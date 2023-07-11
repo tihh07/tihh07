@@ -8,5 +8,5 @@
 
 -- 💡 Sou apaixonado por machine learning, inteligência artificial e sempre estou explorando novas tecnologias. Sempre em busca do próximo 
 
-[![Anurag's GitHub stats-Dark](https://github-readme-stats.vercel.app/api?username=tihh07&show_icons=true&theme=dark#gh-light-mode-only)]
-![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=tihh07&layout=compact)
+![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=tihh07&show_icons=true&theme=transparent)
+[![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=tihh07&layout=donut-vertical)](https://github.com/tihh07/github-readme-stats)
