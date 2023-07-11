@@ -1,16 +1,14 @@
-### Hi there 👋
+👋 Olá! Eu sou um Cientista de Dados com mais de 10 anos de experiência em multinacionais, e meu trabalho é transformar dados em insights poderosos! 💡💪
 
-<!--
-**tihh07/tihh07** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+💻 Habilidades e ferramentos que amo, incluindo:
 
-Here are some ideas to get you started:
+🔧 Data wrangling, Spark, BigQuery, ETL, Mlflow, Banco de dados;
+🔢 SQL, R, Python, GIT, Power Query;
+📊 Power BI, Looker Studio, Office 365, Estatística;
+📚 Frameworks: Lean, Scrum, OKR, DMAIC, PDCA.
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+✈️ Também tive a incrível experiência de um intercâmbio de 30 dias na Europa, ampliando minha visão e adquirindo novos conhecimentos.
+
+💡 Sou apaixonado por machine learning, inteligência artificial e sempre estou explorando novas tecnologias. Sempre em busca do próximo desafio emocionante no mundo dos dados! Vamos juntos construir o futuro? 🚀💻
+
+📫 Fique à vontade para me contatar. Adoraria trocar ideias e fazer parte de projetos inovadores! 😉
