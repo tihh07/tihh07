@@ -1,82 +1,49 @@
 # Tiago Souza
 
-Gerente de Inteligência de Mercado, Cientista de Dados e empreendedor na área da saúde.
+Dados e IA só viram vantagem quando entram no processo de decisão.
 
-Atuo na interseção entre estratégia de negócios, inteligência comercial, BI, ciência de dados, automação e inteligência artificial aplicada.
+Há mais de 12 anos trabalho com dados, BI, inteligência de mercado e estratégia. Minha prática combina contexto de negócio, qualidade da informação, automação e comunicação executiva para transformar demandas confusas em processos mais claros e confiáveis.
 
-Meu foco é transformar dados, tecnologia e IA em sistemas de decisão mais claros, reutilizáveis e executáveis.
+Hoje também construo sistemas, agentes e workflows de IA com governança. O objetivo não é adicionar mais uma ferramenta ao trabalho. É reduzir retrabalho, melhorar a validação e aumentar a capacidade de execução.
 
----
+## O que estou construindo
 
-## Áreas de atuação
+### PromptOps OS
 
-- Inteligência de mercado e análise competitiva.
-- BI, indicadores e dashboards executivos.
-- Ciência de dados aplicada a problemas de negócio.
-- Automação de rotinas analíticas e operacionais.
-- Estratégia comercial e suporte à decisão.
-- Engenharia de contexto, agentes e workflows com IA.
-- Documentação técnica e executiva.
+Metodologia operacional para profissionais de dados e áreas corporativas transformarem demandas em entregas executivas com IA, contexto e critérios de qualidade.
 
----
-
-## Stack principal
-
-| Área | Ferramentas e práticas |
-|---|---|
-| Dados | Python, R, SQL, Excel |
-| BI | Power BI, modelagem de indicadores, dashboards |
-| IA | ChatGPT, Codex, agentes, workflows, PromptOps |
-| Engenharia | Git, GitHub, automações, documentação versionada |
-| Entrega | Markdown, HTML, PowerPoint, PDF, documentação executiva |
-
----
-
-## Como eu trabalho
-
-Gosto de estruturar problemas antes de sair implementando.
-
-Meu processo normalmente passa por:
-
-1. entender o objetivo real;
-2. separar fatos, hipóteses e premissas;
-3. definir a decisão ou entrega esperada;
-4. desenhar uma solução simples e escalável;
-5. implementar de forma incremental;
-6. validar antes de escalar;
-7. documentar o que deve ser reutilizado.
-
----
-
-## Projetos atuais
+[Conhecer o PromptOps OS](https://promptops-os-brasil.tiagosouza.chatgpt.site/)
 
 ### AI Operating System
 
-Repositório pessoal para organizar princípios, agentes, workflows, templates, prompts e boas práticas de uso profissional de IA.
+Arquitetura pessoal para organizar princípios, engenharia de contexto, agentes, workflows, templates e avaliação de sistemas de IA.
 
-[Ver repositório](https://github.com/tihh07/AI-Operating-System)
+O repositório operacional permanece privado. Um case público sanitizado está em preparação.
 
----
+## Como eu trabalho
 
-## Interesses
+1. Entender a decisão ou entrega real.
+2. Separar fatos, hipóteses, premissas e lacunas.
+3. Organizar o contexto e os critérios de qualidade.
+4. Construir de forma incremental.
+5. Validar antes de escalar.
+6. Versionar o que deve ser reutilizado.
 
-- IA aplicada a negócios.
-- Sistemas multiagentes.
-- Engenharia de contexto.
-- BI orientado à decisão.
-- Automação de trabalho analítico.
-- Inteligência de mercado no setor de saúde.
-- PromptOps e governança de IA.
+## Áreas e ferramentas
 
----
-
-## Contato
-
-- LinkedIn: [linkedin.com/in/tiago-souza-07](https://www.linkedin.com/in/tiago-souza-07/)
-- GitHub: [github.com/tihh07](https://github.com/tihh07)
-
----
+| Domínio | Práticas e ferramentas |
+|---|---|
+| Dados | Python, R, SQL e Excel |
+| BI e decisão | Power BI, indicadores e dashboards executivos |
+| Negócio | inteligência de mercado, estratégia comercial e S&OP |
+| IA aplicada | ChatGPT, Codex, Claude Code, agentes e workflows |
+| Engenharia | Git, GitHub, automação e documentação versionada |
 
 ## Princípio
 
 Tecnologia só gera valor quando melhora decisões, reduz fricção operacional ou aumenta a capacidade de execução.
+
+## Contato
+
+- [LinkedIn](https://www.linkedin.com/in/tiago-souza-07/)
+- [PromptOps OS](https://promptops-os-brasil.tiagosouza.chatgpt.site/)
