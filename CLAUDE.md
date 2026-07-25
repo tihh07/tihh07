@@ -90,17 +90,19 @@ do GitHub, e os workflows em `.github/workflows/` têm YAML válido.
 
 ## Topologia de branches
 
-O conteúdo difere de forma relevante entre as branches — verifique em qual você
-está antes de afirmar que um arquivo existe.
+`main` concentra todo o conteúdo do repositório. As duas branches `claude/*` que
+existiam antes já foram mescladas e não carregam mais nada exclusivo:
 
-- **`main`** — só `README.md`. É o que o perfil público mostra.
-- **`claude/ci-pr-watch`** — `README.md` + `.github/workflows/claude-pr-watch.yml`
-  (rascunho do workflow de vigilância de PRs). Este workflow **não existe em
-  nenhuma outra branch**.
-- **`claude/repo-orchestration-agent-bjjsff`** — camada de orquestração:
-  este arquivo e `.claude/prompts/`.
+- **`main`** — `README.md` (perfil público), `CLAUDE.md`, `docs/`,
+  `.claude/prompts/` e `.github/workflows/claude-pr-watch.yml`.
+- **`claude/ci-pr-watch`** — mesclada em `main` pelo PR #2. Era a única portadora
+  do workflow de vigilância de PRs.
+- **`claude/repo-orchestration-agent-bjjsff`** — mesclada em `main` pelo PR #3
+  (blueprint, este arquivo e `.claude/prompts/`); reaproveitada depois para
+  trabalho de orquestração, sempre reiniciada a partir de `main`.
 
-Nenhuma das branches `claude/*` foi mesclada em `main`.
+Branches de trabalho futuras continuam saindo de `main` e voltando por PR — o
+gate humano da seção acima vale para todas.
 
 ## Convenções deste repositório
 
