@@ -25,18 +25,37 @@ Este repositório tem duas funções que não devem se misturar:
 Este arquivo é a resposta à primeira pergunta. As outras duas se resolvem pelo
 ciclo de auditoria descrito abaixo.
 
+O **desenho** do ecossistema — departamentos, executores, governança, matriz de
+riscos R1–R11, roadmap — vive em
+[`docs/orchestration-blueprint.md`](docs/orchestration-blueprint.md). Esse
+documento é a autoridade de projeto; este aqui é operacional. Em caso de
+divergência, o blueprint prevalece e este arquivo é que deve ser corrigido.
+
+Duas regras do blueprint valem em toda sessão neste repo:
+
+- **R1** — nenhuma sessão mistura repositórios privados com este, que é público.
+  Auditorias rodam na sessão local de cada projeto, e só o resumo sanitizado
+  chega aqui.
+- **Gate humano** — nada é mesclado em `main` por agente, e todo commit no repo
+  público passa por revisão.
+
 ## Índice de projetos
 
 O índice é alimentado pelo entregável **G** do prompt de auditoria — cada
 projeto devolve um resumo curto que vira uma linha aqui.
 
-| Projeto | Raiz local | Remoto | Estado | Fonte de verdade | Pendência principal | Última auditoria |
-|---|---|---|---|---|---|---|
-| GTM | *não verificado* | *não verificado* | *não verificado* | *não verificado* | *não verificado* | — |
-| Focus | *não verificado* | *não verificado* | *não verificado* | *não verificado* | *não verificado* | — |
-| PromptOps OS | *não verificado* | *não verificado* | público em `promptops-os-brasil.tiagosouza.chatgpt.site` | *não verificado* | case público sanitizado em preparação | — |
-| AI Operating System | *não verificado* | privado | repositório operacional privado | *não verificado* | *não verificado* | — |
-| tihh07/tihh07 | este repo | `tihh07/tihh07` | ativo | este arquivo | índice não preenchido | — |
+Os departamentos e seus repositórios são definidos pelo
+[blueprint de orquestração](docs/orchestration-blueprint.md) (seção 3) — ele é a
+fonte de verdade sobre *quais* projetos existem e qual a missão de cada um. A
+tabela abaixo rastreia o *estado* de cada um.
+
+| Repositório | Departamento | Estado | Pendência principal | Última auditoria |
+|---|---|---|---|---|
+| `AI-Operating-System` (privado) | Fundação / Arquitetura | *não verificado* — piloto da Fase 1 | *não verificado* | — |
+| `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | *não verificado* | *não verificado* | — |
+| `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | *não verificado* | *não verificado* | — |
+| `bena-agencia` (privado) | Operação de Cliente / Agência | *não verificado* | *não verificado* | — |
+| `tihh07/tihh07` (público) | Fachada Pública / Marketing | ativo | índice não preenchido | — |
 
 > **Nada nesta tabela foi verificado ainda.** As linhas existem para declarar o
 > conjunto conhecido de projetos, não para afirmar o estado deles. Preencher uma
