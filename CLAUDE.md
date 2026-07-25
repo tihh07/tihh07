@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # tihh07/tihh07 — Repositório Orquestrador
 
 Este repositório tem duas funções que não devem se misturar:
@@ -55,6 +59,30 @@ O prompt canônico está em
 5. Divergências de severidade alta viram trabalho no projeto de origem, não
    aqui.
 
+## Build, testes e lint
+
+Não há nenhum. Este repositório não contém código executável — só Markdown e
+YAML de workflow. Não existe gerenciador de pacotes, suíte de testes, linter ou
+etapa de build, e não se deve introduzir um sem que isso seja o pedido
+explícito.
+
+A verificação equivalente aqui é: o `README.md` renderiza corretamente no perfil
+do GitHub, e os workflows em `.github/workflows/` têm YAML válido.
+
+## Topologia de branches
+
+O conteúdo difere de forma relevante entre as branches — verifique em qual você
+está antes de afirmar que um arquivo existe.
+
+- **`main`** — só `README.md`. É o que o perfil público mostra.
+- **`claude/ci-pr-watch`** — `README.md` + `.github/workflows/claude-pr-watch.yml`
+  (rascunho do workflow de vigilância de PRs). Este workflow **não existe em
+  nenhuma outra branch**.
+- **`claude/repo-orchestration-agent-bjjsff`** — camada de orquestração:
+  este arquivo e `.claude/prompts/`.
+
+Nenhuma das branches `claude/*` foi mesclada em `main`.
+
 ## Convenções deste repositório
 
 - **Branches** — trabalho de agente vai para `claude/<escopo>`; `main` é a
@@ -62,7 +90,8 @@ O prompt canônico está em
 - **`.claude/prompts/`** — prompts reutilizáveis, versionados. Um prompt só
   entra aqui quando for rodar em mais de um projeto; caso contrário vive no
   projeto que o usa.
-- **`.github/workflows/`** — automações. `claude-pr-watch.yml` está em rascunho.
+- **Idioma** — a documentação operacional é escrita em português; mensagens de
+  commit, em inglês.
 - **Sanitização** — nada de caminho local absoluto, nome de cliente, token ou
   URL interna em arquivo versionado, inclusive fora do `README.md`. O índice
   acima guarda caminhos locais apenas se forem genéricos; caso contrário,
