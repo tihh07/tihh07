@@ -1,0 +1,23 @@
+# Donos de código — exigido pelo risco R5 do blueprint de orquestração
+# (supply chain do control-plane: `.claude/` e `.mcp.json` são carregados
+# automaticamente por qualquer sessão de agente, e `.github/` decide o que roda
+# na infra do GitHub).
+#
+# Atenção: este arquivo sozinho não bloqueia nada. Ele só passa a ter efeito
+# quando "Require review from Code Owners" estiver ativo na proteção da branch
+# `main` (Settings → Branches / Rules). Sem isso, é documentação de intenção.
+
+# Padrão: todo o repositório.
+*                   @tihh07
+
+# Control-plane de agentes — prompts, agents, skills e hooks versionados.
+/.claude/           @tihh07
+
+# Automação: workflows decidem o que roda com as credenciais do repositório.
+/.github/           @tihh07
+
+# Autoridade de projeto: o blueprint prevalece sobre a documentação operacional.
+/docs/              @tihh07
+
+# Perfil público: o que este arquivo contém é o que o mundo vê.
+/README.md          @tihh07
