@@ -28,11 +28,21 @@ concurrency:
 
 jobs:
   claude:
-    # Só reage quando @claude é mencionado; disparo manual sempre entra.
+    # Duas condições, ambas obrigatórias num evento de comentário/review:
+    #   1. quem falou é o dono do repositório (R9: consumo disparado por terceiros;
+    #      R2: filtro de trigger por autor). Sem isto, qualquer pessoa que comente
+    #      "@claude" num issue público dispara execução paga.
+    #   2. a menção "@claude" está presente.
+    # workflow_dispatch entra direto: só quem tem write no repo consegue disparar.
     if: >
       github.event_name == 'workflow_dispatch'
-      || contains(github.event.comment.body, '@claude')
-      || contains(github.event.review.body, '@claude')
+      || (
+        github.actor == github.repository_owner
+        && (
+          contains(github.event.comment.body, '@claude')
+          || contains(github.event.review.body, '@claude')
+        )
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
