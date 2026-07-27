@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # CLAUDE.md
 
 A doutrina operacional deste repositório vive em [`AGENTS.md`](AGENTS.md).
