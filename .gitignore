@@ -1,0 +1,33 @@
+# Segredos e credenciais
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# Bases de dados e artefatos gerados (não versionar dados de negócio/PII)
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+*.db
+*.sqlite
+
+# Mídia e binários grandes
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.mov
+*.zip
+
+# SO / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dependências (caso o repo passe a ter build tooling)
+node_modules/

@@ -65,12 +65,26 @@ tabela abaixo rastreia o *estado* de cada um.
 | `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | *não verificado* | *não verificado* | — |
 | `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | *não verificado* | *não verificado* | — |
 | `bena-agencia` (privado) | Operação de Cliente / Agência | *não verificado* | *não verificado* | — |
-| `tihh07/tihh07` (público) | Fachada Pública / Marketing | ativo | índice não preenchido | — |
+| `tihh07/tihh07` (público) | Fachada Pública / Marketing | **auditado** — só documentação, sem código executável; `main` sincronizada, sem PR nem branch aberta | `ANTHROPIC_API_KEY` ausente: o workflow PR Watch está ativo apontando para um secret que não existe | 2026-07-27 |
 
-> **Nada nesta tabela foi verificado ainda.** As linhas existem para declarar o
+> **Só a última linha foi verificada.** As demais existem para declarar o
 > conjunto conhecido de projetos, não para afirmar o estado deles. Preencher uma
 > célula sem ter rodado a auditoria no projeto correspondente derrota o
 > propósito do orquestrador.
+
+Achados da auditoria de 2026-07-27 que não cabem na tabela:
+
+- **O gate humano não é aplicado por nada.** `main` não tem proteção nem ruleset,
+  e secret scanning e push protection estão desligados. O `CODEOWNERS` existe mas
+  é inerte sem "Require review from Code Owners" — o próprio arquivo já avisa
+  isso. É coerente com o roadmap (rulesets, CODEOWNERS e secret scanning são
+  entrega da **Fase 1**, ainda 🔜), mas até lá as mitigações de R3, R5 e R6 valem
+  como intenção, não como controle.
+- **O blueprint não é alcançável a partir do perfil.** O `README.md` é o que o
+  GitHub renderiza, e ele não linka `docs/orchestration-blueprint.md` — o artefato
+  público mais substancial do repositório não tem porta de entrada.
+- **Nenhum `.gitignore` versionado.** Num repositório público N2, nada impede um
+  `.xlsx` ou `.csv` de entrar por descuido.
 
 Ao adicionar um projeto, crie a linha com todas as células em *não verificado* e
 só substitua o que a auditoria confirmar.
