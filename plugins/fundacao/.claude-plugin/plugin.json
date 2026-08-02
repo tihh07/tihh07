@@ -1,0 +1,12 @@
+{
+  "name": "fundacao",
+  "version": "0.1.0",
+  "description": "Plugin-fundação do ecossistema de orquestração: quadro de executores, hook de guardrail e esqueleto de telemetria. Templates genéricos, instaláveis em qualquer departamento.",
+  "author": {
+    "name": "Tiago Souza",
+    "url": "https://github.com/tihh07"
+  },
+  "homepage": "https://github.com/tihh07/tihh07/blob/main/plugins/fundacao/README.md",
+  "license": "MIT",
+  "keywords": ["orquestracao", "governanca", "auditoria", "multi-repo"]
+}

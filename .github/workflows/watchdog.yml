@@ -1,0 +1,126 @@
+name: Watchdog
+
+# Vigilância independente, deliberadamente FORA do ecossistema Claude — não
+# compartilha modo de falha com ele. Se as rotinas pararem, quebrarem ou
+# passarem a produzir trabalho que ninguém revisa, é este workflow que avisa.
+#
+# Não usa modelo, não usa ANTHROPIC_API_KEY, não usa Actions de terceiro. Só
+# GitHub e bash, com o GITHUB_TOKEN nativo. Item obrigatório da Fase 1 no
+# blueprint (seção 10), e o único controle deste repositório que funciona hoje
+# sem nenhuma configuração humana pendente.
+#
+# Canal de alerta: a falha do job. O GitHub notifica o dono por e-mail quando um
+# workflow agendado falha — sem integração, sem segredo, sem custo.
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PRs claude/* parados há mais de 7 dias
+        id: stale_prs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          LIMITE=7
+          AGORA=$(date -u +%s)
+          ACHADOS=0
+
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+            --json number,title,headRefName,updatedAt \
+            --limit 100 > prs.json
+
+          TOTAL=$(jq 'length' prs.json)
+          echo "PRs abertos: $TOTAL"
+
+          while read -r linha; do
+            [ -z "$linha" ] && continue
+            NUM=$(printf '%s' "$linha" | jq -r '.number')
+            REF=$(printf '%s' "$linha" | jq -r '.headRefName')
+            UPD=$(printf '%s' "$linha" | jq -r '.updatedAt')
+            TITULO=$(printf '%s' "$linha" | jq -r '.title')
+            DIAS=$(( (AGORA - $(date -u -d "$UPD" +%s)) / 86400 ))
+            if [ "$DIAS" -gt "$LIMITE" ]; then
+              echo "::warning::PR #$NUM ($REF) parado há $DIAS dias — $TITULO"
+              ACHADOS=$((ACHADOS + 1))
+            fi
+          done < <(jq -c '.[] | select(.headRefName | startswith("claude/"))' prs.json)
+
+          echo "achados=$ACHADOS" >> "$GITHUB_OUTPUT"
+
+      - name: Branches claude/* sem PR aberto
+        id: orphan_branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ACHADOS=0
+
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+            --json headRefName --limit 100 | jq -r '.[].headRefName' | sort -u > com_pr.txt
+
+          git branch -r --format='%(refname:short)' \
+            | sed 's|^origin/||' | grep '^claude/' | sort -u > todas.txt || true
+
+          while read -r BR; do
+            [ -z "$BR" ] && continue
+            if ! grep -qxF "$BR" com_pr.txt; then
+              ULTIMO=$(git log -1 --format=%ct "origin/$BR" 2>/dev/null || echo 0)
+              DIAS=$(( ($(date -u +%s) - ULTIMO) / 86400 ))
+              if [ "$DIAS" -gt 7 ]; then
+                echo "::warning::Branch $BR sem PR aberto, último commit há $DIAS dias — trabalho possivelmente órfão"
+                ACHADOS=$((ACHADOS + 1))
+              fi
+            fi
+          done < todas.txt
+
+          echo "achados=$ACHADOS" >> "$GITHUB_OUTPUT"
+
+      - name: Telemetria — rotina morta há mais de 26h
+        id: dead_routine
+        run: |
+          set -euo pipefail
+          ARQ="telemetry/runs.jsonl"
+
+          if [ ! -f "$ARQ" ]; then
+            echo "Sem $ARQ neste repositório — verificação não aplicável."
+            echo "achados=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ULTIMO=$(tail -1 "$ARQ" | jq -r '.ts')
+          HORAS=$(( ($(date -u +%s) - $(date -u -d "$ULTIMO" +%s)) / 3600 ))
+          if [ "$HORAS" -gt 26 ]; then
+            echo "::warning::Nenhum registro de run há $HORAS horas — rotina possivelmente morta"
+            echo "achados=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "achados=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Veredito
+        run: |
+          set -euo pipefail
+          TOTAL=$(( ${{ steps.stale_prs.outputs.achados }} \
+                  + ${{ steps.orphan_branches.outputs.achados }} \
+                  + ${{ steps.dead_routine.outputs.achados }} ))
+
+          if [ "$TOTAL" -gt 0 ]; then
+            echo "Watchdog: $TOTAL achado(s). Detalhes nos warnings acima."
+            echo "A falha deste job É o alerta — o GitHub notifica o dono por e-mail."
+            exit 1
+          fi
+
+          echo "Watchdog: nada a reportar."
