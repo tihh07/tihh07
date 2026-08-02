@@ -32,8 +32,11 @@ Este repositório tem duas funções que não devem se misturar:
 - **O que está pendente?** — lacunas, trabalho não publicado, documentação que
   descreve uma realidade antiga.
 
-Este arquivo é a resposta à primeira pergunta. As outras duas se resolvem pelo
-ciclo de auditoria descrito abaixo.
+Este arquivo é a resposta à primeira pergunta. A segunda se resolve pelo ciclo de
+auditoria descrito abaixo. A terceira vive em
+[`docs/pendencias.md`](docs/pendencias.md) — backlog do checkup mais recente,
+com cada item escrito para ser executado por uma sessão na nuvem sem depender de
+contexto de sessão local.
 
 O **desenho** do ecossistema — departamentos, executores, governança, matriz de
 riscos R1–R11, roadmap — vive em
