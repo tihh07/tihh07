@@ -69,7 +69,15 @@ exemplo.
    público no mesmo escopo? Alguma carrega conector desnecessário? Algum prompt
    voltou a viver só na UI? Essas três são regressões de governança e valem
    severidade alta.
-5. **Backlog** — confira [`docs/pendencias.md`](../../../docs/pendencias.md):
+5. **Doutrina** — `AGENTS.md` existe na raiz e abre com frontmatter declarando
+   `setor`, `nivel`, `emite_pratica` e `nunca_sai`? O `CLAUDE.md` tem
+   `@AGENTS.md` na linha 1 e continua sendo ponteiro, sem duplicar seção do
+   `AGENTS.md`? Conteúdo repetido nos dois é drift esperando para acontecer.
+6. **Cobertura de CI** — cada workflow em `.github/workflows/` declara no
+   cabeçalho o que ele **não** cobre? Workflow que promete mais do que verifica
+   é pior que workflow nenhum: dá verde vazio. Confira também se algum já
+   executou alguma vez — automação com zero runs é intenção, não controle.
+7. **Backlog** — confira [`docs/pendencias.md`](../../../docs/pendencias.md):
    algum item marcado como aberto já foi resolvido, ou algum resolvido regrediu?
    Documentação que descreve realidade antiga é o defeito que este ecossistema
    existe para detectar; ele conta em casa também.
@@ -99,6 +107,23 @@ histórico, tratando como comprometido e não como corrigido.
 
 Verificável, e escrito aqui de propósito: **status verde da run não é tarefa
 cumprida.** A run só cumpriu o objetivo se produziu (a) o diferencial da semana
-com contagem de commits e arquivos, (b) veredito explícito nos oito itens, e
-(c) o estado de PRs, branches, workflows e rotinas. Faltando qualquer um dos
-três, a run é `partial`, mesmo terminando sem erro.
+com contagem de commits e arquivos, (b) veredito explícito nos oito itens do
+checklist N2, e (c) o estado de PRs, branches, workflows, rotinas, doutrina e
+cobertura de CI. Faltando qualquer um dos três, a run é `partial`, mesmo
+terminando sem erro.
+
+## O que esta rotina não alcança
+
+Diga isto no relatório em vez de deixar por suposto — não alegue conformidade
+sobre nada abaixo:
+
+- **Configuração do repositório** — ruleset em `main`, secret scanning, push
+  protection, existência de secrets. Exige permissão de administração que a
+  sessão não tem; o backlog rastreia esses itens como pendências humanas.
+- **Estado verde/vermelho de execuções de CI** quando a sessão não tiver as
+  ferramentas do GitHub disponíveis. Sem elas, dá para ver que o workflow existe
+  e ler o arquivo, não se ele passou.
+- **Qualquer repositório além de `tihh07/tihh07`** — é a trava de escopo acima,
+  e é deliberada.
+- **O que não está versionado** — arquivo local, stash, clone antigo. Isso é o
+  adendo local da auditoria, não esta rotina.

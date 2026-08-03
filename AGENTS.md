@@ -47,10 +47,29 @@ divergência, o blueprint prevalece e este arquivo é que deve ser corrigido.
 Duas regras do blueprint valem em toda sessão neste repo:
 
 - **R1** — nenhuma sessão mistura repositórios privados com este, que é público.
-  Auditorias rodam na sessão local de cada projeto, e só o resumo sanitizado
+  Auditorias rodam escopadas em um projeto por vez, e só o resumo sanitizado
   chega aqui.
 - **Gate humano** — nada é mesclado em `main` por agente, e todo commit no repo
   público passa por revisão.
+
+## Frontmatter de identificação
+
+Todo `AGENTS.md` do ecossistema abre com um bloco YAML que declara a que o
+repositório pertence e o que pode sair dele. Os campos são fiscalizados pela
+rotina semanal de control-plane, então não são decorativos:
+
+| Campo | O que declara |
+|---|---|
+| `setor` | A que setor do ecossistema o repositório pertence. Valor deste repo: `marca-pessoal`. |
+| `nivel` | Classificação de exposição. `N2` = público, rigor máximo de sanitização. |
+| `emite_pratica` | Se o repositório publica prática reutilizável por outros, ou só consome. |
+| `nunca_sai` | O que nunca pode aparecer em arquivo versionado, mesmo fora do `README.md`. |
+
+A lista canônica de setores vive fora deste repositório e ainda **não** foi
+publicada aqui — trazê-la exige a checagem de nomes e titularidade do
+[`SECURITY.md`](SECURITY.md), que é decisão humana pendente
+([`docs/pendencias.md`](docs/pendencias.md)). Até lá, este arquivo declara o
+próprio setor e não afirma o conjunto.
 
 ## Índice de projetos
 
@@ -75,19 +94,10 @@ tabela abaixo rastreia o *estado* de cada um.
 > célula sem ter rodado a auditoria no projeto correspondente derrota o
 > propósito do orquestrador.
 
-Achados da auditoria de 2026-07-27 que não cabem na tabela:
-
-- **O gate humano não é aplicado por nada.** `main` não tem proteção nem ruleset,
-  e secret scanning e push protection estão desligados. O `CODEOWNERS` existe mas
-  é inerte sem "Require review from Code Owners" — o próprio arquivo já avisa
-  isso. É coerente com o roadmap (rulesets, CODEOWNERS e secret scanning são
-  entrega da **Fase 1**, ainda 🔜), mas até lá as mitigações de R3, R5 e R6 valem
-  como intenção, não como controle.
-Resolvidos desde então: o `.gitignore` ausente (commit `0242c04`) e a falta de
-porta de entrada para o blueprint a partir do `README.md`, que agora o linka.
-Os demais achados e todo o backlog em aberto vivem em
-[`docs/pendencias.md`](docs/pendencias.md), que é onde se olha para saber o que
-falta — esta seção guarda apenas o histórico da auditoria de 2026-07-27.
+Achados que não cabem na tabela — abertos e resolvidos — vivem em
+[`docs/pendencias.md`](docs/pendencias.md), com evidência, executor e critério
+de verificação. É lá que se olha para saber o que falta; repetir aqui só cria
+duas versões da mesma lista para divergirem.
 
 Ao adicionar um projeto, crie a linha com todas as células em *não verificado* e
 só substitua o que a auditoria confirmar.
@@ -144,8 +154,9 @@ Markdown, YAML e um único shell script.
 A verificação equivalente aqui, antes de qualquer PR:
 
 - o `README.md` renderiza corretamente no perfil do GitHub;
-- os workflows em `.github/workflows/` e o template em `plugins/` têm YAML
-  válido;
+- os workflows em `.github/workflows/` têm YAML válido, e cada um declara no
+  cabeçalho o que **não** cobre — workflow que promete mais do que verifica dá
+  verde vazio;
 - os manifestos `.claude-plugin/*.json` são JSON válido;
 - `bash -n plugins/fundacao/hooks/guard-push.sh` passa, e o hook continua
   bloqueando push para `main`, force push e deleção de branch remota, e

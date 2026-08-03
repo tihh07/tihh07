@@ -23,7 +23,13 @@ O conteúdo daqui é derivado exclusivamente do blueprint, que já é público.
 | `agents/` | Os oito executores: orquestrador + 7 papéis especializados |
 | `hooks/guard-push.sh` | Guardrail `PreToolUse` — push só em `claude/*`, sem force, sem deleção |
 | `templates/telemetry/` | Esqueleto de `runs.jsonl` e do snapshot semanal |
-| `templates/watchdog.yml` | Watchdog independente, para copiar em `.github/workflows/` |
+
+O **watchdog** não tem cópia aqui de propósito. O arquivo ativo em
+[`.github/workflows/watchdog.yml`](../../.github/workflows/watchdog.yml) já é
+portável: os quatro checks pulam sozinhos quando não se aplicam ao repositório,
+então copiá-lo basta, sem ajuste. Manter uma segunda cópia "template" só criaria
+duas versões para divergirem — que é exatamente o defeito que este ecossistema
+existe para detectar.
 
 ## Instalação num departamento
 
@@ -31,8 +37,8 @@ O conteúdo daqui é derivado exclusivamente do blueprint, que já é público.
 2. Instalar o hook — o `guard-push.sh` precisa estar referenciado nos `hooks`
    do `settings.json` para agir. Copiar o arquivo sem registrar o hook não
    protege nada.
-3. Copiar `templates/watchdog.yml` para `.github/workflows/` e ajustar os
-   caminhos verificados.
+3. Copiar `.github/workflows/watchdog.yml` do repositório público para
+   `.github/workflows/` do departamento. Sem ajustes.
 4. Copiar `templates/telemetry/` para `telemetry/` quando a primeira rotina
    entrar em produção.
 

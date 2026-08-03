@@ -1,7 +1,8 @@
 # Pendências do orquestrador — backlog executável
 
-> Checkup de 2026-08-02. Escopo: repositório público `tihh07/tihh07` e as
-> rotinas agendadas que o tocam. Nenhum repositório privado foi lido (**R1**).
+> Checkup de 2026-08-02, atualizado em 2026-08-03. Escopo: repositório público
+> `tihh07/tihh07` e as rotinas agendadas que o tocam. Nenhum repositório privado
+> foi lido (**R1**).
 >
 > Este arquivo responde à terceira pergunta do [`AGENTS.md`](../AGENTS.md) —
 > *o que está pendente?* — num formato em que cada item é **auto-contido**:
@@ -31,6 +32,12 @@ Duas rotinas semanais estão **ativas** e disparam toda segunda-feira.
 |---|---|---|---|
 | Governança semanal — repo público (N2) | `0 12 * * 1` | só `tihh07/tihh07` | ✅ conforme com R1 |
 | Governança Semanal — IA Control Pane | `0 11 * * 1` | o público **+ 3 privados** | ❌ viola R1 |
+
+Em **2026-08-03 às 10:20 UTC** a rotina de control-plane foi editada, e disparou
+às 11:18. A edição acrescentou duas frentes de verificação (doutrina e cobertura
+de CI) e uma seção declarando o que a rotina não alcança — todas boas adições.
+**Não tocou no escopo nem nos conectores**: P0 e P1 seguem abertos, e a rotina
+rodou pela segunda semana consecutiva com o público e três privados juntos.
 
 ### P0 — A rotina de control-plane mistura repositórios privados com o público
 **Severidade: alta · Executor: 👤 Humano · ABERTO**
@@ -90,85 +97,69 @@ que roda continua sendo a da UI, e as duas vão divergir.
 
 ---
 
-## 1. Entregue neste checkup ☁️
+## 1. Entregue ☁️
 
-### Correções de coerência
+Dois lotes, ambos no PR #7. Detalhe de cada mudança está no corpo do PR e no log
+— aqui fica só o que fechou, para o backlog não virar changelog.
 
-| # | Item | Estado |
+**2026-08-02 — coerência e Fase 1**
+
+| # | Item | Como fechou |
 |---|---|---|
-| N1 | `README.md` não linkava o blueprint | ✅ link acrescentado na seção "AI Operating System" |
-| N2 | Sem `LICENSE`, apesar de o blueprint declarar CC BY 4.0 + MIT | ✅ `LICENSE` criado nos dois regimes |
-| N3 | `AGENTS.md` listava o `.gitignore` como achado aberto, já resolvido em `0242c04` | ✅ movido para histórico |
-| N4 | Topologia de branches descrevia branches já apagadas | ✅ reescrita sem lista nominal — a lista envelhecia a cada merge |
-| N5 | Convenção de commit em inglês não seguida | ✅ regra reafirmada em `AGENTS.md`, com a exceção nomeada |
-| N7 | `reports/publicacao/` não existia | ✅ criado com formato e a regra de não reproduzir o dado |
+| N1 | `README.md` não linkava o blueprint | link na seção "AI Operating System" |
+| N2 | Sem `LICENSE`, apesar de o blueprint declarar CC BY 4.0 + MIT | `LICENSE` nos dois regimes |
+| N3 | `AGENTS.md` listava achado já resolvido em `0242c04` | movido para o backlog |
+| N4 | Topologia de branches nomeava branches apagadas | reescrita sem lista nominal |
+| N5 | Convenção de commit em inglês não seguida | regra reafirmada, exceção nomeada |
+| N7 | `reports/publicacao/` não existia | criado com formato e regra de não reproduzir o dado |
 
-### Auditoria dividida em nuvem + adendo local
+**Auditoria dividida.** O prompt abria com *"rodar em cada sessão local"* — e era
+essa frase, não um limite técnico, que mantinha quatro departamentos em *não
+verificado*. Os passos 1, 2, 4, 5 e 6 do check reverso rodam na nuvem; só o
+Passo 0 e os stashes do Passo 3 precisam de disco. Virou
+[`auditoria-fonte-de-verdade.md`](../.claude/prompts/auditoria-fonte-de-verdade.md)
+(nuvem, trava R1, entregáveis A–H) mais
+[`auditoria-adendo-local.md`](../.claude/prompts/auditoria-adendo-local.md)
+(condicional ao entregável H).
 
-O prompt de auditoria abria com *"rodar em cada sessão local"* — e isso, não a
-nuvem, era o que mantinha quatro departamentos em *não verificado*.
+**Plugin-fundação** ([`plugins/fundacao/`](../plugins/fundacao/)) — oito
+executores, hook de guardrail e esqueleto de telemetria. Fica no repo público
+porque o blueprint exige que o plugin só contenha template genérico: um plugin
+público satisfaz isso por construção. Os agentes ficam em `plugins/`, não em
+`.claude/agents/`, para não mudar o comportamento de toda sessão deste repo sem
+pedido.
 
-Passei os seis passos contra o que uma sessão remota alcança: **os passos 1, 2,
-4, 5 e 6 são integralmente executáveis na nuvem.** Só dependem de disco o Passo 0
-(pastas irmãs, clones antigos, planilhas fora do repo, virtualenvs) e, do Passo 3,
-commits não enviados e stashes.
+O `guard-push.sh` corrige um buraco do snippet ilustrativo do Apêndice A, que
+libera o push sempre que a string `claude/` aparece em qualquer ponto do comando
+— `echo claude/ && git push origin main` passaria. Validado em 11 casos.
 
-- [`auditoria-fonte-de-verdade.md`](../.claude/prompts/auditoria-fonte-de-verdade.md)
-  — versão de nuvem, com trava de escopo R1 no topo, entregáveis A–H, e a
-  obrigação de declarar o próprio limite de alcance em vez de deduzir.
-- [`auditoria-adendo-local.md`](../.claude/prompts/auditoria-adendo-local.md)
-  — minutos na máquina do projeto, **condicional** ao entregável H.
+**Watchdog** ([`.github/workflows/watchdog.yml`](../.github/workflows/watchdog.yml))
+— diário, sem modelo, sem chave de API, sem Action de terceiro. O alerta é a
+falha do job, que o GitHub já notifica por e-mail. Único controle deste
+repositório que funciona sem configuração humana pendente.
 
-### Plugin-fundação
+**2026-08-03 — doutrina e redundância**
 
-[`plugins/fundacao/`](../plugins/fundacao/) — os oito executores da seção 5 do
-blueprint, o hook de guardrail do Apêndice A, e os templates de telemetria e
-watchdog. Distribuído por [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json).
-
-Hospedado no repositório público de propósito: o blueprint exige que o plugin
-contenha **apenas templates genéricos** e nunca derive de memória de repo
-privado. Um plugin público satisfaz isso por construção — não há nada privado
-ali para vazar, e qualquer conteúdo derivado de repo privado apareceria na
-revisão do PR.
-
-Os agentes ficam em `plugins/`, **não** em `.claude/agents/`. A diferença
-importa: em `.claude/`, seriam carregados automaticamente por toda sessão neste
-repositório, mudando o comportamento do repo sem que ninguém tenha pedido.
-Alterar `.claude/**` é gate humano.
-
-**O `guard-push.sh` corrige uma falha da versão ilustrativa do blueprint.** O
-snippet do Apêndice A libera o push se a string `claude/` aparecer em qualquer
-ponto do comando — `echo claude/ && git push origin main` passaria. A versão
-executável extrai o refspec de destino, e bloqueia também force push e deleção
-de branch remota, que o snippet não cobria. Validado em 11 casos, incluindo
-esse.
-
-### Watchdog ativo
-
-[`.github/workflows/watchdog.yml`](../.github/workflows/watchdog.yml) — diário,
-sem modelo, sem chave de API, sem Action de terceiro. Detecta PR `claude/*`
-parado há mais de 7 dias, branch `claude/*` sem PR aberto, e rotina morta via
-`telemetry/runs.jsonl` (pula silenciosamente quando o arquivo não existe, que é
-o caso aqui). O alerta é a falha do job — o GitHub notifica o dono por e-mail.
-
-É o **único controle deste repositório que funciona hoje sem nenhuma
-configuração humana pendente**, e por isso o primeiro a valer a pena. O
-blueprint o classifica como item obrigatório da Fase 1 e deliberadamente fora do
-ecossistema Claude — não compartilha modo de falha com aquilo que vigia.
+| # | Item | Como fechou |
+|---|---|---|
+| N8 | Frontmatter (`setor`/`nivel`/`emite_pratica`/`nunca_sai`) fiscalizado pela rotina e documentado em lugar nenhum | seção nova no `AGENTS.md` |
+| N9 | Nenhum workflow declarava o que **não** cobre — regra que a própria rotina passou a exigir | cabeçalho nos dois, incluindo o "zero runs" do PR Watch |
+| N10 | Skill `governanca-n2` não checava doutrina nem cobertura de CI | passos 5 e 6, mais "o que esta rotina não alcança" |
+| N11 | `templates/watchdog.yml` era cópia quase idêntica do workflow ativo | template removido; o ativo virou portável, com os quatro checks pulando sozinhos |
+| N12 | Achados duplicados entre `AGENTS.md` e este arquivo | `AGENTS.md` passa a apontar para cá |
 
 ### O que segue aberto neste bloco
 
-**N6 — o PR Watch nunca executou.** `.github/workflows/claude-pr-watch.yml`
-está ativo há duas semanas com zero runs no histórico do Actions. Depende de
-`secrets.ANTHROPIC_API_KEY` (linha 57), que não existe. Não há nada a corrigir
-no YAML — ele está bem escrito, com filtro de autor (R9), permissões mínimas e
-concurrency. Bloqueado por **H3**.
+**N6 — o PR Watch nunca executou.** Zero runs no histórico do Actions desde
+2026-07-24. Depende de `secrets.ANTHROPIC_API_KEY` (linha 57), que não existe.
+Não há nada a corrigir no YAML — ele está bem escrito, com filtro de autor (R9),
+permissões mínimas e concurrency; o cabeçalho agora declara isso em vez de
+deixar por suposto. Bloqueado por **H3**.
 
 **Verificação, quando destravar:** um `workflow_dispatch` manual conclui com
 sucesso. É o teste mais barato, e só ele tira o workflow de "não verificado".
 
 ---
-
 ## 2. Exige o humano 👤
 
 Nenhum agente executa estes itens, e essa é a intenção — são exatamente os
@@ -249,24 +240,59 @@ Fundação — é o piloto da Fase 1. Trazer só o entregável G, sanitizado.
 **Restrição:** uma sessão por repositório. Esta sessão não pode fazer nenhuma
 delas — R1 vale para ela também.
 
-### L2 — O projeto Focus não existe no mapa
-**Severidade: média · Executor: 👤 Humano (decisão) depois ☁️ Nuvem**
+### L2 — O índice publicado tem o formato errado, não só linhas faltando
+**Severidade: alta · Executor: 👤 Humano (decisão) depois ☁️ Nuvem**
 
-O prompt de auditoria citava *"(GTM, Focus, etc.)"*, mas Focus não aparece no
-blueprint nem no índice. O organograma da seção 3 declara cinco departamentos e
-Focus não é um deles. O orquestrador não sabe que esse projeto existe — e sua
-primeira pergunta é justamente *"o que existe?"*.
+A edição da rotina de control-plane em 2026-08-03 revelou uma realidade
+operacional que este repositório não descreve:
 
-**Ação:** decidir se é departamento novo, subprojeto de um existente ou trabalho
-fora do ecossistema. Se for departamento, criar a linha no índice com todas as
-células em *não verificado* e acrescentá-lo ao organograma.
+| O que a rotina fiscaliza | O que este repositório publica |
+|---|---|
+| ~18 repositórios no ecossistema | 5 departamentos |
+| 6 setores, declarados no frontmatter `setor:` | 5 departamentos com outros nomes |
+| `/checkup` manual, bundle de backup, clone local | não documentado |
 
-### L3 — Nada do que foi entregue hoje foi exercitado
+O orquestrador existe para responder *"o que existe?"*, e a resposta publicada
+descreve um recorte de 5 num universo de ~18, organizado por uma taxonomia que
+já não é a que está em uso. Não é o índice incompleto — é o eixo do índice que
+está errado.
+
+Isso também resolve o antigo item "Focus não existe no mapa": **Focus é um dos
+setores**, e o prompt de auditoria já o citava porque quem escreveu o prompt
+sabia disso. O mapa é que não sabia.
+
+**Ação (humana, primeiro):** decidir se os nomes de setor podem ser publicados.
+Alguns parecem nomes de organização, o que aciona os itens 1 (nomes) e 7
+(titularidade) do checklist do [`SECURITY.md`](../SECURITY.md). Publicar a
+taxonomia sem essa decisão é exatamente o tipo de vazamento que a rotina N2
+procura.
+
+**Ação (nuvem, depois):** reeixar o índice para setor × repositórios, marcar os
+que estão fora de qualquer rotina, e reconciliar o organograma da seção 3 do
+blueprint com a taxonomia real.
+
+**Verificação:** o número de repositórios declarados no índice bate com o número
+que existe, e cada um tem setor.
+
+### L4 — ~14 repositórios estão fora de qualquer rotina
+**Severidade: média · Executor: 👤 Humano**
+
+A própria rotina de control-plane declara que o ecossistema tem ~18
+repositórios e que ela vê 4. Os demais não são cobertos por nenhuma varredura
+de segredos, PII ou doutrina — e ampliar a cobertura exige anexar fontes na
+configuração da rotina, que é clique humano.
+
+Vale decidir antes se a resposta é uma rotina com mais fontes ou várias rotinas
+menores: uma rotina única com 18 repositórios anexados aumenta o raio de
+qualquer erro dela, e reencontra o problema de P0 numa escala maior.
+
+### L3 — Nada do que foi entregue foi exercitado
 **Severidade: média · Executor: ☁️ Nuvem + 👤 Humano**
 
 Os oito executores foram escritos a partir da especificação e nenhum rodou em
 trabalho real. O hook não foi instalado em nenhum departamento. O watchdog só
-executa depois do primeiro agendamento. O plugin está em 0.1.0 e o
+executa depois do primeiro agendamento — e só existe para o GitHub depois de
+estar em `main`. O plugin está em 0.1.0 e o
 [README dele](../plugins/fundacao/README.md) declara isso.
 
 É a mesma armadilha que o `oficial-governanca` existe para detectar: artefato
@@ -280,14 +306,18 @@ executa; instalar o plugin no piloto e corrigir o que a realidade contradisser.
 ## Ordem sugerida
 
 1. **P0 e P1** — os únicos itens com prazo imposto por terceiro: a rotina
-   dispara sozinha, toda segunda.
-2. **H1, H2, H4** — um único bloco de configuração; destrava o gate humano e
-   fecha R3, R5 e R6. Aproveitar para incluir `/plugins/` no `CODEOWNERS`.
-3. **H5** — verificação barata, consequência cara.
-4. **L1** — quatro auditorias de nuvem, uma sessão cada, agora sem depender de
-   máquina local.
-5. **P2 (metade humana), H3, N6, L2, L3** — validação das automações e decisões
-   de mapa.
+   dispara sozinha toda segunda, e já foram duas semanas em violação.
+2. **Merge do PR #7** — destrava o watchdog, que só existe para o GitHub depois
+   de estar em `main`, e com ele o primeiro `workflow_dispatch` de L3.
+3. **H1, H2, H4** — um único bloco de configuração; destrava o gate humano e
+   fecha R3, R5 e R6. Aproveitar para incluir `/plugins/` e `/.claude-plugin/`
+   no `CODEOWNERS`.
+4. **L2** — a decisão de sanitização da taxonomia; sem ela o índice continua
+   descrevendo um ecossistema que não existe mais.
+5. **H5** — verificação barata, consequência cara.
+6. **L1 e L4** — cobertura: auditar os quatro conhecidos, decidir o que fazer
+   com os ~14 restantes.
+7. **P2 (metade humana), H3, N6, L3** — validação das automações.
 
 Os itens ☁️ não dependem dos demais e podem ser executados a qualquer momento,
 inclusive antes das decisões humanas.
