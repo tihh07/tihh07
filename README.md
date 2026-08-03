@@ -18,6 +18,10 @@ Metodologia operacional para profissionais de dados e áreas corporativas transf
 
 Arquitetura pessoal para organizar princípios, engenharia de contexto, agentes, workflows, templates e avaliação de sistemas de IA.
 
+O desenho completo é público: um design doc que trata cada repositório como departamento de uma empresa, com orquestrador, executores especializados, matriz de riscos e roadmap por fases — marcando explicitamente o que já é real e o que ainda é roadmap.
+
+[Ler o blueprint de orquestração multi-repo](docs/orchestration-blueprint.md)
+
 O repositório operacional permanece privado. Um case público sanitizado está em preparação.
 
 ## Como eu trabalho

@@ -32,8 +32,11 @@ Este repositório tem duas funções que não devem se misturar:
 - **O que está pendente?** — lacunas, trabalho não publicado, documentação que
   descreve uma realidade antiga.
 
-Este arquivo é a resposta à primeira pergunta. As outras duas se resolvem pelo
-ciclo de auditoria descrito abaixo.
+Este arquivo é a resposta à primeira pergunta. A segunda se resolve pelo ciclo de
+auditoria descrito abaixo. A terceira vive em
+[`docs/pendencias.md`](docs/pendencias.md) — backlog do checkup mais recente,
+com cada item escrito para ser executado por uma sessão na nuvem sem depender de
+contexto de sessão local.
 
 O **desenho** do ecossistema — departamentos, executores, governança, matriz de
 riscos R1–R11, roadmap — vive em
@@ -44,10 +47,29 @@ divergência, o blueprint prevalece e este arquivo é que deve ser corrigido.
 Duas regras do blueprint valem em toda sessão neste repo:
 
 - **R1** — nenhuma sessão mistura repositórios privados com este, que é público.
-  Auditorias rodam na sessão local de cada projeto, e só o resumo sanitizado
+  Auditorias rodam escopadas em um projeto por vez, e só o resumo sanitizado
   chega aqui.
 - **Gate humano** — nada é mesclado em `main` por agente, e todo commit no repo
   público passa por revisão.
+
+## Frontmatter de identificação
+
+Todo `AGENTS.md` do ecossistema abre com um bloco YAML que declara a que o
+repositório pertence e o que pode sair dele. Os campos são fiscalizados pela
+rotina semanal de control-plane, então não são decorativos:
+
+| Campo | O que declara |
+|---|---|
+| `setor` | A que setor do ecossistema o repositório pertence. Valor deste repo: `marca-pessoal`. |
+| `nivel` | Classificação de exposição. `N2` = público, rigor máximo de sanitização. |
+| `emite_pratica` | Se o repositório publica prática reutilizável por outros, ou só consome. |
+| `nunca_sai` | O que nunca pode aparecer em arquivo versionado, mesmo fora do `README.md`. |
+
+A lista canônica de setores vive fora deste repositório e ainda **não** foi
+publicada aqui — trazê-la exige a checagem de nomes e titularidade do
+[`SECURITY.md`](SECURITY.md), que é decisão humana pendente
+([`docs/pendencias.md`](docs/pendencias.md)). Até lá, este arquivo declara o
+próprio setor e não afirma o conjunto.
 
 ## Índice de projetos
 
@@ -65,68 +87,94 @@ tabela abaixo rastreia o *estado* de cada um.
 | `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | *não verificado* | *não verificado* | — |
 | `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | *não verificado* | *não verificado* | — |
 | `bena-agencia` (privado) | Operação de Cliente / Agência | *não verificado* | *não verificado* | — |
-| `tihh07/tihh07` (público) | Fachada Pública / Marketing | **auditado** — só documentação, sem código executável; `main` sincronizada, sem PR nem branch aberta | `ANTHROPIC_API_KEY` ausente: o workflow PR Watch está ativo apontando para um secret que não existe | 2026-07-27 |
+| `tihh07/tihh07` (público) | Fachada Pública / Marketing | **auditado** — documentação, workflows e templates de plugin; sem código de aplicação | Uma rotina semanal agendada tem repositório privado e o público no mesmo escopo, violando R1; só o humano remove | 2026-08-02 |
 
 > **Só a última linha foi verificada.** As demais existem para declarar o
 > conjunto conhecido de projetos, não para afirmar o estado deles. Preencher uma
 > célula sem ter rodado a auditoria no projeto correspondente derrota o
 > propósito do orquestrador.
 
-Achados da auditoria de 2026-07-27 que não cabem na tabela:
-
-- **O gate humano não é aplicado por nada.** `main` não tem proteção nem ruleset,
-  e secret scanning e push protection estão desligados. O `CODEOWNERS` existe mas
-  é inerte sem "Require review from Code Owners" — o próprio arquivo já avisa
-  isso. É coerente com o roadmap (rulesets, CODEOWNERS e secret scanning são
-  entrega da **Fase 1**, ainda 🔜), mas até lá as mitigações de R3, R5 e R6 valem
-  como intenção, não como controle.
-- **O blueprint não é alcançável a partir do perfil.** O `README.md` é o que o
-  GitHub renderiza, e ele não linka `docs/orchestration-blueprint.md` — o artefato
-  público mais substancial do repositório não tem porta de entrada.
-- **Nenhum `.gitignore` versionado.** Num repositório público N2, nada impede um
-  `.xlsx` ou `.csv` de entrar por descuido.
+Achados que não cabem na tabela — abertos e resolvidos — vivem em
+[`docs/pendencias.md`](docs/pendencias.md), com evidência, executor e critério
+de verificação. É lá que se olha para saber o que falta; repetir aqui só cria
+duas versões da mesma lista para divergirem.
 
 Ao adicionar um projeto, crie a linha com todas as células em *não verificado* e
 só substitua o que a auditoria confirmar.
 
 ## Ciclo de auditoria
 
-O prompt canônico está em
-[`.claude/prompts/auditoria-fonte-de-verdade.md`](.claude/prompts/auditoria-fonte-de-verdade.md).
+A auditoria é dividida em duas partes, porque só uma fração dela depende de
+máquina local:
 
-1. Abrir uma sessão local no projeto.
-2. Colar o prompt (a partir da linha indicada no arquivo).
-3. A sessão devolve o relatório com os entregáveis A–G, sem alterar nada.
-4. O entregável G vira/atualiza a linha do projeto no índice acima, com a data
+- [`.claude/prompts/auditoria-fonte-de-verdade.md`](.claude/prompts/auditoria-fonte-de-verdade.md)
+  — **roda na nuvem**, escopado em um repositório. Cobre os seis passos do check
+  reverso e os entregáveis A–H. É a maior parte do trabalho.
+- [`.claude/prompts/auditoria-adendo-local.md`](.claude/prompts/auditoria-adendo-local.md)
+  — **roda na máquina do projeto**, em minutos. Só o que a nuvem
+  comprovadamente não alcança: arquivos fora do git, clones antigos, planilhas
+  soltas, stashes, segredos em repouso.
+
+O ciclo:
+
+1. Abrir uma sessão na nuvem escopada em **um** projeto (R1: nunca dois).
+2. Colar o prompt de auditoria de nuvem (a partir da linha indicada no arquivo).
+3. A sessão devolve o relatório A–H, sem alterar nada.
+4. Se o entregável H pedir, rodar o adendo local no projeto e anexar o bloco.
+5. O entregável G vira/atualiza a linha do projeto no índice acima, com a data
    na coluna "Última auditoria".
-5. Divergências de severidade alta viram trabalho no projeto de origem, não
+6. Divergências de severidade alta viram trabalho no projeto de origem, não
    aqui.
+
+O passo 4 é condicional de propósito. Auditoria que exige sessão local por
+padrão não acontece — e quatro departamentos passaram semanas em *não
+verificado* exatamente por isso.
+
+## Onde as coisas moram
+
+| Caminho | O que é |
+|---|---|
+| `README.md` | Perfil público renderizado pelo GitHub |
+| `AGENTS.md` | Esta doutrina operacional; `CLAUDE.md` é ponteiro para cá |
+| `docs/orchestration-blueprint.md` | Autoridade de projeto — vence em caso de divergência |
+| `docs/pendencias.md` | Backlog: o que falta, com executor e critério de verificação |
+| `SECURITY.md` | Política de segurança, regra R1 e runbook de incidente |
+| `.claude/prompts/` | Prompts reutilizáveis entre projetos |
+| `.claude/skills/` | Conteúdo versionado das rotinas (padrão prompt-ponteiro) |
+| `plugins/fundacao/` | Templates distribuíveis: executores, hook, telemetria |
+| `.github/workflows/` | PR Watch e watchdog |
+| `reports/publicacao/` | Saída semanal da rotina N2, quando há achado |
 
 ## Build, testes e lint
 
-Não há nenhum. Este repositório não contém código executável — só Markdown e
-YAML de workflow. Não existe gerenciador de pacotes, suíte de testes, linter ou
-etapa de build, e não se deve introduzir um sem que isso seja o pedido
-explícito.
+Não há gerenciador de pacotes, suíte de testes, linter nem etapa de build, e não
+se deve introduzir um sem que isso seja o pedido explícito. O repositório é
+Markdown, YAML e um único shell script.
 
-A verificação equivalente aqui é: o `README.md` renderiza corretamente no perfil
-do GitHub, e os workflows em `.github/workflows/` têm YAML válido.
+A verificação equivalente aqui, antes de qualquer PR:
+
+- o `README.md` renderiza corretamente no perfil do GitHub;
+- os workflows em `.github/workflows/` têm YAML válido, e cada um declara no
+  cabeçalho o que **não** cobre — workflow que promete mais do que verifica dá
+  verde vazio;
+- os manifestos `.claude-plugin/*.json` são JSON válido;
+- `bash -n plugins/fundacao/hooks/guard-push.sh` passa, e o hook continua
+  bloqueando push para `main`, force push e deleção de branch remota, e
+  liberando `claude/*`.
 
 ## Topologia de branches
 
-`main` concentra todo o conteúdo do repositório. As duas branches `claude/*` que
-existiam antes já foram mescladas e não carregam mais nada exclusivo:
+**`main` é a única branch permanente**, e o que ela contém é o que o perfil
+público mostra. Branches de trabalho são efêmeras: saem de `main`, voltam por PR
+e são apagadas no merge — por isso esta seção não lista branches nominalmente.
+Uma lista dessas envelhece no primeiro merge e passa a descrever uma realidade
+que não existe mais.
 
-- **`main`** — `README.md` (perfil público), `CLAUDE.md`, `docs/`,
-  `.claude/prompts/` e `.github/workflows/claude-pr-watch.yml`.
-- **`claude/ci-pr-watch`** — mesclada em `main` pelo PR #2. Era a única portadora
-  do workflow de vigilância de PRs.
-- **`claude/repo-orchestration-agent-bjjsff`** — mesclada em `main` pelo PR #3
-  (blueprint, este arquivo e `.claude/prompts/`); reaproveitada depois para
-  trabalho de orquestração, sempre reiniciada a partir de `main`.
+Para saber o que está vivo agora, `git branch -r` responde melhor que qualquer
+documento. Três branches já cumpriram esse ciclo e foram removidas (PRs #2, #3,
+#5 e #6); o histórico delas está no log, não aqui.
 
-Branches de trabalho futuras continuam saindo de `main` e voltando por PR — o
-gate humano da seção acima vale para todas.
+O gate humano vale para todas: nada entra em `main` sem PR revisado.
 
 ## Convenções deste repositório
 
@@ -135,8 +183,13 @@ gate humano da seção acima vale para todas.
 - **`.claude/prompts/`** — prompts reutilizáveis, versionados. Um prompt só
   entra aqui quando for rodar em mais de um projeto; caso contrário vive no
   projeto que o usa.
+- **Prompt de rotina nunca mora só na UI** — o conteúdo real vai para
+  `.claude/skills/<nome>/SKILL.md` e o prompt da rotina vira um ponteiro. Prompt
+  na UI não é revisável, não é auditável e se perde se a rotina for recriada.
 - **Idioma** — a documentação operacional é escrita em português; mensagens de
-  commit, em inglês.
+  commit, em inglês. A regra vale inclusive para commit feito à mão: dois
+  commits de julho de 2026 a violaram, e é o tipo de exceção que, repetida,
+  vira a nova convenção por omissão.
 - **Sanitização** — nada de caminho local absoluto, nome de cliente, token ou
   URL interna em arquivo versionado, inclusive fora do `README.md`. O índice
   acima guarda caminhos locais apenas se forem genéricos; caso contrário,

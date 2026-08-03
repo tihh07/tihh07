@@ -5,6 +5,21 @@ name: Claude PR Watch
 # num comentário ou review, ou por disparo manual. Sem cron (num schedule não há
 # contexto de PR e a action gastaria tokens sem alvo) e sem workflow_run (este repo
 # ainda não tem CI). Ambos podem ser reativados quando houver CI/rotina de verdade.
+#
+# ---------------------------------------------------------------------------
+# O QUE ESTE WORKFLOW *NÃO* COBRE
+# ---------------------------------------------------------------------------
+# - NÃO EXECUTOU NENHUMA VEZ. Zero runs no histórico do Actions desde 2026-07-24.
+#   Depende de secrets.ANTHROPIC_API_KEY, que não existe no repositório. Enquanto
+#   o secret faltar, este arquivo é intenção declarada, não controle ativo.
+# - Não verifica nada por conta própria. É reativo: sem menção a @claude por
+#   parte do dono do repo, e sem disparo manual, ele nunca acorda. Um PR pode
+#   ficar aberto indefinidamente sem que este workflow diga uma palavra — quem
+#   detecta abandono é o watchdog.
+# - Não roda em push nem em pull_request. Não existe validação automática de
+#   YAML, JSON, links ou shell neste repositório; a verificação equivalente está
+#   descrita no AGENTS.md e é executada à mão antes do PR.
+# - Não substitui revisão humana. Merge é gate humano, sempre.
 
 on:
   issue_comment:

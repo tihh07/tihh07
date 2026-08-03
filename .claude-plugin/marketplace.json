@@ -1,0 +1,26 @@
+{
+  "name": "tihh07-orquestracao",
+  "owner": {
+    "name": "Tiago Souza",
+    "url": "https://github.com/tihh07"
+  },
+  "metadata": {
+    "description": "Marketplace do ecossistema de orquestração multi-repo. Distribui o plugin-fundação: templates genéricos de executores, hooks e telemetria, derivados do blueprint público.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "fundacao",
+      "source": "./plugins/fundacao",
+      "description": "Templates de executores, guardrails e telemetria para departamentos do ecossistema. Conteúdo 100% genérico — nunca derivado de repositório privado.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Tiago Souza",
+        "url": "https://github.com/tihh07"
+      },
+      "homepage": "https://github.com/tihh07/tihh07/blob/main/docs/orchestration-blueprint.md",
+      "license": "MIT",
+      "keywords": ["orquestracao", "governanca", "auditoria", "multi-repo"]
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+name: Watchdog
+
+# Vigilância independente, deliberadamente FORA do ecossistema Claude — não
+# compartilha modo de falha com aquilo que vigia. Sem modelo, sem chave de API,
+# sem Action de terceiro: só GitHub e bash com o GITHUB_TOKEN nativo.
+#
+# Canal de alerta: a falha do job. O GitHub notifica o dono por e-mail quando um
+# workflow agendado falha — sem integração, sem segredo, sem custo.
+#
+# PORTÁVEL POR CONSTRUÇÃO: os quatro checks pulam sozinhos quando não se aplicam
+# ao repositório. Copiar este arquivo para .github/workflows/ de outro
+# departamento basta; não há nada para ajustar. É por isso que não existe uma
+# segunda cópia "template" no plugin — duas cópias divergem, uma não.
+#
+# ---------------------------------------------------------------------------
+# O QUE ESTE WORKFLOW *NÃO* COBRE — leia antes de tratar o verde como garantia
+# ---------------------------------------------------------------------------
+# - Não lê conteúdo. Detecta sinais de abandono (PR parado, branch órfã, rotina
+#   sem registro, memória estourada), nunca se o trabalho está certo.
+# - Não avalia valor. Uma rotina que registra run toda semana e não produz nada
+#   útil passa neste check — o sunset da seção 6 do blueprint é decisão humana.
+# - Não vê rotina de repositório sem telemetry/runs.jsonl. O check pula, e pular
+#   não é aprovar: é ausência de sinal.
+# - Não substitui a rotina semanal de conformidade N2, que é quem olha o
+#   conteúdo publicado.
+# - Não verifica secret scanning, ruleset de branch nem proteção de main. Esses
+#   são configuração de repositório e não aparecem aqui.
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PRs claude/* parados há mais de 7 dias
+        id: stale_prs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          AGORA=$(date -u +%s)
+          ACHADOS=0
+
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+            --json number,title,headRefName,updatedAt --limit 100 > prs.json
+
+          while read -r linha; do
+            [ -z "$linha" ] && continue
+            NUM=$(printf '%s' "$linha" | jq -r '.number')
+            REF=$(printf '%s' "$linha" | jq -r '.headRefName')
+            UPD=$(printf '%s' "$linha" | jq -r '.updatedAt')
+            TITULO=$(printf '%s' "$linha" | jq -r '.title')
+            DIAS=$(( (AGORA - $(date -u -d "$UPD" +%s)) / 86400 ))
+            if [ "$DIAS" -gt 7 ]; then
+              echo "::warning::PR #$NUM ($REF) parado há $DIAS dias — $TITULO"
+              ACHADOS=$((ACHADOS + 1))
+            fi
+          done < <(jq -c '.[] | select(.headRefName | startswith("claude/"))' prs.json)
+
+          echo "achados=$ACHADOS" >> "$GITHUB_OUTPUT"
+
+      - name: Branches claude/* sem PR aberto
+        id: orphan_branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ACHADOS=0
+
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open \
+            --json headRefName --limit 100 | jq -r '.[].headRefName' | sort -u > com_pr.txt
+
+          git branch -r --format='%(refname:short)' \
+            | sed 's|^origin/||' | grep '^claude/' | sort -u > todas.txt || true
+
+          while read -r BR; do
+            [ -z "$BR" ] && continue
+            if ! grep -qxF "$BR" com_pr.txt; then
+              ULTIMO=$(git log -1 --format=%ct "origin/$BR" 2>/dev/null || echo 0)
+              DIAS=$(( ($(date -u +%s) - ULTIMO) / 86400 ))
+              if [ "$DIAS" -gt 7 ]; then
+                echo "::warning::Branch $BR sem PR aberto, último commit há $DIAS dias — trabalho possivelmente órfão"
+                ACHADOS=$((ACHADOS + 1))
+              fi
+            fi
+          done < todas.txt
+
+          echo "achados=$ACHADOS" >> "$GITHUB_OUTPUT"
+
+      - name: Telemetria — rotina morta há mais de 26h
+        id: dead_routine
+        run: |
+          set -euo pipefail
+          ARQ="telemetry/runs.jsonl"
+
+          if [ ! -f "$ARQ" ]; then
+            echo "Sem $ARQ neste repositório — verificação não aplicável (ausência de sinal, não aprovação)."
+            echo "achados=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ULTIMO=$(tail -1 "$ARQ" | jq -r '.ts')
+          HORAS=$(( ($(date -u +%s) - $(date -u -d "$ULTIMO" +%s)) / 3600 ))
+          if [ "$HORAS" -gt 26 ]; then
+            echo "::warning::Nenhum registro de run há $HORAS horas — rotina possivelmente morta"
+            echo "achados=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "achados=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Memória de executor acima do limite
+        id: memory_limit
+        run: |
+          set -euo pipefail
+          ACHADOS=0
+          ENCONTROU=0
+
+          # Limites do blueprint: 200 linhas ou 25KB. O excedente é descartado
+          # SILENCIOSAMENTE pelo runtime — por isso precisa de vigia externo.
+          for ARQ in .claude/agent-memory/*/MEMORY.md; do
+            [ -f "$ARQ" ] || continue
+            ENCONTROU=1
+            LINHAS=$(wc -l < "$ARQ")
+            BYTES=$(wc -c < "$ARQ")
+            if [ "$LINHAS" -gt 200 ] || [ "$BYTES" -gt 25600 ]; then
+              echo "::warning::$ARQ com $LINHAS linhas / $BYTES bytes — acima do limite; o excedente está sendo descartado sem aviso"
+              ACHADOS=$((ACHADOS + 1))
+            fi
+          done
+
+          [ "$ENCONTROU" -eq 0 ] && echo "Sem memória de executor neste repositório — verificação não aplicável."
+          echo "achados=$ACHADOS" >> "$GITHUB_OUTPUT"
+
+      - name: Veredito
+        run: |
+          set -euo pipefail
+          TOTAL=$(( ${{ steps.stale_prs.outputs.achados }} \
+                  + ${{ steps.orphan_branches.outputs.achados }} \
+                  + ${{ steps.dead_routine.outputs.achados }} \
+                  + ${{ steps.memory_limit.outputs.achados }} ))
+
+          if [ "$TOTAL" -gt 0 ]; then
+            echo "Watchdog: $TOTAL achado(s). Detalhes nos warnings acima."
+            echo "A falha deste job É o alerta — o GitHub notifica o dono por e-mail."
+            exit 1
+          fi
+
+          echo "Watchdog: nada a reportar."
