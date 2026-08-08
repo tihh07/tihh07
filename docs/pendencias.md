@@ -1,8 +1,12 @@
 # Pendências do orquestrador — backlog executável
 
-> Checkup de 2026-08-02, atualizado em 2026-08-08. Escopo: repositório público
-> `tihh07/tihh07` e as rotinas agendadas que o tocam. Nenhum repositório privado
-> foi lido (**R1**).
+> Checkup de 2026-08-02, atualizado em 2026-08-08 **depois do merge do PR #8**.
+> Escopo: repositório público `tihh07/tihh07` e as rotinas agendadas que o
+> tocam. Nenhum repositório privado foi lido (**R1**).
+>
+> Nesta atualização, cada item de configuração foi reconsultado na API do GitHub
+> e o estado abaixo é o que ela devolveu — não o que a rodada anterior supunha.
+> Onde a consulta não foi possível, o item diz isso em vez de afirmar.
 >
 > Este arquivo responde à terceira pergunta do [`AGENTS.md`](../AGENTS.md) —
 > *o que está pendente?* — num formato em que cada item é **auto-contido**:
@@ -99,8 +103,9 @@ que roda continua sendo a da UI, e as duas vão divergir.
 
 ## 1. Entregue ☁️
 
-Dois lotes, ambos no PR #7. Detalhe de cada mudança está no corpo do PR e no log
-— aqui fica só o que fechou, para o backlog não virar changelog.
+Três lotes: os dois primeiros no PR #7, o terceiro no PR #8. Detalhe de cada
+mudança está no corpo do PR e no log — aqui fica só o que fechou, para o backlog
+não virar changelog.
 
 **2026-08-02 — coerência e Fase 1**
 
@@ -148,16 +153,50 @@ repositório que funciona sem configuração humana pendente.
 | N11 | `templates/watchdog.yml` era cópia quase idêntica do workflow ativo | template removido; o ativo virou portável, com os quatro checks pulando sozinhos |
 | N12 | Achados duplicados entre `AGENTS.md` e este arquivo | `AGENTS.md` passa a apontar para cá |
 
+**2026-08-08 — poda (PR #8, mesclado em `1a55679`)**
+
+| # | Item | Como fechou |
+|---|---|---|
+| N13 | `/auditoria-poda` era invocada e não existia — nem na UI, nem versionada | [`.claude/skills/auditoria-poda/SKILL.md`](../.claude/skills/auditoria-poda/SKILL.md), no padrão prompt-ponteiro |
+| N14 | Blueprint dizia "nenhuma rotina em produção ainda", com três rodando | status corrigido |
+| N15 | Backlog pedia merge do #7 e primeira run do watchdog, ambos já feitos | itens retirados |
+| N16 | Topologia de branches do `AGENTS.md` voltou a envelhecer no merge seguinte | reescrita sem contagem nominal |
+| N17 | Exemplo de telemetria em duas cópias sem canônico | template em `plugins/fundacao/templates/telemetry/` declarado canônico |
+| N18 | `CODEOWNERS` não cobria `/plugins/` nem `/.claude-plugin/` (R5) | linhas adicionadas — valem quando H1 valer |
+
 ### O que segue aberto neste bloco
 
-**N6 — o PR Watch nunca executou.** Zero runs no histórico do Actions desde
-2026-07-24. Depende de `secrets.ANTHROPIC_API_KEY` (linha 57), que não existe.
-Não há nada a corrigir no YAML — ele está bem escrito, com filtro de autor (R9),
-permissões mínimas e concurrency; o cabeçalho agora declara isso em vez de
-deixar por suposto. Bloqueado por **H3**.
+**N6 — o PR Watch acordou pela primeira vez, e o filtro de autor o barrou.**
+Até 2026-08-08 o histórico tinha zero runs. Os comentários de review no PR #8
+dispararam cinco eventos naquele dia, e a API mostra o desfecho de cada um:
+
+```
+Claude PR Watch | 2026-08-08T18:24:33Z | pull_request_review_comment | completed/skipped
+Claude PR Watch | 2026-08-08T18:24:33Z | pull_request_review_comment | completed/cancelled
+Claude PR Watch | 2026-08-08T18:24:33Z | pull_request_review_comment | completed/cancelled
+Claude PR Watch | 2026-08-08T18:24:33Z | pull_request_review_comment | completed/skipped
+Claude PR Watch | 2026-08-08T18:24:33Z | pull_request_review    | completed/skipped
+```
+
+O job do run mais recente reporta `claude | skipped | steps=0`: nenhum passo
+chegou a existir, então o `Checkout` e a action nunca rodaram e a chave de API
+nunca foi consultada. A condição `if` da linha 52 barrou tudo — os comentários
+não continham `@claude`. É a **primeira evidência de campo de R9/R2**: os
+eventos chegaram, e o gate de autor + menção segurou. Esse controle deixou de
+ser suposição.
+
+O que segue aberto é a outra metade: **nenhuma execução real** aconteceu, e ela
+continua bloqueada por **H3**. Run que pula não exercita a action, o modelo, as
+permissões nem o prompt.
+
+**Correção junto:** o cabeçalho do workflow afirmava *"NÃO EXECUTOU NENHUMA VEZ.
+Zero runs no histórico"*, o que passou a ser falso no mesmo dia em que foi
+escrito. Reescrito para distinguir *acordar* de *executar* — é o tipo de frase
+com data de validade que a categoria "realidade antiga" da auditoria de poda
+existe para pegar.
 
 **Verificação, quando destravar:** um `workflow_dispatch` manual conclui com
-sucesso. É o teste mais barato, e só ele tira o workflow de "não verificado".
+`success` e o job mostra passos executados — não `skipped`.
 
 ---
 ## 2. Exige o humano 👤
@@ -167,14 +206,23 @@ controles que sustentam o gate humano. A nuvem só consegue **reportar que estã
 abertos**, o que este arquivo faz.
 
 ### H1 — `main` não tem proteção nem ruleset
-**Severidade: alta**
+**Severidade: alta · ABERTO — reverificado em 2026-08-08**
 
-A API confirma `"protected": false`. Nada impede push direto, force push ou
-merge sem revisão. O gate humano do blueprint (seção 8) hoje é convenção, não
-controle.
+Duas consultas independentes, ambas depois do merge do PR #8:
+`GET /repos/tihh07/tihh07/branches/main` devolve `protected: false`, e
+`GET /repos/tihh07/tihh07/rulesets` devolve `[]`. Nada impede push direto, force
+push ou merge sem revisão. O gate humano do blueprint (seção 8) hoje é
+convenção, não controle — e o merge do próprio #8 é a prova: nada no
+repositório o teria impedido de entrar sem revisão.
 
-**Ação:** ruleset em `main` com PR obrigatório e "Require review from Code
-Owners".
+**Ação:** ruleset em `main` com PR obrigatório, e bloqueio de deleção e de
+force push.
+
+> **Sobre "Require review from Code Owners" (H2):** com um único dono, exigir
+> aprovação de code owner bloqueia os PRs do próprio dono, porque o GitHub não
+> aceita autoaprovação. Enquanto não houver um segundo revisor, o ruleset
+> entrega o essencial de H1 — PR obrigatório, sem force push, sem deleção — e o
+> H2 permanece parcialmente aberto por escolha declarada, não por esquecimento.
 
 ### H2 — `CODEOWNERS` é inerte
 **Severidade: alta**
@@ -189,12 +237,21 @@ nada sem "Require review from Code Owners" ativo. Mesmo clique de H1.
 > com H1.
 
 ### H3 — `ANTHROPIC_API_KEY` ausente
-**Severidade: média**
+**Severidade: média · ABERTO — reverificado em 2026-08-08**
 
-Bloqueia N6. Enquanto não existir, o PR Watch é decoração.
+`GET /repos/tihh07/tihh07/actions/secrets` devolve `total_count: 0` — nenhum
+secret de Actions existe no repositório. Bloqueia a metade executável de N6.
+
+**Ação:** `gh secret set ANTHROPIC_API_KEY` **no terminal do dono**. O valor não
+passa por sessão de agente nem por chat: quem cria o segredo é quem o digita.
 
 ### H4 — Secret scanning e push protection desligados
-**Severidade: alta**
+**Severidade: alta · ABERTO — reverificado em 2026-08-08**
+
+`GET /repos/tihh07/tihh07` devolve, em `security_and_analysis`, `disabled` nos
+cinco campos: `secret_scanning`, `secret_scanning_push_protection`,
+`secret_scanning_non_provider_patterns`, `secret_scanning_validity_checks` e
+`dependabot_security_updates`.
 
 Num repositório público N2, push protection é a única barreira que age **antes**
 de o segredo virar público. Depois do push, conteúdo público é comprometido, não
@@ -219,24 +276,25 @@ declarou inegociável.
 dados de cada repositório no escopo das rotinas.
 
 ### H6 — Branch residual do PR #7 no remoto
-**Severidade: média**
+**Severidade: média · ✅ FECHADO em 2026-08-08**
 
-`claude/session-status-pendencias-842ocg` — a branch de origem do PR #7 —
-existe no remoto com o tip exato do momento do merge (2026-08-03). A árvore
-dela é idêntica à de `main`: zero trabalho não mesclado, verificado por diff de
-árvore em 2026-08-08. É o primeiro caso real da categoria 4 da auditoria de
-poda (artefato órfão).
+A branch `claude/session-status-pendencias-842ocg` foi apagada no remoto junto
+com o merge do PR #8. O `git fetch --prune` registrou as duas deleções:
 
-O custo de deixar: a partir de ~2026-08-11 o check "branches `claude/*` sem PR
-aberto" do watchdog passa a falhar todo dia por causa dela. Alerta conhecido e
-benigno é ruído, e ruído treina o revisor a ignorar o alarme que importa.
+```
+- [deleted]  (none) -> origin/claude/auditoria-poda-cjh5ba
+- [deleted]  (none) -> origin/claude/session-status-pendencias-842ocg
+```
 
-**Ação:** apagar a branch no GitHub (página do PR #7 → "Delete branch").
-Nenhum agente faz isso: deleção de branch remota é o que o `guard-push`
-bloqueia, e apagar é decisão humana por doutrina.
+**Verificação cumprida:** `git branch -r` devolve apenas `origin/HEAD` e
+`origin/main`. Nenhuma branch órfã restou, e o check "branches `claude/*` sem
+PR aberto" do watchdog não tem mais motivo para falhar a partir de 08-11 — o
+alerta previsto foi evitado antes de existir.
 
-**Verificação:** `git branch -r` mostra só `main` e branches de trabalho
-ativas.
+Fica o registro do padrão, que é o que interessa reter: o item nasceu porque a
+branch do PR #7 sobreviveu ao merge. Apagar no ato do merge (`--delete-branch`,
+ou o botão "Delete branch" na página do PR) é o que impede a categoria 4 da
+auditoria de poda de reaparecer todo ciclo.
 
 > H1, H2 e H4 são entrega prevista da **Fase 1**, ainda 🔜. Não são surpresa;
 > são dívida declarada. O que este checkup evidencia é a **ordem invertida**: as
@@ -325,15 +383,47 @@ escrito não é controle aplicado. Vale para o que acabou de ser escrito.
 
 **Ação:** instalar o plugin no piloto e corrigir o que a realidade contradisser.
 
+#### L3.1 — O `guard-push` depende de `jq`, ausente na máquina local
+**Severidade: média · Executor: 👤 Humano (instalar) · ABERTO — achado em 2026-08-08**
+
+Primeira execução do hook fora de teste sintético, na máquina Windows do dono:
+
+```
+guard-push: jq não encontrado; bloqueando por precaução.  exit=2
+```
+
+`command -v jq` não devolve nada, e não há binário em `/usr/bin` nem em
+`/mingw64/bin` do Git Bash. O hook declara na linha 19 que **falha fechada**, e
+falhou exatamente como prometido — o comportamento está certo. O problema é a
+consequência: instalado assim, ele bloqueia *todo* push, inclusive os
+`claude/*` que deveria liberar. Um guardrail que nega tudo é indistinguível de
+um guardrail quebrado, e o primeiro reflexo de quem for bloqueado é desinstalar
+o hook.
+
+A lógica em si está íntegra. Com um `jq` mínimo no `PATH`, os doze casos passam:
+bloqueia push para `main` e `master`, o bypass `echo claude/ && git push origin
+main`, force push e `--force-with-lease` mesmo em `claude/*`, deleção por
+`--delete` e por refspec `:branch`, e destino fora de `claude/*`; libera
+`claude/*`, `-u`, `HEAD:claude/*` e comando que não é push.
+
+**Ação:** instalar `jq` antes de habilitar o hook em qualquer departamento
+(`winget install jqlang.jq`, ou o pacote do Git Bash). Vale como pré-requisito
+declarado do plugin, não como defeito dele.
+
+**Verificação:** `command -v jq` devolve um caminho, e o hook passa a liberar
+`git push origin claude/<algo>` em vez de bloquear por precaução.
+
 ---
 
 ## Ordem sugerida
 
 1. **P0 e P1** — os únicos itens com prazo imposto por terceiro: a rotina
-   dispara sozinha toda segunda, e já foram duas semanas em violação.
+   dispara sozinha toda segunda, e já foram duas semanas em violação. A próxima
+   é **2026-08-10**, dois dias depois desta atualização.
 2. **H1, H2, H4** — um único bloco de configuração; destrava o gate humano e
    fecha R3, R5 e R6. As linhas de `/plugins/` e `/.claude-plugin/` no
-   `CODEOWNERS` já existem e passam a valer junto.
+   `CODEOWNERS` já existem e passam a valer junto. Comandos prontos no
+   apêndice abaixo.
 3. **L2** — a decisão de sanitização da taxonomia; sem ela o índice continua
    descrevendo um ecossistema que não existe mais.
 4. **H5** — verificação barata, consequência cara.
@@ -346,3 +436,39 @@ em 2026-08-03/04 e saiu da lista (ver L3).
 
 Os itens ☁️ não dependem dos demais e podem ser executados a qualquer momento,
 inclusive antes das decisões humanas.
+
+---
+
+## Apêndice — comandos do bloco H1/H4
+
+Ficam registrados aqui porque a doutrina exige que o clique seja humano, não que
+o humano redija o comando. Rodam no terminal do dono, com `gh` autenticado.
+
+**H1 — ruleset em `main`:** PR obrigatório, sem force push, sem deleção.
+
+```bash
+gh api repos/tihh07/tihh07/rulesets -X POST --input - <<'EOF'
+{"name":"protect-main","target":"branch","enforcement":"active","conditions":{"ref_name":{"include":["~DEFAULT_BRANCH"],"exclude":[]}},"rules":[{"type":"deletion"},{"type":"non_fast_forward"},{"type":"pull_request","parameters":{"required_approving_review_count":0,"dismiss_stale_reviews_on_push":false,"require_code_owner_review":false,"require_last_push_approval":false,"required_review_thread_resolution":false,"allowed_merge_methods":["merge","squash"]}}]}
+EOF
+```
+
+`required_approving_review_count: 0` e `require_code_owner_review: false` são
+deliberados enquanto houver um único dono — ver a nota em H1. Com um segundo
+revisor, subir os dois é uma edição de uma linha cada.
+
+**H4 — secret scanning e push protection:**
+
+```bash
+gh api -X PATCH repos/tihh07/tihh07 --input - <<'EOF'
+{"security_and_analysis":{"secret_scanning":{"status":"enabled"},"secret_scanning_push_protection":{"status":"enabled"}}}
+EOF
+```
+
+**Verificação dos dois, em um comando:**
+
+```bash
+gh api repos/tihh07/tihh07/rulesets --jq 'length'; gh api repos/tihh07/tihh07 --jq '.security_and_analysis'
+```
+
+Fecha quando o primeiro devolve `1` e os dois campos de `secret_scanning`
+aparecem como `enabled`.
