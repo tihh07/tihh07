@@ -183,9 +183,10 @@ Owners".
 mitigação de **R5**. O próprio arquivo avisa nas linhas 6-8 que não bloqueia
 nada sem "Require review from Code Owners" ativo. Mesmo clique de H1.
 
-> Com o plugin adicionado, `CODEOWNERS` deveria cobrir também `/plugins/` e
-> `/.claude-plugin/` — é control-plane distribuível, exatamente o que R5
-> protege. ☁️ A nuvem pode propor a linha; ela só passa a valer com H1.
+> Com o plugin adicionado, `CODEOWNERS` cobre também `/plugins/` e
+> `/.claude-plugin/` — control-plane distribuível, exatamente o que R5 protege.
+> ☁️ Linhas adicionadas em 2026-08-08; como todo o arquivo, só passam a valer
+> com H1.
 
 ### H3 — `ANTHROPIC_API_KEY` ausente
 **Severidade: média**
@@ -311,8 +312,8 @@ escrito não é controle aplicado. Vale para o que acabou de ser escrito.
 1. **P0 e P1** — os únicos itens com prazo imposto por terceiro: a rotina
    dispara sozinha toda segunda, e já foram duas semanas em violação.
 2. **H1, H2, H4** — um único bloco de configuração; destrava o gate humano e
-   fecha R3, R5 e R6. Aproveitar para incluir `/plugins/` e `/.claude-plugin/`
-   no `CODEOWNERS`.
+   fecha R3, R5 e R6. As linhas de `/plugins/` e `/.claude-plugin/` no
+   `CODEOWNERS` já existem e passam a valer junto.
 3. **L2** — a decisão de sanitização da taxonomia; sem ela o índice continua
    descrevendo um ecossistema que não existe mais.
 4. **H5** — verificação barata, consequência cara.
