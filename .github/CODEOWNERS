@@ -21,3 +21,8 @@
 
 # Perfil público: o que este arquivo contém é o que o mundo vê.
 /README.md          @tihh07
+
+# Control-plane distribuível: o plugin-fundação é template instalado por outros
+# departamentos — exatamente o que R5 protege.
+/plugins/           @tihh07
+/.claude-plugin/    @tihh07

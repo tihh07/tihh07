@@ -171,8 +171,9 @@ Uma lista dessas envelhece no primeiro merge e passa a descrever uma realidade
 que não existe mais.
 
 Para saber o que está vivo agora, `git branch -r` responde melhor que qualquer
-documento. Três branches já cumpriram esse ciclo e foram removidas (PRs #2, #3,
-#5 e #6); o histórico delas está no log, não aqui.
+documento. As branches que já cumpriram esse ciclo foram removidas no merge dos
+seus PRs; o histórico delas está no log, não aqui — mantê-las contadas neste
+arquivo repetiria o defeito que esta seção existe para evitar.
 
 O gate humano vale para todas: nada entra em `main` sem PR revisado.
 

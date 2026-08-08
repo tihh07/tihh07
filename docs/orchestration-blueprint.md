@@ -1,7 +1,8 @@
 # Blueprint: Ecossistema de Agentes de Orquestração Multi-Repo
 
-> **RFC / Design Doc** — versão 0.1 (Fase 0) · 2026-07-24
-> Status: 🔜 nenhuma rotina em produção ainda; este documento É a Fase 0.
+> **RFC / Design Doc** — versão 0.1 (Fase 0) · 2026-07-24 · status revisado em 2026-08-08
+> Status: este documento É a Fase 0. Duas rotinas semanais de governança e o watchdog diário já
+> rodam em produção ([estado vivo](pendencias.md)); a rotina da Fase 2 (piloto) segue 🔜.
 > Licença: texto [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · snippets de código [MIT](https://opensource.org/licenses/MIT)
 >
 > *Instância aplicada da metodologia [PromptOps OS](https://promptops-os-brasil.tiagosouza.chatgpt.site/): demandas → entregas com IA, contexto e critérios de qualidade.*
@@ -446,6 +447,10 @@ corte: rotina que consome mais tempo de revisão do que economiza, por 3 semanas
 ---
 
 ## Apêndice A — Snippets de referência (🔜 não executados; ilustrativos)
+
+Para os formatos de telemetria, a cópia operacional canônica é o template em
+[`plugins/fundacao/templates/telemetry/README.md`](../plugins/fundacao/templates/telemetry/README.md)
+— os snippets abaixo são ilustração congelada na versão deste RFC.
 
 **Executor com memória e tools mínimos** (`.claude/agents/auditor-seguranca.md`):
 

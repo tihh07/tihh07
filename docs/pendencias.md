@@ -1,6 +1,6 @@
 # Pendências do orquestrador — backlog executável
 
-> Checkup de 2026-08-02, atualizado em 2026-08-03. Escopo: repositório público
+> Checkup de 2026-08-02, atualizado em 2026-08-08. Escopo: repositório público
 > `tihh07/tihh07` e as rotinas agendadas que o tocam. Nenhum repositório privado
 > foi lido (**R1**).
 >
@@ -183,9 +183,10 @@ Owners".
 mitigação de **R5**. O próprio arquivo avisa nas linhas 6-8 que não bloqueia
 nada sem "Require review from Code Owners" ativo. Mesmo clique de H1.
 
-> Com o plugin adicionado, `CODEOWNERS` deveria cobrir também `/plugins/` e
-> `/.claude-plugin/` — é control-plane distribuível, exatamente o que R5
-> protege. ☁️ A nuvem pode propor a linha; ela só passa a valer com H1.
+> Com o plugin adicionado, `CODEOWNERS` cobre também `/plugins/` e
+> `/.claude-plugin/` — control-plane distribuível, exatamente o que R5 protege.
+> ☁️ Linhas adicionadas em 2026-08-08; como todo o arquivo, só passam a valer
+> com H1.
 
 ### H3 — `ANTHROPIC_API_KEY` ausente
 **Severidade: média**
@@ -216,6 +217,26 @@ declarou inegociável.
 
 **Ação:** confirmar opt-out com evidência datada; verificar titularidade dos
 dados de cada repositório no escopo das rotinas.
+
+### H6 — Branch residual do PR #7 no remoto
+**Severidade: média**
+
+`claude/session-status-pendencias-842ocg` — a branch de origem do PR #7 —
+existe no remoto com o tip exato do momento do merge (2026-08-03). A árvore
+dela é idêntica à de `main`: zero trabalho não mesclado, verificado por diff de
+árvore em 2026-08-08. É o primeiro caso real da categoria 4 da auditoria de
+poda (artefato órfão).
+
+O custo de deixar: a partir de ~2026-08-11 o check "branches `claude/*` sem PR
+aberto" do watchdog passa a falhar todo dia por causa dela. Alerta conhecido e
+benigno é ruído, e ruído treina o revisor a ignorar o alarme que importa.
+
+**Ação:** apagar a branch no GitHub (página do PR #7 → "Delete branch").
+Nenhum agente faz isso: deleção de branch remota é o que o `guard-push`
+bloqueia, e apagar é decisão humana por doutrina.
+
+**Verificação:** `git branch -r` mostra só `main` e branches de trabalho
+ativas.
 
 > H1, H2 e H4 são entrega prevista da **Fase 1**, ainda 🔜. Não são surpresa;
 > são dívida declarada. O que este checkup evidencia é a **ordem invertida**: as
@@ -286,20 +307,23 @@ Vale decidir antes se a resposta é uma rotina com mais fontes ou várias rotina
 menores: uma rotina única com 18 repositórios anexados aumenta o raio de
 qualquer erro dela, e reencontra o problema de P0 numa escala maior.
 
-### L3 — Nada do que foi entregue foi exercitado
+### L3 — Executores e hook seguem não exercitados
 **Severidade: média · Executor: ☁️ Nuvem + 👤 Humano**
 
-Os oito executores foram escritos a partir da especificação e nenhum rodou em
-trabalho real. O hook não foi instalado em nenhum departamento. O watchdog só
-executa depois do primeiro agendamento — e só existe para o GitHub depois de
-estar em `main`. O plugin está em 0.1.0 e o
+**Parcialmente fechado pela realidade (2026-08-08):** com o merge do PR #7 em
+2026-08-03, o watchdog entrou em produção e executou por agendamento cinco dias
+seguidos (2026-08-04 a 2026-08-08), todos verdes. "Confirmar que o job executa"
+deixou de ser pendência.
+
+O resto continua aberto: os oito executores foram escritos a partir da
+especificação e nenhum rodou em trabalho real; o hook não foi instalado em
+nenhum departamento; o plugin está em 0.1.0 e o
 [README dele](../plugins/fundacao/README.md) declara isso.
 
 É a mesma armadilha que o `oficial-governanca` existe para detectar: artefato
 escrito não é controle aplicado. Vale para o que acabou de ser escrito.
 
-**Ação:** rodar o watchdog via `workflow_dispatch` para confirmar que o job
-executa; instalar o plugin no piloto e corrigir o que a realidade contradisser.
+**Ação:** instalar o plugin no piloto e corrigir o que a realidade contradisser.
 
 ---
 
@@ -307,17 +331,18 @@ executa; instalar o plugin no piloto e corrigir o que a realidade contradisser.
 
 1. **P0 e P1** — os únicos itens com prazo imposto por terceiro: a rotina
    dispara sozinha toda segunda, e já foram duas semanas em violação.
-2. **Merge do PR #7** — destrava o watchdog, que só existe para o GitHub depois
-   de estar em `main`, e com ele o primeiro `workflow_dispatch` de L3.
-3. **H1, H2, H4** — um único bloco de configuração; destrava o gate humano e
-   fecha R3, R5 e R6. Aproveitar para incluir `/plugins/` e `/.claude-plugin/`
-   no `CODEOWNERS`.
-4. **L2** — a decisão de sanitização da taxonomia; sem ela o índice continua
+2. **H1, H2, H4** — um único bloco de configuração; destrava o gate humano e
+   fecha R3, R5 e R6. As linhas de `/plugins/` e `/.claude-plugin/` no
+   `CODEOWNERS` já existem e passam a valer junto.
+3. **L2** — a decisão de sanitização da taxonomia; sem ela o índice continua
    descrevendo um ecossistema que não existe mais.
-5. **H5** — verificação barata, consequência cara.
-6. **L1 e L4** — cobertura: auditar os quatro conhecidos, decidir o que fazer
+4. **H5** — verificação barata, consequência cara.
+5. **L1 e L4** — cobertura: auditar os quatro conhecidos, decidir o que fazer
    com os ~14 restantes.
-7. **P2 (metade humana), H3, N6, L3** — validação das automações.
+6. **P2 (metade humana), H3, N6, L3** — validação das automações.
+
+O antigo passo 2 — merge do PR #7 e primeira execução do watchdog — foi cumprido
+em 2026-08-03/04 e saiu da lista (ver L3).
 
 Os itens ☁️ não dependem dos demais e podem ser executados a qualquer momento,
 inclusive antes das decisões humanas.
