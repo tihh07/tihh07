@@ -16,19 +16,37 @@
 #     }
 #   }
 #
-# Requer jq. Falha fechada: se não conseguir interpretar a entrada, bloqueia.
+# Lê o comando com jq ou, na falta dele, com o módulo json do Python — ambos
+# stdlib do ambiente, nenhum pacote a instalar. Numa máquina Windows sem jq a
+# versão anterior bloqueava TODO push, inclusive os claude/* que deve liberar:
+# guardrail que nega tudo é indistinguível de guardrail quebrado, e convida a
+# desinstalação. Falha fechada continua valendo — sem nenhum dos dois leitores,
+# ou com entrada ilegível, bloqueia.
 
 set -uo pipefail
 
 INPUT=$(cat)
 
-if ! command -v jq >/dev/null 2>&1; then
-  echo "guard-push: jq não encontrado; bloqueando por precaução." >&2
-  exit 2
-fi
+leia_comando() {
+  if command -v jq >/dev/null 2>&1; then
+    printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null && return 0
+    return 1
+  fi
+  for PY in python3 python py; do
+    command -v "$PY" >/dev/null 2>&1 || continue
+    printf '%s' "$INPUT" | "$PY" -c 'import json,sys
+try:
+    print(json.load(sys.stdin).get("tool_input", {}).get("command", ""))
+except Exception:
+    sys.exit(1)' 2>/dev/null && return 0
+    return 1
+  done
+  echo "guard-push: nem jq nem python encontrados; bloqueando por precaução." >&2
+  return 2
+}
 
-CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null) || {
-  echo "guard-push: entrada ilegível; bloqueando por precaução." >&2
+CMD=$(leia_comando) || {
+  [ $? -eq 2 ] || echo "guard-push: entrada ilegível; bloqueando por precaução." >&2
   exit 2
 }
 

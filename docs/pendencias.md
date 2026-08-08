@@ -1,12 +1,32 @@
 # Pendências do orquestrador — backlog executável
 
-> Checkup de 2026-08-02, atualizado em 2026-08-08 **depois do merge do PR #8**.
-> Escopo: repositório público `tihh07/tihh07` e as rotinas agendadas que o
-> tocam. Nenhum repositório privado foi lido (**R1**).
+> Checkup de 2026-08-02, atualizado em 2026-08-08. Escopo: repositório público
+> `tihh07/tihh07` e as rotinas agendadas que o tocam. Nenhum repositório privado
+> foi lido (**R1**).
 >
-> Nesta atualização, cada item de configuração foi reconsultado na API do GitHub
-> e o estado abaixo é o que ela devolveu — não o que a rodada anterior supunha.
-> Onde a consulta não foi possível, o item diz isso em vez de afirmar.
+> Cada item de configuração foi reconsultado na API do GitHub e o estado abaixo
+> é o que ela devolveu — não o que a rodada anterior supunha. Onde a consulta
+> não foi possível, o item diz isso em vez de afirmar.
+
+## Placar em 2026-08-08
+
+| Item | Estado | Por quê |
+|---|---|---|
+| **H1** — proteção de `main` | ✅ fechado | ruleset `protect-main` ativo, `bypass: never` |
+| **H4** — secret scanning + push protection | ✅ fechado | ambos `enabled` na API |
+| **H6** — branch órfã | ✅ fechado | apagada no merge do #8 |
+| **L3.1** — `guard-push` travado sem `jq` | ✅ fechado | dependência dura removida; 13/13 sem shim |
+| **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
+| **P0 · P1** — rotina viola R1 | ❌ aberto | **fora do alcance de agente**; dispara 2026-08-10 |
+| **H3** — `ANTHROPIC_API_KEY` | ❌ aberto | proibido a agente por regra, não por ferramenta |
+| **H5 · L2 · L4** | ❌ aberto | decisão humana |
+| **L1 · L3** | ❌ aberto | exigem os repositórios privados — R1 barra desta sessão |
+
+Os quatro fechados saíram todos de uma rodada só. Os abertos **não são resíduo
+de esforço**: cada um está preso a um limite declarado — permissão de
+ferramenta, regra de conduta, decisão humana ou R1. A distinção importa porque
+backlog que mistura "falta fazer" com "não pode ser feito assim" treina o leitor
+a ignorar os dois.
 >
 > Este arquivo responde à terceira pergunta do [`AGENTS.md`](../AGENTS.md) —
 > *o que está pendente?* — num formato em que cada item é **auto-contido**:
@@ -65,6 +85,17 @@ depois.
 **Verificação:** nenhuma rotina lista repositório público e privado
 simultaneamente.
 
+> **Tentado por agente em 2026-08-08, sem sucesso — e o motivo importa.** Três
+> canais foram testados: o MCP de tarefas agendadas lista apenas as tarefas
+> **locais** desta máquina (auditoria da biblioteca e diagnóstico mensal), não
+> as rotinas da nuvem; `CronCreate` cria job em memória da sessão, que morre com
+> ela; e a skill `schedule` foi barrada pelo classificador de permissão.
+>
+> O "👤 Humano" deste item deixou de ser só doutrina: **é o que a ferramenta
+> impõe**. Nenhum agente alcança a configuração das rotinas da nuvem a partir
+> daqui, que é exatamente o desenho que o blueprint pede. O custo é que P0 e P1
+> só fecham na UI, e a rotina dispara sozinha toda segunda enquanto isso.
+
 ### P1 — A rotina de control-plane carrega quatro conectores
 **Severidade: alta · Executor: 👤 Humano · ABERTO**
 
@@ -77,6 +108,9 @@ padrão, então isso é herança da criação, não decisão.
 **Ação:** remover os quatro conectores da rotina.
 
 **Verificação:** a rotina executa e produz o mesmo relatório sem eles.
+
+> Mesmo bloqueio de ferramenta descrito em P0: a configuração da rotina não é
+> alcançável por agente a partir daqui.
 
 ### P2 — Prompt de rotina fora do git
 **Severidade: média · Executor: ☁️ Nuvem ✅ / 👤 Humano ABERTO**
@@ -206,56 +240,93 @@ controles que sustentam o gate humano. A nuvem só consegue **reportar que estã
 abertos**, o que este arquivo faz.
 
 ### H1 — `main` não tem proteção nem ruleset
-**Severidade: alta · ABERTO — reverificado em 2026-08-08**
+**Severidade: alta · ✅ FECHADO em 2026-08-08**
 
-Duas consultas independentes, ambas depois do merge do PR #8:
-`GET /repos/tihh07/tihh07/branches/main` devolve `protected: false`, e
-`GET /repos/tihh07/tihh07/rulesets` devolve `[]`. Nada impede push direto, force
-push ou merge sem revisão. O gate humano do blueprint (seção 8) hoje é
-convenção, não controle — e o merge do próprio #8 é a prova: nada no
-repositório o teria impedido de entrar sem revisão.
+O ruleset `protect-main` foi criado e está **ativo**. O que a API devolve agora:
 
-**Ação:** ruleset em `main` com PR obrigatório, e bloqueio de deleção e de
-force push.
+```
+20591796 protect-main active
+{"regras":["deletion","non_fast_forward","pull_request"],"bypass":"never"}
+```
 
-> **Sobre "Require review from Code Owners" (H2):** com um único dono, exigir
-> aprovação de code owner bloqueia os PRs do próprio dono, porque o GitHub não
-> aceita autoaprovação. Enquanto não houver um segundo revisor, o ruleset
-> entrega o essencial de H1 — PR obrigatório, sem force push, sem deleção — e o
-> H2 permanece parcialmente aberto por escolha declarada, não por esquecimento.
+`bypass: never` vale inclusive para o dono: nem ele empurra direto para `main`.
+O gate humano do blueprint (seção 8) deixou de ser convenção e virou controle.
+
+Até esta data nada no repositório teria impedido um merge sem revisão — o
+próprio PR #8 entrou nessa janela. A janela fechou.
+
+> **`require_code_owner_review` fica em `false`, e H2 segue parcialmente
+> aberto.** Com um único dono, exigir aprovação de code owner bloquearia os PRs
+> do próprio dono: o GitHub não aceita autoaprovação. O ruleset entrega o
+> essencial — PR obrigatório, sem force push, sem deleção. Subir para revisão de
+> code owner é uma edição de uma linha quando houver um segundo revisor, e é a
+> condição que falta para `CODEOWNERS` deixar de ser inerte.
+
+**Verificação cumprida:** `gh api repos/tihh07/tihh07/rulesets --jq 'length'`
+devolve `1`.
 
 ### H2 — `CODEOWNERS` é inerte
-**Severidade: alta**
+**Severidade: alta → média · PARCIAL — bloqueado por ter um único dono**
 
-`.github/CODEOWNERS` cobre `/.claude/`, `/.github/`, `/docs/` e `/README.md` — a
-mitigação de **R5**. O próprio arquivo avisa nas linhas 6-8 que não bloqueia
-nada sem "Require review from Code Owners" ativo. Mesmo clique de H1.
+`.github/CODEOWNERS` cobre `/.claude/`, `/.github/`, `/docs/`, `/README.md` e,
+desde 2026-08-08, `/plugins/` e `/.claude-plugin/` — control-plane distribuível,
+exatamente o que **R5** protege.
 
-> Com o plugin adicionado, `CODEOWNERS` cobre também `/plugins/` e
-> `/.claude-plugin/` — control-plane distribuível, exatamente o que R5 protege.
-> ☁️ Linhas adicionadas em 2026-08-08; como todo o arquivo, só passam a valer
-> com H1.
+Com H1 fechado, o arquivo deixou de ser inerte pela metade: `main` agora exige
+PR, então as mudanças passam por um lugar onde a revisão *pode* acontecer. O que
+falta é a exigência de que ela aconteça — `require_code_owner_review` está em
+`false` no ruleset.
+
+**E não é esquecimento: é aritmética.** O GitHub não aceita autoaprovação. Com um
+único dono e code-owner review exigido, todo PR do dono ficaria travado sem
+ninguém que possa destravá-lo — o controle viraria um bloqueio total, e o
+primeiro reflexo seria desligá-lo. Mesmo padrão do L3.1: controle que nega tudo
+não sobrevive à primeira semana.
+
+**Ação, quando houver um segundo revisor:** trocar `require_code_owner_review`
+para `true` no ruleset `protect-main` (id 20591796). É uma linha.
+
+**Verificação:** um PR que toca `/plugins/` fica bloqueado até o code owner
+aprovar.
 
 ### H3 — `ANTHROPIC_API_KEY` ausente
-**Severidade: média · ABERTO — reverificado em 2026-08-08**
+**Severidade: média · ABERTO por regra, não por esquecimento**
 
 `GET /repos/tihh07/tihh07/actions/secrets` devolve `total_count: 0` — nenhum
 secret de Actions existe no repositório. Bloqueia a metade executável de N6.
 
-**Ação:** `gh secret set ANTHROPIC_API_KEY` **no terminal do dono**. O valor não
-passa por sessão de agente nem por chat: quem cria o segredo é quem o digita.
+**Ação:** `gh secret set ANTHROPIC_API_KEY` **no terminal do dono**.
+
+**Este item nunca será fechado por agente, e não é limitação de ferramenta.**
+Manipular chave de API é proibido por regra de conduta, independentemente de
+quem peça ou de como o pedido seja formulado: o valor não passa por sessão de
+agente nem por chat. Quem cria o segredo é quem o digita. Registrado assim para
+que uma sessão futura não trate isso como pendência a executar.
 
 ### H4 — Secret scanning e push protection desligados
-**Severidade: alta · ABERTO — reverificado em 2026-08-08**
+**Severidade: alta · ✅ FECHADO em 2026-08-08**
 
-`GET /repos/tihh07/tihh07` devolve, em `security_and_analysis`, `disabled` nos
-cinco campos: `secret_scanning`, `secret_scanning_push_protection`,
-`secret_scanning_non_provider_patterns`, `secret_scanning_validity_checks` e
-`dependabot_security_updates`.
+Os dois controles foram ligados. O que a API devolve agora:
+
+```json
+{"secret_scanning":{"status":"enabled"},
+ "secret_scanning_push_protection":{"status":"enabled"},
+ "secret_scanning_non_provider_patterns":{"status":"disabled"},
+ "secret_scanning_validity_checks":{"status":"disabled"},
+ "dependabot_security_updates":{"status":"disabled"}}
+```
 
 Num repositório público N2, push protection é a única barreira que age **antes**
 de o segredo virar público. Depois do push, conteúdo público é comprometido, não
-corrigível — é o que o runbook do [`SECURITY.md`](../SECURITY.md) diz.
+corrigível — é o que o runbook do [`SECURITY.md`](../SECURITY.md) diz. Essa
+barreira agora existe.
+
+**Os outros três campos seguem `disabled`, e isso é escolha, não sobra.**
+`non_provider_patterns` amplia a varredura para segredos genéricos ao custo de
+falso positivo; `validity_checks` envia o candidato ao provedor para saber se
+está ativo; `dependabot_security_updates` não tem o que atualizar num
+repositório sem dependências. Ligar os dois primeiros é decisão de quem revisa o
+ruído — ficam registrados aqui como disponíveis, não como pendência.
 
 ### H5 — Pré-condições jurídicas não verificadas
 **Severidade: alta**
@@ -318,6 +389,17 @@ Fundação — é o piloto da Fase 1. Trazer só o entregável G, sanitizado.
 
 **Restrição:** uma sessão por repositório. Esta sessão não pode fazer nenhuma
 delas — R1 vale para ela também.
+
+> Pedido explicitamente em 2026-08-08 e **não executado, por R1**. A regra é do
+> próprio repositório: *"nenhuma sessão mistura repositórios privados com este,
+> que é público"*. Auditar os quatro daqui exigiria abrir os privados na mesma
+> sessão que escreve no público — o canal exato que R1 fecha, e o mesmo defeito
+> que P0 aponta na rotina de control-plane. Fazer isso para "fechar o backlog"
+> seria violar o controle para poder marcar como concluído o item que pede o
+> controle.
+>
+> **Como destravar:** quatro sessões na nuvem, uma por repositório, cada uma
+> escopada no seu. Só o entregável G volta, sanitizado.
 
 ### L2 — O índice publicado tem o formato errado, não só linhas faltando
 **Severidade: alta · Executor: 👤 Humano (decisão) depois ☁️ Nuvem**
@@ -383,8 +465,8 @@ escrito não é controle aplicado. Vale para o que acabou de ser escrito.
 
 **Ação:** instalar o plugin no piloto e corrigir o que a realidade contradisser.
 
-#### L3.1 — O `guard-push` depende de `jq`, ausente na máquina local
-**Severidade: média · Executor: 👤 Humano (instalar) · ABERTO — achado em 2026-08-08**
+#### L3.1 — O `guard-push` dependia de `jq`, ausente na máquina local
+**Severidade: média · ✅ FECHADO em 2026-08-08 · Executor: ☁️ Nuvem**
 
 Primeira execução do hook fora de teste sintético, na máquina Windows do dono:
 
@@ -392,26 +474,33 @@ Primeira execução do hook fora de teste sintético, na máquina Windows do don
 guard-push: jq não encontrado; bloqueando por precaução.  exit=2
 ```
 
-`command -v jq` não devolve nada, e não há binário em `/usr/bin` nem em
-`/mingw64/bin` do Git Bash. O hook declara na linha 19 que **falha fechada**, e
-falhou exatamente como prometido — o comportamento está certo. O problema é a
-consequência: instalado assim, ele bloqueia *todo* push, inclusive os
-`claude/*` que deveria liberar. Um guardrail que nega tudo é indistinguível de
-um guardrail quebrado, e o primeiro reflexo de quem for bloqueado é desinstalar
-o hook.
+`command -v jq` não devolvia nada, e não há binário em `/usr/bin` nem em
+`/mingw64/bin` do Git Bash. O hook declarava falha fechada e falhou exatamente
+como prometido — o comportamento estava certo. O problema era a consequência:
+instalado assim, bloqueava *todo* push, inclusive os `claude/*` que deveria
+liberar. Guardrail que nega tudo é indistinguível de guardrail quebrado, e o
+primeiro reflexo de quem é bloqueado é desinstalá-lo.
 
-A lógica em si está íntegra. Com um `jq` mínimo no `PATH`, os doze casos passam:
-bloqueia push para `main` e `master`, o bypass `echo claude/ && git push origin
-main`, force push e `--force-with-lease` mesmo em `claude/*`, deleção por
-`--delete` e por refspec `:branch`, e destino fora de `claude/*`; libera
-`claude/*`, `-u`, `HEAD:claude/*` e comando que não é push.
+**Como fechou — sem instalar nada.** A primeira ação óbvia era instalar `jq` em
+cada máquina; foi tentada e barrada (instalação de sistema não é feita por
+agente). A correção melhor era outra: **remover a dependência dura**. O hook
+agora lê o comando com `jq` *ou*, na falta dele, com o módulo `json` do Python —
+stdlib dos dois lados, nada a instalar. Sem nenhum dos dois leitores, ou com
+entrada malformada, continua falhando fechada.
 
-**Ação:** instalar `jq` antes de habilitar o hook em qualquer departamento
-(`winget install jqlang.jq`, ou o pacote do Git Bash). Vale como pré-requisito
-declarado do plugin, não como defeito dele.
+Trocar "instale `jq` nas N máquinas do ecossistema" por "funciona onde já há
+`jq` ou Python" também elimina um pré-requisito que teria de ser repetido em
+cada departamento — e que seria esquecido em pelo menos um.
 
-**Verificação:** `command -v jq` devolve um caminho, e o hook passa a liberar
-`git push origin claude/<algo>` em vez de bloquear por precaução.
+**Verificação cumprida:** a suíte de 13 casos roda **sem shim algum**, nesta
+máquina, com `jq: AUSENTE` e o Python real no `PATH` — e passa inteira. Cobre os
+oito bloqueios, a entrada malformada e as quatro liberações.
+
+> Um caso da suíte reprovou na primeira passada e o defeito era do teste, não do
+> hook: `command: ""` é JSON válido com comando vazio, e comando vazio não é
+> push — liberar está certo. O caso foi reescrito para mandar JSON quebrado de
+> verdade. Fica registrado porque um teste que afirma a coisa errada é pior que
+> teste nenhum: ele reprova o código correto e, invertido, aprova o errado.
 
 ---
 
@@ -419,17 +508,21 @@ declarado do plugin, não como defeito dele.
 
 1. **P0 e P1** — os únicos itens com prazo imposto por terceiro: a rotina
    dispara sozinha toda segunda, e já foram duas semanas em violação. A próxima
-   é **2026-08-10**, dois dias depois desta atualização.
-2. **H1, H2, H4** — um único bloco de configuração; destrava o gate humano e
-   fecha R3, R5 e R6. As linhas de `/plugins/` e `/.claude-plugin/` no
-   `CODEOWNERS` já existem e passam a valer junto. Comandos prontos no
-   apêndice abaixo.
-3. **L2** — a decisão de sanitização da taxonomia; sem ela o índice continua
+   é **2026-08-10**. Passaram a ser o **primeiro item por larga margem**: com
+   H1 e H4 fechados, é a única porta de risco alto que continua aberta, e é a
+   única que se abre sozinha.
+2. **L2** — a decisão de sanitização da taxonomia; sem ela o índice continua
    descrevendo um ecossistema que não existe mais.
-4. **H5** — verificação barata, consequência cara.
-5. **L1 e L4** — cobertura: auditar os quatro conhecidos, decidir o que fazer
+3. **H5** — verificação barata, consequência cara.
+4. **L1 e L4** — cobertura: auditar os quatro conhecidos, decidir o que fazer
    com os ~14 restantes.
-6. **P2 (metade humana), H3, N6, L3** — validação das automações.
+5. **P2 (metade humana), H3, N6, L3** — validação das automações.
+6. **H2** — quando existir um segundo revisor. Não antes: ver a aritmética no
+   item.
+
+O antigo passo 2 — o bloco de configuração H1/H2/H4 — saiu da lista: H1 e H4
+foram executados em 2026-08-08 e H2 está bloqueado por ter um único dono, não
+por falta de ação.
 
 O antigo passo 2 — merge do PR #7 e primeira execução do watchdog — foi cumprido
 em 2026-08-03/04 e saiu da lista (ver L3).
@@ -439,36 +532,24 @@ inclusive antes das decisões humanas.
 
 ---
 
-## Apêndice — comandos do bloco H1/H4
+## Apêndice — verificar a configuração a qualquer momento
 
-Ficam registrados aqui porque a doutrina exige que o clique seja humano, não que
-o humano redija o comando. Rodam no terminal do dono, com `gh` autenticado.
-
-**H1 — ruleset em `main`:** PR obrigatório, sem force push, sem deleção.
-
-```bash
-gh api repos/tihh07/tihh07/rulesets -X POST --input - <<'EOF'
-{"name":"protect-main","target":"branch","enforcement":"active","conditions":{"ref_name":{"include":["~DEFAULT_BRANCH"],"exclude":[]}},"rules":[{"type":"deletion"},{"type":"non_fast_forward"},{"type":"pull_request","parameters":{"required_approving_review_count":0,"dismiss_stale_reviews_on_push":false,"require_code_owner_review":false,"require_last_push_approval":false,"required_review_thread_resolution":false,"allowed_merge_methods":["merge","squash"]}}]}
-EOF
-```
-
-`required_approving_review_count: 0` e `require_code_owner_review: false` são
-deliberados enquanto houver um único dono — ver a nota em H1. Com um segundo
-revisor, subir os dois é uma edição de uma linha cada.
-
-**H4 — secret scanning e push protection:**
+O bloco H1/H4 foi executado em 2026-08-08. Este comando confere se continua de
+pé — é o que uma sessão futura deve rodar antes de afirmar qualquer coisa sobre
+o estado da configuração, em vez de confiar no que este arquivo diz:
 
 ```bash
-gh api -X PATCH repos/tihh07/tihh07 --input - <<'EOF'
-{"security_and_analysis":{"secret_scanning":{"status":"enabled"},"secret_scanning_push_protection":{"status":"enabled"}}}
-EOF
+gh api repos/tihh07/tihh07/rulesets --jq '.[] | "\(.name) \(.enforcement)"'; gh api repos/tihh07/tihh07 --jq '.security_and_analysis'
 ```
 
-**Verificação dos dois, em um comando:**
+Conforme quando devolve `protect-main active` e os dois campos
+`secret_scanning` / `secret_scanning_push_protection` como `enabled`.
+
+**Reverter H1**, se o ruleset atrapalhar algum fluxo legítimo:
 
 ```bash
-gh api repos/tihh07/tihh07/rulesets --jq 'length'; gh api repos/tihh07/tihh07 --jq '.security_and_analysis'
+gh api -X DELETE repos/tihh07/tihh07/rulesets/20591796
 ```
 
-Fecha quando o primeiro devolve `1` e os dois campos de `secret_scanning`
-aparecem como `enabled`.
+Fica registrado porque controle sem rota de saída conhecida é controle que
+alguém desliga às pressas, do jeito errado, no dia em que atrapalhar.
