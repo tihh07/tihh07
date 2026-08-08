@@ -218,6 +218,26 @@ declarou inegociável.
 **Ação:** confirmar opt-out com evidência datada; verificar titularidade dos
 dados de cada repositório no escopo das rotinas.
 
+### H6 — Branch residual do PR #7 no remoto
+**Severidade: média**
+
+`claude/session-status-pendencias-842ocg` — a branch de origem do PR #7 —
+existe no remoto com o tip exato do momento do merge (2026-08-03). A árvore
+dela é idêntica à de `main`: zero trabalho não mesclado, verificado por diff de
+árvore em 2026-08-08. É o primeiro caso real da categoria 4 da auditoria de
+poda (artefato órfão).
+
+O custo de deixar: a partir de ~2026-08-11 o check "branches `claude/*` sem PR
+aberto" do watchdog passa a falhar todo dia por causa dela. Alerta conhecido e
+benigno é ruído, e ruído treina o revisor a ignorar o alarme que importa.
+
+**Ação:** apagar a branch no GitHub (página do PR #7 → "Delete branch").
+Nenhum agente faz isso: deleção de branch remota é o que o `guard-push`
+bloqueia, e apagar é decisão humana por doutrina.
+
+**Verificação:** `git branch -r` mostra só `main` e branches de trabalho
+ativas.
+
 > H1, H2 e H4 são entrega prevista da **Fase 1**, ainda 🔜. Não são surpresa;
 > são dívida declarada. O que este checkup evidencia é a **ordem invertida**: as
 > automações já estão em produção enquanto os controles que deveriam contê-las
