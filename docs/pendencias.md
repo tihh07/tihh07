@@ -27,6 +27,52 @@ de esforço**: cada um está preso a um limite declarado — permissão de
 ferramenta, regra de conduta, decisão humana ou R1. A distinção importa porque
 backlog que mistura "falta fazer" com "não pode ser feito assim" treina o leitor
 a ignorar os dois.
+
+## Retomada — por onde a próxima sessão começa
+
+Escrito no fim de 2026-08-08 para que a sessão seguinte não precise reconstruir
+contexto nenhum.
+
+**Antes de qualquer coisa, reverifique.** Este arquivo descreve o que a API
+devolveu num dia; o repositório é operado de mais de uma superfície e o estado
+muda sem aviso. O apêndice tem o comando de conferência da configuração, e
+`gh pr list --state open` diz o que está em voo.
+
+**1. P0 e P1 — único item de risco alto ainda aberto, e o único com prazo.**
+A rotina de control-plane dispara toda segunda com o repositório público e três
+privados no mesmo escopo. Só a UI resolve: nenhum canal de agente alcança a
+configuração das rotinas da nuvem (três foram testados — ver a nota em P0).
+
+**2. Um PR pode estar esperando merge.** Em 2026-08-08 o PR #9 ficou aberto ao
+fim do dia carregando a reverificação e os itens H1/H4/L3.1. O diagnóstico
+registrado: `mergeable: MERGEABLE`, `mergeStateStatus: CLEAN`, zero aprovações
+exigidas, nenhum check bloqueando, e **nenhum evento de merge na timeline** —
+ou seja, nada no repositório impedia; a ação não chegou a ser registrada.
+Se ele ainda estiver aberto, `gh pr merge 9 --merge --delete-branch` é o
+caminho que funcionou no PR #8 no mesmo dia.
+
+**3. O resto do backlog não mudou de natureza.** H3 é proibido a agente por
+conduta; H5, L2 e L4 são decisão humana; L1 e L3 exigem os repositórios
+privados e **R1 barra qualquer sessão que também escreva aqui**. Nenhum deles é
+trabalho parado por falta de execução.
+
+### Achados que pertencem a outros repositórios
+
+Registrados aqui porque a segunda pergunta do [`AGENTS.md`](../AGENTS.md) é
+*onde está a verdade* e a terceira é *o que está pendente* — mas o trabalho é do
+repositório de origem, não deste.
+
+- **`ia-fonte-de-conhecimento` tem 9 branches `claude/*` sem PR aberto.** É o
+  padrão do H6 multiplicado: se o watchdog for instalado lá, falha todo dia até
+  a poda. Verificado em 2026-08-08 com `git branch -r`.
+- **A rotina de fechamento de sessão (configuração global, fora deste repo)
+  monta o arquivo de hashes com um glob que não casa quando o projeto não tem
+  zip de insumos.** O comando sai com erro e grava o arquivo pela metade —
+  aconteceu nas duas execuções do dia e foi contornado à mão. Reincide em todo
+  projeto sem insumos zipados.
+- **A mesma rotina afirma uma convenção de nome de arquivo que o diretório
+  contradiz** — a proporção real é 47 com prefixo de data contra 31 sem, o que
+  é maioria, não convenção única. Categoria "realidade antiga".
 >
 > Este arquivo responde à terceira pergunta do [`AGENTS.md`](../AGENTS.md) —
 > *o que está pendente?* — num formato em que cada item é **auto-contido**:
