@@ -550,28 +550,61 @@ oito bloqueios, a entrada malformada e as quatro liberações.
 
 ---
 
-## Ordem sugerida
+## Plano de execução — semana de 2026-08-10
 
-1. **P0 e P1** — os únicos itens com prazo imposto por terceiro: a rotina
-   dispara sozinha toda segunda, e já foram duas semanas em violação. A próxima
-   é **2026-08-10**. Passaram a ser o **primeiro item por larga margem**: com
-   H1 e H4 fechados, é a única porta de risco alto que continua aberta, e é a
-   única que se abre sozinha.
-2. **L2** — a decisão de sanitização da taxonomia; sem ela o índice continua
-   descrevendo um ecossistema que não existe mais.
-3. **H5** — verificação barata, consequência cara.
-4. **L1 e L4** — cobertura: auditar os quatro conhecidos, decidir o que fazer
-   com os ~14 restantes.
-5. **P2 (metade humana), H3, N6, L3** — validação das automações.
-6. **H2** — quando existir um segundo revisor. Não antes: ver a aritmética no
-   item.
+**Este plano tem validade de uma semana e envelhece de propósito.** Se a data
+acima não for a da semana corrente, ele descreve um passado: reconstrua-o pela
+regra da subseção seguinte em vez de seguir as datas. Plano datado que ninguém
+reescreve é a categoria "realidade antiga" aplicada ao próprio backlog.
 
-O antigo passo 2 — o bloco de configuração H1/H2/H4 — saiu da lista: H1 e H4
-foram executados em 2026-08-08 e H2 está bloqueado por ter um único dono, não
-por falta de ação.
+### A regra que gera o plano, quando as datas vencerem
 
-O antigo passo 2 — merge do PR #7 e primeira execução do watchdog — foi cumprido
-em 2026-08-03/04 e saiu da lista (ver L3).
+Em ordem, e o primeiro critério que se aplica decide:
+
+1. **O que tem prazo imposto de fora** vem primeiro, sempre. Hoje é só P0/P1: a
+   rotina dispara sozinha toda segunda, e nenhuma outra pendência anda sem
+   alguém decidir andar.
+2. **O que destrava outros itens** vem em seguida — decisão humana que libera
+   trabalho de nuvem vale mais que o trabalho de nuvem em si, porque a decisão
+   é o gargalo e a execução não.
+3. **O barato com consequência cara** antes do caro com consequência barata.
+4. **O que só depende de sessão de nuvem** por último: não bloqueia nada e pode
+   ser paralelizado, uma sessão por repositório (R1).
+
+### A semana
+
+| Quando | O quê | Executor | Tempo |
+|---|---|---|---|
+| **Hoje** | Mesclar o que está em voo, para nada ficar só na branch | 👤 | 2 min |
+| **Antes de seg 11:00 UTC** | **P0 + P1** na UI da rotina de control-plane | 👤 | 10 min |
+| **Seg, após 12:00 UTC** | Conferir as duas execuções da semana | ☁️ ou 👤 | 5 min |
+| **Ter** | **H5** — opt-out com evidência datada, titularidade dos dados | 👤 | 30 min |
+| **Qua** | **L2** — decidir se os nomes de setor podem ser publicados | 👤 | 20 min |
+| **Qui** | **L1** — auditoria de nuvem no piloto (Fundação) | ☁️ | 1 sessão |
+| **Sex** | **L1** — segundo repositório · **L4** — decidir cobertura dos ~14 | ☁️ + 👤 | 1 sessão |
+
+**A segunda-feira é o único dia com hora marcada.** A rotina de control-plane
+dispara às 11:00 UTC e a N2 às 12:00 UTC. Ajustar P0/P1 *depois* das 11:00 custa
+mais uma semana em violação de R1 — a quarta consecutiva.
+
+### Fora da semana, sem data
+
+- **H3** — cinco minutos no terminal do dono, e destrava N6. Só entra num dia
+  quando o PR Watch importar; até lá ele é decoração declarada, não pendência
+  urgente.
+- **H2** — quando existir um segundo revisor. Não antes: ver a aritmética no
+  item.
+- **L3** — depende de o piloto de L1 acontecer primeiro; instalar o plugin sem
+  ter auditado o repositório é escrever controle sobre terreno não verificado.
+
+### O que saiu da lista
+
+O bloco de configuração H1/H2/H4 era o passo 2 e foi executado em 2026-08-08 —
+H1 e H4 fechados, H2 bloqueado por ter um único dono. Antes dele, o passo 2 era
+o merge do PR #7 e a primeira execução do watchdog, cumpridos em 2026-08-03/04
+(ver L3). **Duas vezes seguidas o passo 2 saiu por ter sido feito**, o que é o
+sinal de que a lista está viva; quando um passo sair por ter sido esquecido, o
+sintoma será este parágrafo parar de mudar.
 
 Os itens ☁️ não dependem dos demais e podem ser executados a qualquer momento,
 inclusive antes das decisões humanas.
