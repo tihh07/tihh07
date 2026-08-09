@@ -9,9 +9,15 @@ name: Claude PR Watch
 # ---------------------------------------------------------------------------
 # O QUE ESTE WORKFLOW *NÃO* COBRE
 # ---------------------------------------------------------------------------
-# - NÃO EXECUTOU NENHUMA VEZ. Zero runs no histórico do Actions desde 2026-07-24.
-#   Depende de secrets.ANTHROPIC_API_KEY, que não existe no repositório. Enquanto
-#   o secret faltar, este arquivo é intenção declarada, não controle ativo.
+# - ACORDOU, MAS NUNCA EXECUTOU. Em 2026-08-08 os comentários de review do PR #8
+#   dispararam cinco runs; todas terminaram skipped/cancelled na condição `if`
+#   abaixo, porque não continham "@claude". O job reporta steps=0: o Checkout e a
+#   action nunca rodaram, e a chave de API nunca foi consultada. Disparar não é
+#   executar — nenhuma execução real aconteceu até aqui, e ela segue dependendo
+#   de secrets.ANTHROPIC_API_KEY, que não existe no repositório (backlog H3).
+#   Enquanto o secret faltar, este arquivo é intenção declarada, não controle
+#   ativo. O que os cinco runs comprovam é o filtro de autor (R9/R2), que
+#   segurou eventos reais em vez de teoria.
 # - Não verifica nada por conta própria. É reativo: sem menção a @claude por
 #   parte do dono do repo, e sem disparo manual, ele nunca acorda. Um PR pode
 #   ficar aberto indefinidamente sem que este workflow diga uma palavra — quem

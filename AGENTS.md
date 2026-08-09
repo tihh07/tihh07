@@ -87,7 +87,7 @@ tabela abaixo rastreia o *estado* de cada um.
 | `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | *não verificado* | *não verificado* | — |
 | `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | *não verificado* | *não verificado* | — |
 | `bena-agencia` (privado) | Operação de Cliente / Agência | *não verificado* | *não verificado* | — |
-| `tihh07/tihh07` (público) | Fachada Pública / Marketing | **auditado** — documentação, workflows e templates de plugin; sem código de aplicação | Uma rotina semanal agendada tem repositório privado e o público no mesmo escopo, violando R1; só o humano remove | 2026-08-02 |
+| `tihh07/tihh07` (público) | Fachada Pública / Marketing | **auditado** — documentação, workflows e templates de plugin; sem código de aplicação | Uma rotina semanal agendada tem repositório privado e o público no mesmo escopo, violando R1; só o humano remove | 2026-08-08 |
 
 > **Só a última linha foi verificada.** As demais existem para declarar o
 > conjunto conhecido de projetos, não para afirmar o estado deles. Preencher uma
