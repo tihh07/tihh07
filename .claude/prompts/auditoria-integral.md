@@ -200,22 +200,25 @@ controle barato e reversível que você **alcance**, aplique (classe B) e
 controle que alguém desliga às pressas, do jeito errado, no dia em que
 atrapalhar.
 
-> ⚠️ **O que a sessão de nuvem comprovadamente não alcança.** Verificado em
-> 2026-08-20: o proxy de saída nega os caminhos de **configuração de
-> repositório** da API do GitHub — `/repos/{o}/{r}` (e portanto
-> `security_and_analysis`), `/rulesets`, `/branches/{b}/protection`,
-> `/secret-scanning/alerts` e `/actions/secrets` — com HTTP 403, **mesmo havendo
-> token válido** (o mesmo token responde 200 em `/user`). Nenhuma ferramenta MCP
-> expõe ruleset ou branch protection.
+> ⚠️ **O que a sessão de nuvem não alcança — e por quê, que são duas coisas.**
+> Medido em 2026-08-20, com o mesmo token que responde `200` em `/user`:
 >
-> Consequência: ruleset, proteção de `main`, secret scanning, push protection e
-> existência de secret de Actions **não são verificáveis nem aplicáveis por
-> agente** a partir da nuvem. Trate-os como **classe C**: relate o que precisa
-> ser conferido, diga que a via está bloqueada, e não afirme conformidade nem
-> desvio sobre eles. `list_branches` devolve um campo `protected`, que prova que
-> *existe alguma* proteção — não qual, nem se exige review, nem quem tem bypass.
+> | Caminho | Resposta | Causa |
+> |---|---|---|
+> | `/repos/{o}/{r}`, `/rulesets`, `/branches/*/protection` | 403 · *"GitHub access is not enabled for this session. An org admin must connect the Claude GitHub App"* | **autorização do GitHub App** — tem conserto humano |
+> | `/secret-scanning/alerts`, `/actions/secrets` | 403 · *"Access to this GitHub API path is not permitted through this proxy"* | **allowlist do proxy** — não tem |
 >
-> Não gaste a rodada tentando contornar. Registre o 403 literal e siga.
+> A distinção importa: a primeira linha pode deixar de ser 403 depois que alguém
+> reconectar a autorização do GitHub, e aí ruleset e proteção de branch voltam a
+> ser verificáveis. A segunda não muda por nada que você faça.
+>
+> **Enquanto o 403 aparecer, esses itens são classe C**: relate o que precisa ser
+> conferido, **cite a mensagem literal** (ela diz qual das duas causas é), e não
+> afirme conformidade nem desvio. `list_branches` devolve um campo `protected`,
+> que prova que *existe alguma* proteção — não qual, nem quem tem bypass.
+>
+> Não gaste a rodada tentando contornar, e **não peça token com mais escopo**:
+> escopo não é o problema em nenhuma das duas linhas.
 
 ## 5. Ordem de trabalho
 

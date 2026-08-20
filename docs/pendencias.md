@@ -64,11 +64,20 @@ Verificado em 2026-08-20, a partir de uma sessão de nuvem:
 
 - O binário `gh` **não existe** neste ambiente (`command -v gh` devolve vazio).
   Todo comando do apêndice antigo era inexecutável aqui.
-- O proxy de saída **nega os caminhos de configuração de repositório da API do
-  GitHub** — dados do repositório, rulesets, proteção de branch, alertas de
-  secret scanning e segredos de Actions — com **HTTP 403, mesmo com token
-  válido**. O mesmo token responde `200` no endpoint de identidade, então não é
-  credencial: é política de egresso.
+- Os caminhos de configuração de repositório da API do GitHub devolvem **HTTP
+  403, mesmo com token válido** (o mesmo token responde `200` em identidade).
+  **Mas não pela mesma causa** — e a rodada de 2026-08-20 tratou as duas como
+  uma só, o que era impreciso:
+
+  | Caminho | Mensagem literal | Causa | Tem conserto? |
+  |---|---|---|---|
+  | dados do repositório, rulesets, proteção de branch | *"GitHub access is not enabled for this session. An org admin must connect the Claude GitHub App"* | autorização do GitHub App | **sim, humano** |
+  | alertas de secret scanning, segredos de Actions | *"Access to this GitHub API path is not permitted through this proxy"* | allowlist do proxy | não |
+
+  A primeira linha muda de estado se a autorização do GitHub for reconectada —
+  e aí **H1 volta a ser verificável**. A segunda não muda. Escopo de token não é
+  o problema em nenhuma das duas: pedir permissão maior não destrava nada e só
+  amplia agência à toa.
 - Nenhuma ferramenta MCP disponível expõe ruleset ou proteção de branch.
 - A ferramenta de secret scanning recusa com *"Repository does not have GitHub
   Advanced Security enabled"* — o que prova o estado do GHAS e nada além dele.
