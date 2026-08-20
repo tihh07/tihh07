@@ -20,29 +20,54 @@
 
 ---
 
-## Qual modelo usar
+## Qual modelo usar — procedimento, não conselho
 
-A escolha do modelo é parte do despacho, não detalhe de infraestrutura. A regra
-saiu da primeira rodada em massa, e o número é a evidência: **17 auditorias no
-modelo mais capaz custaram cerca de US$ 273 numa tarde.** Para a passada
-inicial isso se paga — é a rodada que descobre o que existe, e errar por baixo
-ali contamina tudo que vem depois. Para o resto, não.
+Quem despacha decide **sozinho**, por esta sequência. Não há passo que consulte o
+dono: um orquestrador que precisa perguntar o modelo a cada tarefa não orquestra.
 
-| Rodada | Modelo | Por quê |
-|---|---|---|
-| **Primeira auditoria de um repositório** | o mais capaz disponível | terreno desconhecido, oito frentes, julgamento sobre o que é sensível |
-| **Desbloqueio ou follow-up** | um degrau abaixo | a decisão já foi tomada; o trabalho é estreito e o relatório anterior é o mapa |
-| **Reauditoria periódica** | um degrau abaixo | existe linha de base; a pergunta é o que mudou |
-| **Verificação pontual** (um fato, um comando) | o mais econômico que resolva | ler uma API e reportar não exige julgamento |
+A regra nasceu de um número: **17 auditorias no modelo mais capaz custaram cerca
+de US$ 273 numa tarde.** Para a primeira passada isso se paga — é a rodada que
+descobre o que existe, e errar por baixo ali contamina tudo depois. Para o resto,
+não.
 
-Duas ressalvas que valem mais que a tabela:
+**O problema circular, e como ele se resolve.** A variável que mais deveria pesar
+é a sensibilidade do repositório — e ela só é conhecida **depois** de auditá-lo.
+Na primeira rodada não há como saber, então não se adivinha: **assume-se o pior**.
+A partir da segunda, a ficha de handoff responde, e a escolha vira consulta em vez
+de julgamento.
 
-- **Repositório com dado sensível sobe um degrau**, seja qual for a rodada. A
-  frente F5 é a que erra mais caro, e o custo de um falso negativo ali não se
-  compara ao de tokens.
-- **Modelo mais barato não compensa prompt pior.** Se a rodada estreitou, é o
-  prompt que precisa carregar a decisão já tomada — como neste arquivo. Cortar
-  modelo e manter prompt aberto só troca custo por retrabalho.
+Execute em ordem; o primeiro passo que decidir, decide:
+
+1. **Existe ficha em `docs/handoff/<slug>.md` para este alvo?**
+   - **Não** → primeira rodada. Use o **modelo mais capaz disponível**. Pare aqui.
+   - **Sim** → siga para 2.
+2. **A ficha declara `sensibilidade: alta`?**
+   - **Sim** → use o **modelo mais capaz disponível**, seja qual for a rodada.
+     Pare aqui. A frente F5 é a que erra mais caro, e um falso negativo em dado
+     pessoal não se compara ao custo de tokens.
+   - **Não** → siga para 3.
+3. **Que tipo de rodada é esta?**
+
+   | Rodada | Modelo | Por quê |
+   |---|---|---|
+   | Reauditoria periódica | um degrau abaixo do topo | existe linha de base; a pergunta é o que mudou |
+   | Desbloqueio ou follow-up | um degrau abaixo do topo | a decisão já foi tomada, e o relatório anterior é o mapa |
+   | Verificação pontual — um fato, um comando | o mais econômico que resolva | ler uma API e reportar não exige julgamento |
+   | Qualquer outra coisa | um degrau abaixo do topo | o padrão, quando a rodada não se encaixa |
+
+**Quando a informação faltar, erre para cima.** Ficha ilegível, slug que não
+resolve, tipo de rodada ambíguo: trate como primeira rodada. O custo desse erro é
+dinheiro; o custo do erro contrário é um achado de dado sensível que ninguém viu.
+São incomparáveis, e por isso a regra não é simétrica.
+
+**Modelo mais barato não compensa prompt pior.** Se a rodada estreitou, é o
+*prompt* que carrega a decisão já tomada — como este arquivo faz. Cortar modelo
+mantendo prompt aberto troca custo por retrabalho, e retrabalho custa duas
+rodadas em vez de uma.
+
+**Registre a escolha.** Quem despacha escreve no prompt da sessão qual modelo
+usou e por qual passo desta sequência. Sem isso não há como saber, depois, se uma
+rodada rasa foi decisão ou descuido.
 
 ## 0. Escopo — leia primeiro e obedeça antes de qualquer outra coisa
 

@@ -14,6 +14,23 @@
 | **Estado** | <auditado · em voo · não verificado> |
 | **Última auditoria** | <AAAA-MM-DD, ou "—" se nunca> |
 | **Adendo local** | <necessário · dispensado · não avaliado> |
+| **Sensibilidade** | <alta · média · baixa> — ver abaixo |
+
+## Sensibilidade — o campo que decide o modelo da próxima rodada
+
+Preencha com o que a auditoria **encontrou**, não com o que o nome do repositório
+sugere. Este campo não é decorativo: quem despachar a próxima rodada lê ele para
+escolher o modelo, sem perguntar a ninguém.
+
+- **alta** — o repositório contém, hoje ou no histórico, dado pessoal, dado de
+  cliente, número comercial real, credencial, ou material de terceiro cuja
+  titularidade não é do dono. Alta trava o modelo no topo em toda rodada futura.
+- **média** — nada disso, mas o repositório toca processo de negócio ou produz
+  material que vira público.
+- **baixa** — só ferramenta, configuração ou documentação genérica.
+
+Na dúvida entre dois níveis, **escolha o mais alto**. Errar para cima custa
+tokens; errar para baixo custa um achado que ninguém viu.
 
 ## Fonte de verdade
 

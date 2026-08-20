@@ -533,7 +533,7 @@ dias e três merges depois, continua valendo.
 ## 3. Ainda em aberto ☁️ / 🏠
 
 ### D1 — O que ainda depende de uma máquina ligada
-**Severidade: alta · Executor: 👤 Humano (decisão) depois ☁️ Nuvem · ABERTO**
+**Severidade: alta · Executor: ☁️ Nuvem (workflow, feito) + 👤 Humano (credencial) · PARCIAL**
 
 Objetivo declarado pelo dono em 2026-08-20: **nada do ecossistema pode depender
 de a máquina local estar ligada.** GitHub como fonte de verdade, uma segunda
@@ -560,24 +560,56 @@ O que **não** satisfaz, em ordem de gravidade:
    avisado quando ela não liga. Backup que depende de lembrança não é backup, é
    intenção.
 
-**Ação (👤, primeiro): dizer se o OneDrive é corporativo (Microsoft 365) ou
-pessoal.** A resposta decide o desenho e não dá para adivinhar:
+**Destino decidido em 2026-08-20: Google Drive, não OneDrive.** A comparação não
+foi de preferência, foi de modo de falha:
 
-- **Corporativo** — um workflow agendado do GitHub Actions gera o bundle e o
-  envia via Microsoft Graph, autenticando por aplicativo registrado no Entra ID,
-  com o segredo nos secrets do repositório. Roda na infraestrutura do GitHub,
-  sem máquina nenhuma. É a solução limpa.
-- **Pessoal** — o fluxo por aplicativo **não funciona**: OneDrive de consumidor
-  só aceita autenticação delegada, com refresh token que expira e exige novo
-  consentimento humano. Automatizar isso cria um segundo ponto de falha silencioso
-  — o backup para de rodar e ninguém percebe até precisar dele. Nesse caso vale
-  mais escolher outro destino, alcançável por token que não expira sozinho.
+| | OneDrive pessoal | OneDrive corporativo | **Google Drive** |
+|---|---|---|---|
+| Autenticação sem humano | ❌ só delegada; refresh token expira e pede consentimento | ✅ aplicativo do Entra ID | ✅ service account |
+| Falha quando o token vence | silenciosa | — | — |
+| Já autorizado nesta conta | não verificado | não verificado | ✅ sim |
 
-**Ação (☁️, depois):** o workflow de backup, com três propriedades não
-negociáveis — grava um **heartbeat versionado a cada execução** (rodada que falha
-não pode terminar em silêncio; foi o defeito que já custou três ciclos de
-diagnóstico às cegas em outro repositório do ecossistema), **falha ruidosamente**
-em vez de pular, e **declara no cabeçalho o que não cobre**.
+O que elimina o OneDrive pessoal não é ser pior de usar: é que **a falha dele é
+silenciosa**. O backup para de rodar quando o consentimento vence, e ninguém
+descobre até precisar restaurar. Um backup que falha calado é pior que backup
+nenhum, porque produz confiança sem cobertura.
+
+**Por conector, não. Por GitHub Actions, sim — e a razão é R1.** A conta tem um
+conector do Google Drive autorizado, e seria mais rápido anexá-lo a uma rotina de
+backup. Mas conector se anexa a **rotina**, e uma rotina que faça backup de vários
+repositórios teria privados e o público no mesmo escopo: é exatamente a violação
+que **P0** acabou de fechar, reaberta por outra porta e em escala maior.
+
+Um workflow do Actions vive **dentro de um repositório e só enxerga aquele
+repositório**. Não é só uma alternativa aceitável — é **R1-seguro por
+construção**, sem depender de ninguém lembrar da regra. Preferir o controle que
+não pode ser violado ao controle que exige disciplina é o padrão do ecossistema.
+
+**Ação (☁️): o workflow, um por repositório.** Template em
+`plugins/fundacao/templates/backup/`, instalado em `.github/workflows/`.
+Propriedades não negociáveis:
+
+- **`fetch-depth: 0`** no checkout. Bundle feito de clone raso não contém o
+  histórico e é backup só na aparência — o mesmo defeito de clone raso que já
+  tornou cego um check do watchdog aqui.
+- **`git bundle verify` antes de enviar.** Substituir uma cópia boa por uma
+  corrompida é pior que não ter feito backup.
+- **Falha ruidosa se o secret não existir** — nada de pular em silêncio.
+  Instalar o workflow é ato deliberado; backup que você acha que roda e não roda
+  é pior que um X vermelho.
+- **Resumo de execução a cada rodada**, para que "rodou e deu certo" seja
+  distinguível de "rodou e não fez nada".
+
+**Ação (👤): criar a service account, compartilhar a pasta do Drive com o e-mail
+dela e gravar o secret.** É o único passo que agente nenhum alcança. Sem ele o
+workflow existe e falha — de propósito.
+
+**Armadilha declarada, que o próprio GitHub cria:** workflow agendado é
+**desabilitado automaticamente após 60 dias sem atividade no repositório**. Para
+um backup, esse é o modo de falha silenciosa que ele existe para evitar — e ele
+morde justamente os repositórios parados, que são os que mais dependem do
+backup. A conferência de que o agendamento continua vivo não pode morar dentro do
+repositório que ele protege.
 
 **Ação (☁️, junto):** um arquivo versionado que **descreva** a configuração das
 rotinas e dos repositórios — não como backup executável, mas para que perder a UI
@@ -587,7 +619,8 @@ operacional (ver **N19**).
 
 **Verificação:** desligar a máquina local por uma semana não muda nada
 observável — o backup continua datado do dia, e nenhuma pergunta sobre o
-ecossistema fica sem resposta.
+ecossistema fica sem resposta. E, uma vez por trimestre, **restaurar de verdade a
+partir de um bundle**: backup sem restauração testada é intenção, não controle.
 
 > **A pergunta certa não é "onde estão os arquivos".** Os arquivos já estão
 > seguros: estão no git, em dezoito repositórios, e qualquer máquina os recupera.
