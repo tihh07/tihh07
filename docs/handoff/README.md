@@ -8,24 +8,36 @@ que torna todo o resto possível, então não se abre exceção para ela.
 O handoff é a resposta a essa tensão. É a única coisa que atravessa a fronteira,
 e ela atravessa **carregada por uma pessoa**, nunca por uma sessão.
 
-## O caminho, em quatro passos
+## O ciclo, de ponta a ponta
 
-1. **A auditoria roda na origem.** Uma sessão de nuvem escopada em um único
-   repositório privado ([prompt](../../.claude/prompts/auditoria-integral.md))
-   audita, aplica o que está autorizado e grava o relatório **no próprio
-   repositório auditado**, em `docs/auditoria/AAAA-MM-DD-integral.md`.
-2. **O relatório termina num bloco sanitizado**, sob o título
-   `## Handoff — sanitizado`, com no máximo 12 linhas e o checklist do
-   [`SECURITY.md`](../../SECURITY.md) já aplicado linha a linha.
-3. **Uma pessoa lê o bloco e o traz.** Não há automação neste passo, e a
+1. **Abrir uma sessão de nuvem escopada em UM projeto** — R1: nunca dois.
+2. **Colar o prompt**, substituindo `<REPOSITORIO>`. São três, e escolher é a
+   primeira decisão do ciclo:
+
+   | Prompt | Onde roda | Quando |
+   |---|---|---|
+   | [`auditoria-integral`](../../.claude/prompts/auditoria-integral.md) | nuvem, um repo | via padrão — audita **e corrige**, em classes de ação declaradas, terminando em PR draft |
+   | [`auditoria-fonte-de-verdade`](../../.claude/prompts/auditoria-fonte-de-verdade.md) | nuvem, um repo | quando o objetivo é linha de base: não altera nada |
+   | [`auditoria-adendo-local`](../../.claude/prompts/auditoria-adendo-local.md) | máquina do projeto | só o que a nuvem não alcança: arquivo fora do git, clone antigo, stash, segredo em repouso |
+
+   Auditoria que corrige não serve de linha de base — mistura o que existia com o
+   que ela mesma mudou. Por isso os dois primeiros coexistem.
+3. **A sessão audita, aplica o autorizado e grava o relatório na origem**, em
+   `docs/auditoria/AAAA-MM-DD-integral.md`, abrindo PR draft lá.
+4. **Se o relatório pedir, rodar o adendo local** e anexar o bloco. Este passo é
+   condicional de propósito: auditoria que exige sessão local por padrão não
+   acontece — quatro departamentos passaram semanas em *não verificado*
+   exatamente por isso.
+5. **Uma pessoa lê o bloco sanitizado e o traz.** Não há automação aqui, e a
    ausência dela é o controle: um humano lendo doze linhas é a última chance de
-   barrar o que não devia sair. Se isso parecer trabalho demais, o problema é o
-   número de auditorias simultâneas, não o gate.
-4. **A ficha é criada ou atualizada aqui**, e o índice do
-   [`AGENTS.md`](../../AGENTS.md) recebe a linha correspondente.
+   barrar o que não devia sair. Se parecer trabalho demais, o problema é o número
+   de auditorias simultâneas, não o gate.
+6. **A ficha é criada ou atualizada aqui**, o índice do
+   [`AGENTS.md`](../../AGENTS.md) recebe a linha, e divergência de severidade alta
+   vira trabalho **no projeto de origem**, não aqui.
 
-Nenhuma sessão executa os passos 1 e 4. Quem audita não publica; quem publica
-não leu o privado.
+Nenhuma sessão executa os passos 5 e 6. Quem audita não publica; quem publica não
+leu o privado.
 
 ## A ficha não leva o nome do repositório
 
