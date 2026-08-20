@@ -22,6 +22,16 @@
 # guardrail que nega tudo é indistinguível de guardrail quebrado, e convida a
 # desinstalação. Falha fechada continua valendo — sem nenhum dos dois leitores,
 # ou com entrada ilegível, bloqueia.
+#
+# O que ele NÃO faz: não valida o conteúdo do que se empurra, não substitui a
+# proteção de branch no servidor (um agente sem este hook continua alcançando
+# `main` se o ruleset permitir), e não cobre push por ferramenta que não seja o
+# comando `git` — API, MCP ou biblioteca passam ao largo. É defesa em
+# profundidade, não a única camada.
+#
+# Comportamento verificado por `test-guard-push.sh`, ao lado. Rode-o depois de
+# qualquer edição: a suíte existe porque um guardrail sem prova de que bloqueia
+# é uma afirmação, não um controle.
 
 set -uo pipefail
 
@@ -70,6 +80,15 @@ printf '%s' "$CMD" | grep -qE '(--delete|[[:space:]]-d([[:space:]]|$)|[[:space:]
 # Alvos explicitamente proibidos, mesmo que "claude" apareça em outro ponto do comando.
 printf '%s' "$CMD" | grep -qE '[[:space:]](main|master|develop)([[:space:]]|$)|:(main|master|develop)([[:space:]]|$)' \
   && deny "push direto para branch protegida bloqueado."
+
+# Modos que empurram o repositório inteiro, sem refspec nenhum. Sem esta trava
+# eles caem no fallback de "branch atual" logo abaixo, que numa sessão de agente
+# é claude/* — e passam. Mas `--all` empurra TODAS as branches locais, `main`
+# inclusive, `--mirror` espelha o repositório (o que apaga refs remotas que não
+# existam mais no local) e `--prune` apaga remotas diretamente. Os três fazem
+# exatamente o que as travas acima proíbem, por um caminho que elas não olham.
+printf '%s' "$CMD" | grep -qE '(--all|--mirror|--prune)([[:space:]]|$)' \
+  && deny "push de repositório inteiro (--all/--mirror/--prune) bloqueado."
 
 # Extrai o refspec: última palavra que não seja flag, remoto conhecido ou o próprio git/push.
 REF=$(printf '%s' "$CMD" \
