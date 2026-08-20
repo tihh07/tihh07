@@ -632,6 +632,33 @@ não pode morar no repositório que ela protege. A evidência que não depende d
 a **data do bundle mais recente no Drive** — quem olha isso, e com que
 periodicidade, ainda não está decidido.
 
+**Destino por setor, decidido em 2026-08-20.** Não há um destino só, e não
+deveria haver: **o dado vai para o locatário de quem é dono dele.** Repositório
+de empregador ou cliente vai para a nuvem corporativa daquela organização;
+repositório próprio vai para conta pessoal. Backup é cópia, e copiar material de
+terceiro para conta pessoal aciona o item 7 do checklist (titularidade) do mesmo
+jeito que publicá-lo.
+
+O **mapa setor → conta de destino não é versionado**, aqui nem em lugar nenhum
+público: ele nomeia organizações e endereços de pessoas (itens 1, 3 e 5). O
+desenho já dispensa versioná-lo — **o destino é um secret do repositório**, então
+o workflow é idêntico em todos e nenhum deles sabe para onde os outros enviam.
+Uma pasta por setor com os projetos dentro sai de graça: repositórios do mesmo
+setor compartilham o identificador de pasta no secret, sem tocar no workflow.
+
+**Lacuna declarada, e é a que trava a parte mais sensível:** o workflow existente
+fala **só Google Drive**. Destino em **OneDrive/SharePoint corporativo** — o certo
+para repositório de empregador — exige outro caminho de autenticação (aplicativo
+no Entra ID, `client_credentials`, Microsoft Graph). Bundle, verificação e
+contrato de falha são idênticos; muda quem emite o token e quem recebe o arquivo.
+Até essa variante existir, **repositório de empregador fica sem backup
+automatizado** — o que é melhor do que apontá-lo para um destino pessoal só
+porque esse já funciona.
+
+Duas notas de viabilidade, para não voltarem à mesa: **Yahoo não serve** — não
+expõe armazenamento com API utilizável para isso. E conta Google pessoal esbarra
+na cota da service account, tratada no README do template.
+
 **Armadilha declarada, que o próprio GitHub cria:** workflow agendado é
 **desabilitado automaticamente após 60 dias sem atividade no repositório**. Para
 um backup, esse é o modo de falha silenciosa que ele existe para evitar — e ele

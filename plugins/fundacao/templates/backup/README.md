@@ -33,6 +33,59 @@ chave vale até ser revogada.
 O que ainda pode quebrar, e falha ruidosamente: chave revogada/apagada, Drive API
 desabilitada no projeto, pasta descompartilhada, cota de armazenamento estourada.
 
+## Escolher o destino é decisão de titularidade, não de conveniência
+
+Antes de qualquer passo técnico: **para onde este repositório pode ser copiado?**
+A resposta não é "onde eu tenho espaço" — é **de quem é o dado**.
+
+Um bundle é o repositório inteiro, com histórico. Copiá-lo para uma conta é dar
+a essa conta uma cópia integral e permanente de tudo que já esteve ali. A regra
+que decorre disso é curta:
+
+> **O dado vai para o locatário de quem é dono dele.**
+>
+> - Repositório de **empregador ou cliente** → nuvem corporativa **daquela
+>   organização**. Copiar material de cliente para a conta pessoal de quem o
+>   produziu é o item 7 do checklist (titularidade) — e o fato de ser backup não
+>   muda isso. Backup é cópia.
+> - Repositório **próprio** → conta pessoal, à vontade.
+> - **Na dúvida sobre a quem pertence, é do cliente.** Errar para esse lado custa
+>   espaço em disco; errar para o outro custa uma cópia de material de terceiro
+>   fora do controle dele.
+
+Consequência prática: um ecossistema com repositórios de origens diferentes tem
+**mais de um destino**, e a escolha é por setor, não por repositório — dois
+repositórios do mesmo cliente vão para o mesmo lugar.
+
+### Onde essa correspondência mora
+
+**Fora daqui.** O mapa *setor → conta de destino* nomeia organizações e endereços
+de pessoas: publicá-lo aciona os itens 1, 3 e 5 do checklist, e este template é
+distribuído inclusive para repositórios públicos.
+
+O desenho já resolve isso sem esforço: **o destino é um secret do repositório**,
+não um campo de configuração versionada. Cada repositório carrega o identificador
+da sua pasta e a credencial da sua conta; o workflow é idêntico em todos e não
+sabe para onde está enviando. Quem conhece o mapa é quem tem acesso aos dois
+lados.
+
+Uma pasta por setor, com os projetos dentro, é organização de destino — e sai de
+graça: basta que os repositórios de um setor compartilhem o mesmo identificador
+de pasta no secret. **Nenhuma mudança no workflow.**
+
+### Este template cobre um destino, não dois
+
+O workflow aqui fala **Google Drive, via service account**. Um destino em
+**OneDrive/SharePoint corporativo** — que é o certo para repositório de
+empregador — precisa de outro caminho de autenticação: aplicativo registrado no
+Entra ID, com `client_credentials`, contra o Microsoft Graph. A mecânica do
+bundle, a verificação e o contrato de falha são os mesmos; muda o bloco que
+obtém o token e o que envia o arquivo.
+
+Enquanto essa variante não existir, **repositório de empregador não tem backup
+automatizado** — e é melhor registrar isso como lacuna do que apontá-lo para um
+destino pessoal só porque esse funciona hoje.
+
 ## Instalação num departamento
 
 1. **Crie (ou reaproveite) um projeto no Google Cloud** e habilite nele a
