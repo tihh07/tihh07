@@ -28,14 +28,14 @@
 | **H4** — secret scanning e push protection | "fechado, ambos `enabled`" | 🟡 **não verificável pela nuvem**. O que se provou hoje é que o GitHub Advanced Security está **desligado** — o que é um flag distinto do secret scanning gratuito de repositório público. Push protection não foi verificado por via nenhuma. |
 | **L1** — quatro departamentos nunca auditados | "bloqueado por R1" | 🟢 **em voo**. Em 2026-08-20 foram despachadas **17 sessões de nuvem, uma por repositório privado**, cada uma escopada num único repositório. O que falta deixou de ser a auditoria e passou a ser o **transporte** do handoff. |
 | **L4** — ~14 repositórios fora de rotina | "~18 no ecossistema, 4 cobertos" | 🔴 **cobertura recorrente**, não cobertura pontual. São **18 repositórios** (17 privados + o público); a rodada de hoje dá cobertura pontual a todos, e a maioria segue fora de qualquer rotina agendada. |
-| **P2** — prompt de rotina fora do git | "falta a rotina N2" | 🔴 **as duas** rotinas de governança continuam com o prompt inteiro na UI. A skill versionada existe e **não é o que roda**. |
+| **P2** — prompt de rotina fora do git | "falta a rotina N2" | 🟡 a reverificação mostrou que **as duas** rotinas tinham o prompt inteiro na UI, não uma. A N2 foi convertida em ponteiro no mesmo dia; a de control-plane segue. |
 
 **Abertos**
 
 | Item | Estado | Por quê |
 |---|---|---|
 | **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
-| **P2** — prompt das duas rotinas só na UI | ❌ aberto | 👤 troca na UI |
+| **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1 · H4** — estado real dos controles | 🟡 parcial | só a UI responde |
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
 | **H3** — segredo de Actions para o PR Watch | ❌ aberto | proibido a agente por regra de conduta, não por ferramenta |
@@ -216,8 +216,8 @@ anexado.
 **Verificação cumprida:** a rotina executa e produz o mesmo relatório sem eles —
 o que confirma que os conectores nunca foram necessários, só estavam ligados.
 
-### P2 — Prompt de rotina fora do git, nas duas rotinas
-**Severidade: média · Executor: 👤 Humano · ABERTO**
+### P2 — Prompt de rotina fora do git
+**Severidade: média · Executor: ☁️ Nuvem ✅ (N2) / 👤 Humano ABERTO (control-plane)**
 
 **Feito, e versionado:** a rotina N2 tem conteúdo em
 [`.claude/skills/governanca-n2/SKILL.md`](../.claude/skills/governanca-n2/SKILL.md),
@@ -233,12 +233,32 @@ Isso não é cosmético. Prompt na UI não é revisável, não é auditável, n�
 PR e desaparece se a rotina for recriada. Enquanto durar, a versão que executa e
 a versão que este repositório publica podem divergir sem que nada acuse.
 
-**Ação (👤):** trocar o prompt de cada rotina pelo ponteiro para a skill
-correspondente. Para a rotina N2 a skill já existe. Para a de control-plane,
-falta decidir onde a skill mora — o escopo dela é multi-repo, e a skill não pode
-morar num repositório que ela audita sem virar entrada da própria auditoria.
+**Fechado para a rotina N2, em 2026-08-20.** O prompt na UI foi trocado pelo
+ponteiro para a skill versionada. Duas escolhas de desenho vale registrar, porque
+o critério ingênuo — *"o prompt cabe em duas linhas"* — teria produzido um
+controle pior:
 
-**Verificação:** o prompt de cada rotina cabe em duas linhas.
+- **A regra de escopo (R1) ficou inline**, repetida no prompt além de constar da
+  skill. Um ponteiro puro faz a regra dura depender de o arquivo ser legível; a
+  regra precisa valer inclusive quando ele não for.
+- **O prompt manda parar e relatar se a skill não puder ser lida**, com o caminho
+  tentado e o erro literal, em vez de improvisar de memória. Sem isso, uma rodada
+  que perdesse o critério devolveria "sem achados" — e rodada cega relatada como
+  limpa é pior do que rodada que não aconteceu.
+
+O prompt não cabe em duas linhas, e **é para não caber**. O critério de
+verificação abaixo foi corrigido: o que importa não é o tamanho, é que nenhum
+critério operacional viva só na UI.
+
+**Aberto para a rotina de control-plane (👤).** Falta decidir onde a skill mora, e
+a resposta ficou mais clara com P0 fechado: ela **não pode** morar no repositório
+público, porque a rotina teria de lê-lo e voltaria a violar R1 — o defeito que
+acabou de ser corrigido. O candidato natural é o repositório privado de
+configuração do harness, que já hospeda skills executadas por outra rotina e
+não está no escopo desta.
+
+**Verificação:** o prompt de cada rotina não contém critério operacional que não
+esteja versionado — só escopo, ponteiro e o que fazer se o ponteiro falhar.
 
 ---
 
@@ -755,7 +775,7 @@ Hoje é **quinta-feira, 2026-08-20**.
 |---|---|---|---|
 | **Hoje (qui)** | Recolher os handoffs das auditorias que já retornaram; guardar o entregável G sanitizado de cada uma | 👤 | 30 min |
 | **Hoje (qui)** | **H1 + H4** — conferir na UI e datar a conferência neste arquivo | 👤 | 5 min |
-| **Sex** | **P2** — trocar o prompt das duas rotinas pelo ponteiro para a skill | 👤 | 10 min |
+| ~~Sex~~ | ~~**P2** — trocar o prompt das rotinas pelo ponteiro~~ | ☁️ | **feito em 2026-08-20 para a N2**; a de control-plane espera a decisão de onde a skill mora |
 | **Sex** | **L2** — decidir se os nomes de setor podem ser publicados | 👤 | 20 min |
 | **Sáb/dom** | Recolher os handoffs restantes | 👤 | conforme retorno |
 | **Antes de seg** | **V1** — escrever o workflow de leitura de configuração (depende de `.github/` estar livre) | ☁️ | 1 sessão |
