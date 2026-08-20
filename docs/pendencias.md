@@ -532,6 +532,71 @@ dias e três merges depois, continua valendo.
 
 ## 3. Ainda em aberto ☁️ / 🏠
 
+### D1 — O que ainda depende de uma máquina ligada
+**Severidade: alta · Executor: 👤 Humano (decisão) depois ☁️ Nuvem · ABERTO**
+
+Objetivo declarado pelo dono em 2026-08-20: **nada do ecossistema pode depender
+de a máquina local estar ligada.** GitHub como fonte de verdade, uma segunda
+cópia independente, e nenhum arquivo cuja existência dependa de alguém abrir o
+notebook.
+
+O que já satisfaz isso: **todo conteúdo versionado.** Qualquer máquina clona e
+continua; as sessões de nuvem provaram isso em 18 repositórios hoje.
+
+O que **não** satisfaz, em ordem de gravidade:
+
+1. **A configuração das rotinas** — cron, escopo de repositórios, conectores,
+   modelo. Vive só na UI da nuvem. Não é arquivo, então clonar não recupera, e
+   **é o único ponto do ecossistema que nenhum backup alcança.** Se as rotinas
+   forem recriadas ou perdidas, o que se perde não é o texto (P2 versionou a
+   skill) — é o agendamento e o escopo. Não há hoje nem um registro versionado
+   *descrevendo* essa configuração, que seria o mínimo.
+2. **A configuração dos repositórios no GitHub** — ruleset, proteção de branch,
+   secret scanning. Não é refém de máquina local, mas também não é versionada
+   nem reverificável da nuvem (**V1**). Some junto com a conta.
+3. **A cópia de segurança em bundle** — hoje produzida na máquina do dono e
+   guardada no OneDrive. **É exatamente a dependência que o objetivo quer
+   eliminar:** o backup só existe nos dias em que a máquina ligou, e ninguém é
+   avisado quando ela não liga. Backup que depende de lembrança não é backup, é
+   intenção.
+
+**Ação (👤, primeiro): dizer se o OneDrive é corporativo (Microsoft 365) ou
+pessoal.** A resposta decide o desenho e não dá para adivinhar:
+
+- **Corporativo** — um workflow agendado do GitHub Actions gera o bundle e o
+  envia via Microsoft Graph, autenticando por aplicativo registrado no Entra ID,
+  com o segredo nos secrets do repositório. Roda na infraestrutura do GitHub,
+  sem máquina nenhuma. É a solução limpa.
+- **Pessoal** — o fluxo por aplicativo **não funciona**: OneDrive de consumidor
+  só aceita autenticação delegada, com refresh token que expira e exige novo
+  consentimento humano. Automatizar isso cria um segundo ponto de falha silencioso
+  — o backup para de rodar e ninguém percebe até precisar dele. Nesse caso vale
+  mais escolher outro destino, alcançável por token que não expira sozinho.
+
+**Ação (☁️, depois):** o workflow de backup, com três propriedades não
+negociáveis — grava um **heartbeat versionado a cada execução** (rodada que falha
+não pode terminar em silêncio; foi o defeito que já custou três ciclos de
+diagnóstico às cegas em outro repositório do ecossistema), **falha ruidosamente**
+em vez de pular, e **declara no cabeçalho o que não cobre**.
+
+**Ação (☁️, junto):** um arquivo versionado que **descreva** a configuração das
+rotinas e dos repositórios — não como backup executável, mas para que perder a UI
+não signifique perder o conhecimento de como reconstruí-la. Sem cron, sem
+identificador e sem conector no texto: o que se registra é o desenho, não o mapa
+operacional (ver **N19**).
+
+**Verificação:** desligar a máquina local por uma semana não muda nada
+observável — o backup continua datado do dia, e nenhuma pergunta sobre o
+ecossistema fica sem resposta.
+
+> **A pergunta certa não é "onde estão os arquivos".** Os arquivos já estão
+> seguros: estão no git, em dezoito repositórios, e qualquer máquina os recupera.
+> O que está refém não é disco — é **configuração que não é arquivo**. Um plano de
+> durabilidade que só resolve o backup de arquivos resolve a parte que já estava
+> resolvida.
+
+---
+
 ### V1 — A configuração do repositório não é reverificável pela nuvem
 **Severidade: alta · Executor: ☁️ Nuvem (implementa) + 👤 Humano (confere hoje) · ABERTO**
 

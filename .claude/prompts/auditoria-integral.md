@@ -20,6 +20,30 @@
 
 ---
 
+## Qual modelo usar
+
+A escolha do modelo é parte do despacho, não detalhe de infraestrutura. A regra
+saiu da primeira rodada em massa, e o número é a evidência: **17 auditorias no
+modelo mais capaz custaram cerca de US$ 273 numa tarde.** Para a passada
+inicial isso se paga — é a rodada que descobre o que existe, e errar por baixo
+ali contamina tudo que vem depois. Para o resto, não.
+
+| Rodada | Modelo | Por quê |
+|---|---|---|
+| **Primeira auditoria de um repositório** | o mais capaz disponível | terreno desconhecido, oito frentes, julgamento sobre o que é sensível |
+| **Desbloqueio ou follow-up** | um degrau abaixo | a decisão já foi tomada; o trabalho é estreito e o relatório anterior é o mapa |
+| **Reauditoria periódica** | um degrau abaixo | existe linha de base; a pergunta é o que mudou |
+| **Verificação pontual** (um fato, um comando) | o mais econômico que resolva | ler uma API e reportar não exige julgamento |
+
+Duas ressalvas que valem mais que a tabela:
+
+- **Repositório com dado sensível sobe um degrau**, seja qual for a rodada. A
+  frente F5 é a que erra mais caro, e o custo de um falso negativo ali não se
+  compara ao de tokens.
+- **Modelo mais barato não compensa prompt pior.** Se a rodada estreitou, é o
+  prompt que precisa carregar a decisão já tomada — como neste arquivo. Cortar
+  modelo e manter prompt aberto só troca custo por retrabalho.
+
 ## 0. Escopo — leia primeiro e obedeça antes de qualquer outra coisa
 
 Você audita **exclusivamente `<REPOSITORIO>`**.
