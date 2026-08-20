@@ -600,9 +600,28 @@ Propriedades não negociáveis:
 - **Resumo de execução a cada rodada**, para que "rodou e deu certo" seja
   distinguível de "rodou e não fez nada".
 
-**Ação (👤): criar a service account, compartilhar a pasta do Drive com o e-mail
-dela e gravar o secret.** É o único passo que agente nenhum alcança. Sem ele o
-workflow existe e falha — de propósito.
+**Ação (👤): sete passos, e nenhum deles é alcançável por agente.** O workflow já
+está escrito e verificado; o que falta é credencial, que agente não cria:
+
+1. Habilitar a **Google Drive API** no projeto do Google Cloud.
+2. Criar a **service account** (sem papel IAM) e gerar a chave JSON.
+3. **Compartilhar a pasta do Drive com o e-mail da service account, como Editor.**
+   É o passo cuja falha é opaca: sem ele o envio volta como se a pasta não
+   existisse, e a mensagem não diz que o problema é permissão.
+4. Gravar os secrets do repositório com a chave e o id da pasta. Enquanto não
+   existirem, **o job falha de propósito** — nunca pula em silêncio.
+5. Rodar uma vez à mão e conferir o resumo de execução e o arquivo na pasta.
+6. **Testar a restauração** a partir do bundle e anotar a data. Backup sem
+   restauração testada é intenção, não controle. O caminho foi provado neste
+   repositório: bundle criado, verificado e clonado de volta com o histórico
+   completo — falta provar no destino real.
+7. Conferir que a notificação de falha de workflow agendado chega ao dono. O
+   alarme deste controle é essa notificação; se ela não chega, o controle é mudo.
+
+**Ainda em aberto, e sem dono:** a conferência contra a desabilitação de 60 dias
+não pode morar no repositório que ela protege. A evidência que não depende dele é
+a **data do bundle mais recente no Drive** — quem olha isso, e com que
+periodicidade, ainda não está decidido.
 
 **Armadilha declarada, que o próprio GitHub cria:** workflow agendado é
 **desabilitado automaticamente após 60 dias sem atividade no repositório**. Para

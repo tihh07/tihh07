@@ -124,8 +124,8 @@ em dois lugares é a divergência que este repositório existe para evitar.
 | `.claude/prompts/` | Prompts reutilizáveis entre projetos |
 | `.claude/skills/` | Conteúdo versionado das rotinas (padrão prompt-ponteiro) |
 | `.claude-plugin/marketplace.json` | Manifesto do marketplace que distribui o plugin-fundação |
-| `plugins/fundacao/` | Templates distribuíveis: executores, hook, suíte do hook, telemetria |
-| `.github/workflows/` | PR Watch e watchdog |
+| `plugins/fundacao/` | Templates distribuíveis: executores, hook e sua suíte, telemetria, backup |
+| `.github/workflows/` | PR Watch, watchdog e backup para o Drive |
 | `.github/CODEOWNERS` | Donos por caminho — inerte até "Require review from Code Owners" |
 | `.gitignore` | Barra segredo, base de dados e mídia |
 | `reports/publicacao/` | Saída semanal da rotina N2, quando há achado |
@@ -146,12 +146,12 @@ A verificação equivalente aqui, antes de qualquer PR:
 - todo `**/.claude-plugin/*.json` e `.claude/settings.json` são JSON válido
   (o glob antigo, `.claude-plugin/*.json`, deixava o manifesto do plugin de
   fora do procedimento);
-- **`bash plugins/fundacao/hooks/test-guard-push.sh` passa inteira.** É a única
-  verificação executável do repositório: 29 casos que provam que o hook bloqueia
-  push para `main`, force push, deleção de branch remota e push de repositório
-  inteiro (`--all`/`--mirror`/`--prune`), e libera `claude/*`. Guardrail sem
-  suíte é uma afirmação, não um controle — e três desses casos existem porque o
-  hook os deixava passar até 2026-08-20.
+- **`bash plugins/fundacao/hooks/test-guard-push.sh` passa inteira**, e os blocos
+  `run:` dos workflows passam em `bash -n`. A suíte é a única verificação
+  executável do repositório: prova que o hook bloqueia push para `main`, force
+  push, deleção remota e push de repositório inteiro, e libera `claude/*`.
+  Guardrail sem suíte é afirmação, não controle. A contagem de casos não fica
+  aqui: já envelheceu uma vez neste arquivo, calada, entre duas correções.
 
 ## Topologia de branches
 

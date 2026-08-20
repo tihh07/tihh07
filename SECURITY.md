@@ -76,6 +76,25 @@ carrega nome de cliente, número de faturamento ou estrutura interna
 reconhecível de um caso real. Sanitização deixa rastro. Exemplo publicado deve
 ser construído como exemplo, não derivado de um caso.
 
+## Backup: uma superfície que o checklist não cobria
+
+A cópia de segurança fora do GitHub cria duas exposições que não existiam, e
+nenhuma delas aparece no checklist acima, porque ele foi escrito para conteúdo
+publicado, não para conteúdo copiado:
+
+- **A credencial do destino** vive num secret do repositório. Quem consegue
+  adicionar um workflow consegue usá-la, então a proteção efetiva do backup é a
+  proteção da branch default — não a força da chave.
+- **O bundle é o repositório inteiro, com histórico.** Ele carrega o que já foi
+  removido do conteúdo atual: um segredo revogado, um dado sanitizado depois.
+  Copiá-lo para outra conta amplia o alcance de tudo isso de uma vez.
+
+Para este repositório, que é público, o bundle não revela nada que já não esteja
+publicado. **Essa conclusão não se transporta.** Num repositório privado, decidir
+o destino do backup é uma decisão de sanitização como qualquer outra, e passa
+pelos mesmos oito itens — em especial titularidade: material de cliente copiado
+para uma conta pessoal continua sendo material de cliente.
+
 ## Runbook de incidente
 
 Se algo que não deveria ser público já está público, a ordem importa. Esta é a

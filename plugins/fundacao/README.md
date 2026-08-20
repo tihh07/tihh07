@@ -22,7 +22,9 @@ O conteúdo daqui é derivado exclusivamente do blueprint, que já é público.
 |---|---|
 | `agents/` | Os oito executores: orquestrador + 7 papéis especializados |
 | `hooks/guard-push.sh` | Guardrail `PreToolUse` — push só em `claude/*`, sem force, sem deleção |
+| `hooks/test-guard-push.sh` | A suíte que prova o guardrail — rode-a depois de qualquer edição nele |
 | `templates/telemetry/` | Esqueleto de `runs.jsonl` e do snapshot semanal |
+| `templates/backup/` | Workflow de backup do repositório para o Google Drive, e como instalá-lo |
 
 O **watchdog** não tem cópia aqui de propósito. O arquivo ativo em
 [`.github/workflows/watchdog.yml`](../../.github/workflows/watchdog.yml) já é
@@ -30,6 +32,13 @@ portável: os quatro checks pulam sozinhos quando não se aplicam ao repositóri
 então copiá-lo basta, sem ajuste. Manter uma segunda cópia "template" só criaria
 duas versões para divergirem — que é exatamente o defeito que este ecossistema
 existe para detectar.
+
+O **backup**, ao contrário, tem template *e* instalação, e a diferença é
+deliberada: o arquivo ativo aqui carrega um bloco de análise de risco que só vale
+para um repositório **público** — o bundle não revela nada que já não esteja
+publicado. Copiar essa conclusão para um repositório privado seria copiar a parte
+errada. Por isso as duas cópias existem, e por isso ambas declaram, no cabeçalho,
+que divergem só no cabeçalho e que **o template é o lado que vale**.
 
 ## Instalação num departamento
 
@@ -41,6 +50,9 @@ existe para detectar.
    `.github/workflows/` do departamento. Sem ajustes.
 4. Copiar `templates/telemetry/` para `telemetry/` quando a primeira rotina
    entrar em produção.
+5. Copiar `templates/backup/backup-drive.yml` para `.github/workflows/` e seguir
+   o [README do template](templates/backup/README.md) — a credencial é humana, e
+   até ela existir o workflow falha de propósito, em vez de pular calado.
 
 **Alterar `.claude/**` é gate humano.** Nenhum agente executa esta instalação
 sozinho.
