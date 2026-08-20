@@ -60,8 +60,45 @@ CMD=$(leia_comando) || {
   exit 2
 }
 
-# Só interessa comando de push.
-printf '%s' "$CMD" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+([^;&|]*[[:space:]])?push([[:space:]]|$)' || exit 0
+# Corpo de heredoc é DADO, não comando. Uma mensagem de commit escrita via
+# `<<EOF` pode citar comandos de exemplo, e um script gerado por heredoc pode
+# conter linhas inteiras deles; nada disso é executado pelo shell que estamos
+# inspecionando. Sem descartar esses corpos, o hook nega trabalho legítimo — foi
+# o que aconteceu em 2026-08-20, quando uma mensagem de commit que mencionava o
+# próprio guardrail passou a bloquear o commit que a carregava.
+sem_heredoc() {
+  awk '
+    # Dentro de um corpo de heredoc: só procura o marcador de fim.
+    dentro {
+      linha = $0
+      sub(/^[ \t]+/, "", linha)
+      if (linha == marca) { dentro = 0 }
+      next
+    }
+    {
+      print
+      # Abre um heredoc? Guarda o marcador, com ou sem aspas, com ou sem <<-.
+      if (match($0, /<<-?[ \t]*("[^"]+"|'"'"'[^'"'"']+'"'"'|[A-Za-z_][A-Za-z0-9_]*)/)) {
+        marca = substr($0, RSTART, RLENGTH)
+        sub(/^<<-?[ \t]*/, "", marca)
+        gsub(/["'"'"']/, "", marca)
+        dentro = 1
+      }
+    }
+  '
+}
+
+CMD=$(printf '%s' "$CMD" | sem_heredoc)
+
+# Um comando pode encadear vários segmentos (`a && b`, `a; b`, `a | b`). Cada um
+# é avaliado por si: o que interessa é se ALGUM deles é um `git push`, e as
+# travas se aplicam ao segmento que é, não à string inteira.
+#
+# Varrer a string inteira era o desenho anterior, e ele negava trabalho legítimo:
+# um `git commit` cuja mensagem mencionasse a palavra "push" — dentro de um
+# heredoc, longe de qualquer comando — casava com o padrão e era bloqueado.
+# Guardrail que nega demais é indistinguível de guardrail quebrado, e convida à
+# desinstalação; está escrito no cabeçalho deste arquivo e vale para ele mesmo.
 
 deny() {
   echo "guard-push: $1" >&2
@@ -69,43 +106,78 @@ deny() {
   exit 2
 }
 
-# Force push destrói histórico remoto — nunca, nem em claude/*.
-printf '%s' "$CMD" | grep -qE '(--force([^-]|$)|--force-with-lease|[[:space:]]-f([[:space:]]|$))' \
-  && deny "force push bloqueado."
+# Verdadeiro quando o segmento é um `git push`: depois de `git`, só podem vir
+# opções globais antes do subcomando. Assim `git -c k=v commit` não é push, e
+# `git --no-pager push` é.
+e_um_push() {
+  local -a w
+  read -r -a w <<< "$1"
+  local i=0
+  [ "${w[0]:-}" = "git" ] || return 1
+  i=1
+  while [ $i -lt ${#w[@]} ]; do
+    case "${w[$i]}" in
+      # Opções globais que consomem o argumento seguinte.
+      -C|-c|--git-dir|--work-tree|--namespace|--exec-path) i=$((i + 2)) ;;
+      -*) i=$((i + 1)) ;;
+      *) break ;;
+    esac
+  done
+  [ "${w[$i]:-}" = "push" ]
+}
 
-# Deleção de branch remota.
-printf '%s' "$CMD" | grep -qE '(--delete|[[:space:]]-d([[:space:]]|$)|[[:space:]]:[A-Za-z0-9._/-]+)' \
-  && deny "deleção de branch remota bloqueada."
+verifica_segmento() {
+  local SEG="$1"
 
-# Alvos explicitamente proibidos, mesmo que "claude" apareça em outro ponto do comando.
-printf '%s' "$CMD" | grep -qE '[[:space:]](main|master|develop)([[:space:]]|$)|:(main|master|develop)([[:space:]]|$)' \
-  && deny "push direto para branch protegida bloqueado."
+  # Force push destrói histórico remoto — nunca, nem em claude/*.
+  printf '%s' "$SEG" | grep -qE '(--force([^-]|$)|--force-with-lease|[[:space:]]-f([[:space:]]|$))' \
+    && deny "force push bloqueado."
 
-# Modos que empurram o repositório inteiro, sem refspec nenhum. Sem esta trava
-# eles caem no fallback de "branch atual" logo abaixo, que numa sessão de agente
-# é claude/* — e passam. Mas `--all` empurra TODAS as branches locais, `main`
-# inclusive, `--mirror` espelha o repositório (o que apaga refs remotas que não
-# existam mais no local) e `--prune` apaga remotas diretamente. Os três fazem
-# exatamente o que as travas acima proíbem, por um caminho que elas não olham.
-printf '%s' "$CMD" | grep -qE '(--all|--mirror|--prune)([[:space:]]|$)' \
-  && deny "push de repositório inteiro (--all/--mirror/--prune) bloqueado."
+  # Deleção de branch remota.
+  printf '%s' "$SEG" | grep -qE '(--delete|[[:space:]]-d([[:space:]]|$)|[[:space:]]:[A-Za-z0-9._/-]+)' \
+    && deny "deleção de branch remota bloqueada."
 
-# Extrai o refspec: última palavra que não seja flag, remoto conhecido ou o próprio git/push.
-REF=$(printf '%s' "$CMD" \
-  | tr ' ' '\n' \
-  | grep -vE '^(git|push|origin|upstream|-u|--set-upstream|--tags|--quiet|-q|--verbose|-v)$' \
-  | grep -vE '^-' \
-  | tail -1)
+  # Alvos proibidos, mesmo que "claude" apareça em outro ponto do segmento.
+  printf '%s' "$SEG" | grep -qE '[[:space:]](main|master|develop)([[:space:]]|$)|:(main|master|develop)([[:space:]]|$)' \
+    && deny "push direto para branch protegida bloqueado."
 
-# Push sem refspec empurra a branch atual — precisa que ela seja claude/*.
-if [ -z "$REF" ]; then
-  REF=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-  [ -z "$REF" ] && deny "não foi possível determinar a branch de destino."
-fi
+  # Modos que empurram o repositório inteiro, sem refspec nenhum. Sem esta trava
+  # caem no fallback de "branch atual" abaixo, que numa sessão de agente é
+  # claude/* — e passam. Mas `--all` empurra TODAS as branches locais, `main`
+  # inclusive, `--mirror` espelha o repositório (apagando refs remotas que não
+  # existam mais no local) e `--prune` apaga remotas diretamente. Os três fazem o
+  # que as travas acima proíbem, por um caminho que elas não olham.
+  printf '%s' "$SEG" | grep -qE '(--all|--mirror|--prune)([[:space:]]|$)' \
+    && deny "push de repositório inteiro (--all/--mirror/--prune) bloqueado."
 
-# Aceita claude/x e origem:destino onde o destino é claude/x.
-DEST="${REF##*:}"
-case "$DEST" in
-  claude/*) exit 0 ;;
-  *) deny "destino '$DEST' fora de claude/*." ;;
-esac
+  # Extrai o refspec: última palavra que não seja flag, remoto conhecido ou o próprio git/push.
+  REF=$(printf '%s' "$SEG" \
+    | tr ' ' '\n' \
+    | grep -vE '^(git|push|origin|upstream|-u|--set-upstream|--tags|--quiet|-q|--verbose|-v)$' \
+    | grep -vE '^-' \
+    | tail -1)
+
+  # Push sem refspec empurra a branch atual — precisa que ela seja claude/*.
+  if [ -z "$REF" ]; then
+    REF=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    [ -z "$REF" ] && deny "não foi possível determinar a branch de destino."
+  fi
+
+  # Aceita claude/x e origem:destino onde o destino é claude/x.
+  # `return`, não `exit`: um segmento liberado não encerra a varredura, senão o
+  # primeiro envio legítimo faria o hook parar antes de olhar o segundo.
+  DEST="${REF##*:}"
+  case "$DEST" in
+    claude/*) return 0 ;;
+    *) deny "destino '$DEST' fora de claude/*." ;;
+  esac
+}
+
+while IFS= read -r SEG; do
+  SEG=$(printf '%s' "$SEG" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+  [ -n "$SEG" ] || continue
+  e_um_push "$SEG" && verifica_segmento "$SEG"
+done <<< "$(printf '%s' "$CMD" | sed -E 's/(\|\||&&|;|\||&)/\n/g')"
+
+# Nenhum segmento era um push: nada a decidir.
+exit 0

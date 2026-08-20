@@ -81,18 +81,38 @@ Os departamentos e seus repositórios são definidos pelo
 fonte de verdade sobre *quais* projetos existem e qual a missão de cada um. A
 tabela abaixo rastreia o *estado* de cada um.
 
-| Repositório | Departamento | Estado | Pendência principal | Última auditoria |
-|---|---|---|---|---|
-| `AI-Operating-System` (privado) | Fundação / Arquitetura | *não verificado* — piloto da Fase 1 | *não verificado* | — |
-| `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | *não verificado* | *não verificado* | — |
-| `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | *não verificado* | *não verificado* | — |
-| `bena-agencia` (privado) | Operação de Cliente / Agência | *não verificado* | *não verificado* | — |
-| `tihh07/tihh07` (público) | Fachada Pública / Marketing | **auditado** — documentação, workflows e templates de plugin; sem código de aplicação | Uma rotina semanal agendada tem repositório privado e o público no mesmo escopo, violando R1; só o humano remove | 2026-08-08 |
+O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 
-> **Só a última linha foi verificada.** As demais existem para declarar o
-> conjunto conhecido de projetos, não para afirmar o estado deles. Preencher uma
-> célula sem ter rodado a auditoria no projeto correspondente derrota o
-> propósito do orquestrador.
+| Repositório | Departamento | Estado | Última auditoria |
+|---|---|---|---|
+| `AI-Operating-System` (privado) | Fundação / Arquitetura | auditoria integral despachada | em voo |
+| `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | auditoria integral despachada | em voo |
+| `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | auditoria integral despachada | em voo |
+| `bena-agencia` (privado) | Operação de Cliente / Agência | auditoria integral despachada | em voo |
+| *13 repositórios privados* | não declarado | auditoria integral despachada | em voo |
+| `tihh07/tihh07` (público) | Fachada Pública / Marketing | **auditado** — documentação, workflows e templates de plugin; sem código de aplicação | 2026-08-20 |
+
+> **Por que treze linhas viraram uma.** Não é preguiça de tabela: vários desses
+> nomes de repositório são nomes de organização, e publicá-los aqui aciona os
+> itens 1 (nomes) e 7 (titularidade) do checklist do
+> [`SECURITY.md`](SECURITY.md). O orquestrador precisa responder *"o que
+> existe?"* — e a resposta honesta num repositório N2 é a **contagem e o
+> estado**, não a lista. Nomear os treze é decisão humana, registrada em
+> [`docs/pendencias.md`](docs/pendencias.md); os quatro nomeados acima já
+> constavam do blueprint publicado, e **um deles cai na mesma decisão**.
+>
+> Enquanto a decisão não vier, este arquivo declara o conjunto pelo tamanho. Um
+> índice que esconde treze dos dezoito descreve um recorte; um índice que os
+> publica sem a decisão vaza. Contar e não nomear é a única das três opções que
+> não mente nem expõe.
+
+> **"Em voo" não é "verificado".** Em 2026-08-20 foram despachadas 17 sessões de
+> nuvem, uma por repositório privado, cada uma escopada no seu (**R1**: nenhuma
+> mistura). Cada uma audita, aplica as correções autorizadas e abre PR draft no
+> próprio repositório. Nenhuma delas escreve aqui: o bloco de handoff sanitizado
+> fica na origem, e o transporte é humano. A coluna só vira data quando esse
+> bloco chegar — despachar não é auditar, e marcar como concluído o que ainda
+> está rodando é exatamente o defeito que este índice existe para evitar.
 
 Achados que não cabem na tabela — abertos e resolvidos — vivem em
 [`docs/pendencias.md`](docs/pendencias.md), com evidência, executor e critério
@@ -138,18 +158,24 @@ verificado* exatamente por isso.
 | `AGENTS.md` | Esta doutrina operacional; `CLAUDE.md` é ponteiro para cá |
 | `docs/orchestration-blueprint.md` | Autoridade de projeto — vence em caso de divergência |
 | `docs/pendencias.md` | Backlog: o que falta, com executor e critério de verificação |
-| `SECURITY.md` | Política de segurança, regra R1 e runbook de incidente |
+| `SECURITY.md` | Canônico do checklist de sanitização, da regra R1, do kill-switch e do runbook de incidente |
+| `LICENSE` | Dois regimes: CC BY 4.0 para o texto, MIT para os snippets |
+| `.claude/settings.json` | Permissões do projeto e instalação do hook de push |
 | `.claude/prompts/` | Prompts reutilizáveis entre projetos |
 | `.claude/skills/` | Conteúdo versionado das rotinas (padrão prompt-ponteiro) |
-| `plugins/fundacao/` | Templates distribuíveis: executores, hook, telemetria |
+| `.claude-plugin/marketplace.json` | Manifesto do marketplace que distribui o plugin-fundação |
+| `plugins/fundacao/` | Templates distribuíveis: executores, hook, suíte do hook, telemetria |
 | `.github/workflows/` | PR Watch e watchdog |
+| `.github/CODEOWNERS` | Donos por caminho — inerte até "Require review from Code Owners" |
+| `.gitignore` | Barra segredo, base de dados e mídia |
 | `reports/publicacao/` | Saída semanal da rotina N2, quando há achado |
 
 ## Build, testes e lint
 
-Não há gerenciador de pacotes, suíte de testes, linter nem etapa de build, e não
-se deve introduzir um sem que isso seja o pedido explícito. O repositório é
-Markdown, YAML e um único shell script.
+Não há gerenciador de pacotes, linter nem etapa de build, e não se deve
+introduzir um sem que isso seja o pedido explícito. O repositório é Markdown,
+YAML, três manifestos JSON e dois shell scripts — um guardrail e a suíte que o
+verifica.
 
 A verificação equivalente aqui, antes de qualquer PR:
 
@@ -157,10 +183,15 @@ A verificação equivalente aqui, antes de qualquer PR:
 - os workflows em `.github/workflows/` têm YAML válido, e cada um declara no
   cabeçalho o que **não** cobre — workflow que promete mais do que verifica dá
   verde vazio;
-- os manifestos `.claude-plugin/*.json` são JSON válido;
-- `bash -n plugins/fundacao/hooks/guard-push.sh` passa, e o hook continua
-  bloqueando push para `main`, force push e deleção de branch remota, e
-  liberando `claude/*`.
+- todo `**/.claude-plugin/*.json` e `.claude/settings.json` são JSON válido
+  (o glob antigo, `.claude-plugin/*.json`, deixava o manifesto do plugin de
+  fora do procedimento);
+- **`bash plugins/fundacao/hooks/test-guard-push.sh` passa inteira.** É a única
+  verificação executável do repositório: 29 casos que provam que o hook bloqueia
+  push para `main`, force push, deleção de branch remota e push de repositório
+  inteiro (`--all`/`--mirror`/`--prune`), e libera `claude/*`. Guardrail sem
+  suíte é uma afirmação, não um controle — e três desses casos existem porque o
+  hook os deixava passar até 2026-08-20.
 
 ## Topologia de branches
 
@@ -188,9 +219,11 @@ O gate humano vale para todas: nada entra em `main` sem PR revisado.
   `.claude/skills/<nome>/SKILL.md` e o prompt da rotina vira um ponteiro. Prompt
   na UI não é revisável, não é auditável e se perde se a rotina for recriada.
 - **Idioma** — a documentação operacional é escrita em português; mensagens de
-  commit, em inglês. A regra vale inclusive para commit feito à mão: dois
-  commits de julho de 2026 a violaram, e é o tipo de exceção que, repetida,
-  vira a nova convenção por omissão.
+  commit, em inglês. A regra vale inclusive para commit feito à mão: vários
+  commits de julho de 2026 a violaram — inclusive títulos de merge, que passam
+  despercebidos — e é o tipo de exceção que, repetida, vira a nova convenção por
+  omissão. A contagem exata não fica aqui de propósito: número no texto envelhece
+  calado, e `git log` responde melhor.
 - **Sanitização** — nada de caminho local absoluto, nome de cliente, token ou
   URL interna em arquivo versionado, inclusive fora do `README.md`. O índice
   acima guarda caminhos locais apenas se forem genéricos; caso contrário,

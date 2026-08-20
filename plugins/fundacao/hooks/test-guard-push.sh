@@ -26,8 +26,11 @@ FAIL=0
 # Constrói {"tool_input":{"command":"..."}} escapando \ e " — sem depender de jq
 # nem de python, que é justamente o que o hook precisa tolerar.
 json_para() {
+  # Escapa barra invertida, aspas e — o que faltava — quebra de linha: newline
+  # literal dentro de string JSON é JSON inválido, e o hook a recusaria por falha
+  # fechada, fazendo um caso legítimo parecer um bloqueio.
   printf '{"tool_input":{"command":"%s"}}' \
-    "$(printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
+    "$(printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g')"
 }
 
 # caso <esperado 0|2> <descrição> <comando>
@@ -88,6 +91,20 @@ caso 0 "main local para claude/* remoto"     'git push origin main:claude/x'
 caso 0 "não é push: ls"                      'ls -la'
 caso 0 "não é push: git status"              'git status'
 caso 0 "não é push: comando que cita push"   'echo "não faça git pushes"'
+
+# Regressões de 2026-08-20. A detecção varria a string inteira do comando, então
+# qualquer prosa que contivesse "git ... push" bloqueava: a mensagem de um commit
+# sobre o próprio guardrail, um heredoc que gerasse um script, um exemplo em
+# documentação. Guardrail que nega demais convida à desinstalação.
+caso 0 "commit cuja mensagem cita push"       'git commit -m "wire the push hook"'
+caso 0 "opção global antes de um não-push"    'git -c user.name=t commit -m "push guardrail"'
+caso 0 "corpo de heredoc não é comando"       'cat <<EOF
+git push origin main
+EOF'
+caso 0 "segmento liberado seguido de prosa"   'git push origin claude/x && echo main'
+# E o simétrico: opção global não pode esconder um push de verdade.
+caso 2 "--no-pager não esconde o push"        'git --no-pager push origin main'
+caso 2 "opção global com valor antes do push" 'git -c core.pager=cat push origin main'
 
 # O caso do fallback só é honesto num repositório onde a branch atual NÃO é
 # claude/*: é lá que "push sem refspec" precisa bloquear. Monta um repo
