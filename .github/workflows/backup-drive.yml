@@ -1,0 +1,397 @@
+name: Backup para o Google Drive
+
+# Segunda cópia durável do repositório, semanal, sem depender de máquina local
+# ligada. Gera um `git bundle` de TODAS as refs, verifica o bundle e o envia
+# para uma pasta do Google Drive autenticando com uma **service account** do
+# Google Cloud (chave JSON em secret do repositório).
+#
+# POR QUE WORKFLOW E NÃO CONECTOR: um conector se anexa a uma *rotina*, e uma
+# rotina que fizesse backup de vários repositórios teria repositório privado e
+# público no mesmo escopo — violação direta de R1. Um workflow vive dentro de um
+# repositório e só enxerga aquele repositório: é R1-seguro por construção.
+#
+# POR QUE SERVICE ACCOUNT: não há refresh token que expire nem consentimento
+# humano periódico para renovar. O que pode quebrar é a chave ser revogada ou a
+# pasta deixar de estar compartilhada — ambos falham ruidosamente aqui.
+#
+# ---------------------------------------------------------------------------
+# ESTE ARQUIVO É A INSTALAÇÃO DO TEMPLATE
+# ---------------------------------------------------------------------------
+# O original vive em `plugins/fundacao/templates/backup/backup-drive.yml`, junto
+# do README de instalação. As duas cópias devem ficar em sincronia, e o ÚNICO
+# diff esperado entre elas é este bloco e o bloco seguinte, ambos sobre o fato de
+# este repositório ser público. Divergiu em qualquer outra linha: alguém corrigiu
+# um lado só — o template é o lado que vale, e a correção precisa voltar para ele.
+#
+# ---------------------------------------------------------------------------
+# ESTE REPOSITÓRIO É PÚBLICO — e isso muda a análise de risco do DESTINO
+# ---------------------------------------------------------------------------
+# Todo o conteúdo empacotado aqui já é legível por qualquer pessoa no GitHub. O
+# bundle não contém nada sensível: nem segredo, nem nome de cliente, nem caminho
+# local — se contivesse, o problema seria o repositório, não o backup. Logo, o
+# risco de confidencialidade do destino é ~nulo neste caso específico: o Drive
+# guarda uma cópia de algo que já é público. O que resta a proteger é
+# DISPONIBILIDADE e INTEGRIDADE — que a cópia exista e esteja íntegra.
+#
+# NÃO COPIE ESSA CONCLUSÃO PARA UM REPOSITÓRIO PRIVADO. Lá, o mesmo bundle é o
+# código e o histórico inteiros em claro dentro de uma pasta do Drive, alcançável
+# por quem tiver a conta Google ou a chave da service account. A superfície de
+# risco muda de lugar, e a decisão tem que ser refeita por repositório. O texto
+# acima vale por este repositório ser N2/público, não por o mecanismo ser seguro.
+#
+# R1 continua valendo: este workflow só enxerga este repositório. Ele não é, e
+# não deve virar, o backup do ecossistema — cada repositório instala o seu.
+#
+# ---------------------------------------------------------------------------
+# `fetch-depth: 0` NÃO É DETALHE — É O QUE FAZ ISTO SER UM BACKUP
+# ---------------------------------------------------------------------------
+# `actions/checkout` sem `fetch-depth` traz só a ref do evento e um commit de
+# profundidade. Um bundle feito desse clone é sintaticamente válido, passa no
+# `git bundle verify`, sobe para o Drive e não contém o histórico: um backup que
+# parece existir e não restaura nada. Este repositório já teve um caso análogo —
+# um check do watchdog que lia refs remotas inexistentes num clone raso e passava
+# sempre, por não enxergar nada. Se alguém "otimizar" esta linha, o backup vira
+# ilusão sem nenhum sinal vermelho. Não remova.
+#
+# ---------------------------------------------------------------------------
+# NOMEAÇÃO E RETENÇÃO — decisão declarada
+# ---------------------------------------------------------------------------
+# O arquivo é versionado por data: `<owner>-<repo>-AAAA-MM-DD.bundle`. Se já
+# existir um arquivo com ESSE MESMO nome na pasta (mesmo dia, execução repetida
+# ou disparo manual), ele é ATUALIZADO no lugar; datas diferentes viram arquivos
+# diferentes. Ou seja: idempotente dentro do dia, histórico entre semanas.
+#
+# O que isso implica, dito sem enfeite:
+# - A pasta CRESCE SEM LIMITE. Nada aqui apaga bundle velho. Uma execução
+#   semanal são ~52 arquivos por ano, cada um do tamanho do repositório inteiro.
+#   A poda é humana, ou é um segundo mecanismo que este workflow não tem.
+# - A alternativa (um único arquivo sempre sobrescrito) não cresce, mas perde o
+#   histórico de backups: um estrago que só se percebe depois de N dias volta
+#   irrecuperável. Trocamos espaço por janela de recuperação, de propósito.
+# - Para inverter a escolha, veja o README do template: é mudar a construção de
+#   `NOME_ARQUIVO` para um nome fixo.
+#
+# ---------------------------------------------------------------------------
+# O QUE ESTE WORKFLOW *NÃO* COBRE — leia antes de tratar o verde como garantia
+# ---------------------------------------------------------------------------
+# - NÃO TESTA RESTAURAÇÃO. Verifica a integridade do bundle antes de enviar
+#   (`git bundle verify`), e nada além disso. Backup sem restauração testada é
+#   intenção, não controle: o teste (`git clone <bundle> <destino>`) é humano e
+#   periódico. Está no README do template.
+# - Não faz backup do que não é git: issues, pull requests, reviews, wiki,
+#   releases e seus binários, secrets, variáveis, rulesets, configurações do
+#   repositório e histórico de Actions. Nada disso está no bundle.
+# - Não inclui objetos Git LFS. `git bundle` empacota os ponteiros, não os
+#   blobs. Repositório com LFS precisa de um segundo mecanismo.
+# - Não criptografa. O bundle chega ao Drive como está; quem tiver acesso à
+#   pasta, à conta Google ou à chave da service account lê o repositório inteiro.
+#   Em repositório privado, isso move a superfície de risco para o Drive.
+# - Não confere o que já está no Drive. Não valida que os bundles antigos
+#   continuam lá, íntegros e legíveis — só escreve o de hoje.
+# - Não avisa por conta própria em caso de falha, além do canal nativo: a falha
+#   do job é o alerta, e o GitHub notifica o dono por e-mail quando um workflow
+#   agendado falha. Sem isso configurado no perfil, a falha é silenciosa.
+#
+# ---------------------------------------------------------------------------
+# SECRET AUSENTE FALHA O JOB — de propósito
+# ---------------------------------------------------------------------------
+# Instalar este workflow é ato deliberado. Se `GDRIVE_SA_KEY` ou
+# `GDRIVE_FOLDER_ID` não existirem, o job FALHA com mensagem clara em vez de
+# pular em silêncio: um backup que você acha que roda e não roda é pior que um X
+# vermelho na aba Actions. O X é informação; o verde vazio é mentira.
+# O conteúdo do secret nunca é ecoado — nem em log, nem em mensagem de erro.
+#
+# ---------------------------------------------------------------------------
+# ARMADILHA DO GITHUB: 60 DIAS
+# ---------------------------------------------------------------------------
+# O GitHub DESABILITA AUTOMATICAMENTE workflows agendados após 60 dias sem
+# atividade no repositório. Para um backup isso é exatamente o modo de falha que
+# ele existe para evitar: o cron para, nenhum job falha (não há job), nenhum
+# e-mail de falha chega, e a última cópia envelhece calada.
+# O que NÃO resolve: `workflow_dispatch`. O botão manual permite rodar, não
+# impede a desabilitação nem avisa que ela ocorreu.
+# Mitigação, e ela é deliberadamente de fora deste arquivo:
+#   (a) conferência periódica humana — a data do bundle mais recente na pasta do
+#       Drive é a única evidência que não depende deste repositório estar vivo;
+#   (b) qualquer vigia externo (rotina em outro sistema, lembrete de calendário)
+#       que compare essa data com hoje;
+#   (c) commit real no repositório dentro da janela — mas repositório de arquivo
+#       morto não tem commit, e é justamente ele que mais precisa do backup.
+# Nenhuma checagem interna serve: se o agendamento está desabilitado, nada aqui
+# dentro executa para reclamar.
+
+on:
+  schedule:
+    # Semanal, segunda-feira 04:17 UTC. Minuto e hora fora de `0 0` de
+    # propósito: no topo da hora a fila de agendamentos do GitHub atrasa.
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+# Princípio do mínimo: o job só lê o próprio repositório. Não escreve nada no
+# GitHub — nem commit, nem comentário, nem release.
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-drive-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Pré-voo — secrets obrigatórios
+        env:
+          GDRIVE_SA_KEY: ${{ secrets.GDRIVE_SA_KEY }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          set -euo pipefail
+          FALTA=0
+          if [ -z "${GDRIVE_SA_KEY:-}" ]; then
+            echo "::error::secret GDRIVE_SA_KEY ausente. Sem a chave da service account não há backup. Veja plugins/fundacao/templates/backup/README.md."
+            FALTA=1
+          fi
+          if [ -z "${GDRIVE_FOLDER_ID:-}" ]; then
+            echo "::error::secret GDRIVE_FOLDER_ID ausente. É o ID da pasta de destino no Drive (o trecho final da URL da pasta)."
+            FALTA=1
+          fi
+          if [ "$FALTA" -ne 0 ]; then
+            echo "Job falhando de propósito: workflow instalado sem configuração não deve passar em verde." >&2
+            exit 1
+          fi
+          echo "Secrets presentes (conteúdo não é lido nem impresso aqui)."
+
+      - name: Checkout completo
+        uses: actions/checkout@v4
+        with:
+          # Ver cabeçalho: sem isto o bundle sai sem histórico e o backup é
+          # ilusão. `0` = todo o histórico de todas as branches e tags.
+          fetch-depth: 0
+
+      - name: Gerar e verificar o bundle
+        id: bundle
+        run: |
+          set -euo pipefail
+
+          DATA="$(date -u +%Y-%m-%d)"
+          SLUG="$(printf '%s' "$GITHUB_REPOSITORY" | tr '/' '-')"
+          NOME_ARQUIVO="${SLUG}-${DATA}.bundle"
+          CAMINHO="${RUNNER_TEMP}/${NOME_ARQUIVO}"
+
+          # --all pega todas as refs presentes no clone (refs/heads/* e as
+          # remote-tracking refs/remotes/origin/* que o fetch-depth: 0 trouxe),
+          # mais as tags. É o que garante que nenhuma branch fique de fora.
+          git bundle create "$CAMINHO" --all
+
+          # Verificação ANTES do envio. Bundle corrompido não sobe: substituir
+          # uma cópia boa por uma quebrada é pior que não ter feito backup.
+          if ! git bundle verify "$CAMINHO"; then
+            echo "::error::git bundle verify falhou — bundle corrompido. Nada será enviado ao Drive; a cópia anterior no Drive permanece intacta."
+            exit 1
+          fi
+
+          REFS="$(git bundle list-heads "$CAMINHO" | wc -l | tr -d ' ')"
+          BYTES="$(wc -c < "$CAMINHO" | tr -d ' ')"
+          LEGIVEL="$(numfmt --to=iec --suffix=B "$BYTES" 2>/dev/null || echo "${BYTES} B")"
+
+          {
+            echo "nome=$NOME_ARQUIVO"
+            echo "caminho=$CAMINHO"
+            echo "bytes=$BYTES"
+            echo "refs=$REFS"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Backup para o Google Drive"
+            echo
+            echo "| Campo | Valor |"
+            echo "|---|---|"
+            echo "| Data (UTC) | $(date -u +'%Y-%m-%d %H:%M') |"
+            echo "| Repositório | \`${GITHUB_REPOSITORY}\` |"
+            echo "| Arquivo | \`${NOME_ARQUIVO}\` |"
+            echo "| Tamanho do bundle | ${LEGIVEL} (${BYTES} bytes) |"
+            echo "| Refs no bundle | ${REFS} |"
+            echo "| \`git bundle verify\` | ok |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enviar ao Google Drive
+        id: upload
+        env:
+          GDRIVE_SA_KEY: ${{ secrets.GDRIVE_SA_KEY }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          NOME_ARQUIVO: ${{ steps.bundle.outputs.nome }}
+          CAMINHO: ${{ steps.bundle.outputs.caminho }}
+          BYTES: ${{ steps.bundle.outputs.bytes }}
+        run: |
+          set -euo pipefail
+          umask 077
+
+          # Ferramentas usadas, todas presentes no runner ubuntu-latest do
+          # GitHub: openssl (assinatura RS256 do JWT), jq (JSON), curl (HTTP),
+          # coreutils. Nenhuma instalação via pip/npm — dependência a mais é
+          # superfície a mais num job que manipula credencial.
+          # Portabilidade: NÃO vale para runner self-hosted enxuto nem macOS.
+          #
+          # Minta do token e envio moram no MESMO step de propósito: assim o
+          # access token nunca atravessa `$GITHUB_OUTPUT` nem variável de job,
+          # onde o mascaramento não é garantido.
+
+          TRAB="${RUNNER_TEMP}/gdrive"
+          mkdir -p "$TRAB"
+
+          printf '%s' "$GDRIVE_SA_KEY" > "$TRAB/sa.json"
+          # stderr descartado: mensagem de parser pode ecoar trecho da chave.
+          if ! jq -e 'type == "object"' "$TRAB/sa.json" >/dev/null 2>&1; then
+            echo "::error::GDRIVE_SA_KEY não é um JSON válido. Cole o arquivo de chave da service account INTEIRO, sem editar."
+            exit 1
+          fi
+
+          CLIENT_EMAIL="$(jq -r '.client_email // empty' "$TRAB/sa.json")"
+          TOKEN_URI="$(jq -r '.token_uri // "https://oauth2.googleapis.com/token"' "$TRAB/sa.json")"
+          jq -r '.private_key // empty' "$TRAB/sa.json" > "$TRAB/key.pem"
+          if [ -z "$CLIENT_EMAIL" ] || [ ! -s "$TRAB/key.pem" ]; then
+            echo "::error::GDRIVE_SA_KEY sem client_email ou private_key. Isso é chave de service account? (arquivo com \"type\": \"service_account\")"
+            exit 1
+          fi
+
+          b64url() { openssl base64 -e -A | tr '+/' '-_' | tr -d '='; }
+
+          AGORA="$(date -u +%s)"
+          CAB="$(printf '%s' '{"alg":"RS256","typ":"JWT"}' | b64url)"
+          # Escopo mínimo: drive.file dá acesso apenas aos arquivos que a própria
+          # service account criou. Ela não enxerga o resto do Drive de ninguém.
+          PAYLOAD="$(jq -nc \
+            --arg iss "$CLIENT_EMAIL" \
+            --arg scope "https://www.googleapis.com/auth/drive.file" \
+            --arg aud "$TOKEN_URI" \
+            --argjson iat "$AGORA" \
+            --argjson exp "$((AGORA + 3600))" \
+            '{iss:$iss, scope:$scope, aud:$aud, iat:$iat, exp:$exp}' | b64url)"
+
+          ASSINATURA="$(printf '%s' "${CAB}.${PAYLOAD}" \
+            | openssl dgst -sha256 -sign "$TRAB/key.pem" -binary | b64url)"
+          JWT="${CAB}.${PAYLOAD}.${ASSINATURA}"
+
+          if ! curl -sS --fail-with-body -X POST "$TOKEN_URI" \
+                --data-urlencode 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer' \
+                --data-urlencode "assertion=${JWT}" \
+                -o "$TRAB/token.json"; then
+            echo "::error::Troca do JWT por access token falhou: $(jq -r '.error_description // .error // "sem detalhe"' "$TRAB/token.json" 2>/dev/null || echo 'resposta ilegível')"
+            exit 1
+          fi
+
+          ACCESS_TOKEN="$(jq -r '.access_token // empty' "$TRAB/token.json")"
+          if [ -z "$ACCESS_TOKEN" ]; then
+            echo "::error::Resposta do Google sem access_token. Verifique se a Drive API está habilitada no projeto e se o relógio do runner não está fora de sincronia."
+            exit 1
+          fi
+          # Token derivado não é mascarado automaticamente pelo GitHub.
+          echo "::add-mask::$ACCESS_TOKEN"
+
+          # Header em arquivo de config: mantém o token fora da linha de comando
+          # (e, portanto, da tabela de processos e de qualquer trace).
+          printf 'header = "Authorization: Bearer %s"\n' "$ACCESS_TOKEN" > "$TRAB/auth.conf"
+          unset ACCESS_TOKEN
+
+          # Existe arquivo com este mesmo nome na pasta? (mesmo dia, re-execução)
+          # Sob o escopo drive.file, esta busca só enxerga o que a própria service
+          # account criou — que é exatamente o conjunto dos bundles anteriores.
+          if ! curl -sS --fail-with-body --config "$TRAB/auth.conf" -G \
+                "https://www.googleapis.com/drive/v3/files" \
+                --data-urlencode "q=name = '${NOME_ARQUIVO}' and '${GDRIVE_FOLDER_ID}' in parents and trashed = false" \
+                --data-urlencode "fields=files(id,name)" \
+                --data-urlencode "supportsAllDrives=true" \
+                --data-urlencode "includeItemsFromAllDrives=true" \
+                --data-urlencode "corpora=allDrives" \
+                -o "$TRAB/busca.json"; then
+            echo "::error::Consulta à Drive API falhou: $(jq -r '.error.message // "sem detalhe"' "$TRAB/busca.json" 2>/dev/null || echo 'resposta ilegível')"
+            exit 1
+          fi
+          FILE_ID="$(jq -r '.files[0].id // empty' "$TRAB/busca.json")"
+
+          # Upload resumable (e não multipart): multipart é limitado a payload
+          # pequeno e o bundle cresce com o repositório. Resumable aguenta
+          # qualquer tamanho e o custo é uma requisição a mais.
+          if [ -n "$FILE_ID" ]; then
+            ACAO="atualizado"
+            jq -nc --arg name "$NOME_ARQUIVO" '{name:$name}' > "$TRAB/meta.json"
+            METODO=PATCH
+            URL_SESSAO="https://www.googleapis.com/upload/drive/v3/files/${FILE_ID}?uploadType=resumable&supportsAllDrives=true"
+          else
+            ACAO="criado"
+            jq -nc --arg name "$NOME_ARQUIVO" --arg pai "$GDRIVE_FOLDER_ID" \
+              '{name:$name, parents:[$pai]}' > "$TRAB/meta.json"
+            METODO=POST
+            URL_SESSAO="https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true"
+          fi
+
+          if ! curl -sS --fail-with-body --config "$TRAB/auth.conf" \
+                -X "$METODO" "$URL_SESSAO" \
+                -H 'Content-Type: application/json; charset=UTF-8' \
+                -H 'X-Upload-Content-Type: application/octet-stream' \
+                -H "X-Upload-Content-Length: ${BYTES}" \
+                --data-binary "@$TRAB/meta.json" \
+                -D "$TRAB/cab.txt" -o "$TRAB/sessao.json"; then
+            echo "::error::Abertura da sessão de upload falhou: $(jq -r '.error.message // "sem detalhe"' "$TRAB/sessao.json" 2>/dev/null || echo 'resposta ilegível'). Causa mais comum: a pasta ${GDRIVE_FOLDER_ID} não está compartilhada com o e-mail da service account."
+            exit 1
+          fi
+
+          UPLOAD_URI="$(tr -d '\r' < "$TRAB/cab.txt" | awk 'tolower($1) == "location:" {print $2}' | tail -1)"
+          if [ -z "$UPLOAD_URI" ]; then
+            echo "::error::Google não devolveu a URL da sessão de upload (cabeçalho Location ausente)."
+            exit 1
+          fi
+
+          if ! curl -sS --fail-with-body --config "$TRAB/auth.conf" \
+                -X PUT "$UPLOAD_URI" \
+                -H 'Content-Type: application/octet-stream' \
+                --upload-file "$CAMINHO" \
+                -o "$TRAB/resultado.json"; then
+            echo "::error::Envio do bundle falhou: $(jq -r '.error.message // "sem detalhe"' "$TRAB/resultado.json" 2>/dev/null || echo 'resposta ilegível')"
+            exit 1
+          fi
+
+          ID_REMOTO="$(jq -r '.id // empty' "$TRAB/resultado.json")"
+          if [ -z "$ID_REMOTO" ]; then
+            echo "::error::Upload terminou sem id de arquivo na resposta — não trate como sucesso."
+            exit 1
+          fi
+
+          # Confirma no Drive o tamanho gravado: sucesso de HTTP não é arquivo
+          # íntegro no destino.
+          if ! curl -sS --fail-with-body --config "$TRAB/auth.conf" -G \
+                "https://www.googleapis.com/drive/v3/files/${ID_REMOTO}" \
+                --data-urlencode "fields=id,name,size,modifiedTime" \
+                --data-urlencode "supportsAllDrives=true" \
+                -o "$TRAB/confere.json"; then
+            echo "::error::Não foi possível reler os metadados do arquivo enviado."
+            exit 1
+          fi
+          TAM_REMOTO="$(jq -r '.size // empty' "$TRAB/confere.json")"
+          if [ "$TAM_REMOTO" != "$BYTES" ]; then
+            echo "::error::Tamanho no Drive (${TAM_REMOTO:-vazio}) difere do bundle local (${BYTES}). Trate a cópia como suspeita."
+            exit 1
+          fi
+
+          {
+            echo "| Envio | **ok** — arquivo ${ACAO} no Drive |"
+            echo "| ID no Drive | \`${ID_REMOTO}\` |"
+            echo "| Tamanho confirmado no destino | ${TAM_REMOTO} bytes |"
+            echo
+            echo "Restauração (teste periódico, humano): \`git clone <arquivo>.bundle <destino>\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          rm -f "$TRAB/sa.json" "$TRAB/key.pem" "$TRAB/token.json" "$TRAB/auth.conf"
+
+      - name: Registrar falha no resumo
+        if: failure()
+        run: |
+          set -euo pipefail
+          {
+            echo
+            echo "### Resultado: FALHA"
+            echo
+            echo "Este backup **não** foi concluído. Veja os erros nos steps acima."
+            echo "A cópia anterior no Drive, se existir, não foi tocada — o envio só ocorre após \`git bundle verify\`."
+          } >> "$GITHUB_STEP_SUMMARY"
