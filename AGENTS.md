@@ -124,31 +124,45 @@ só substitua o que a auditoria confirmar.
 
 ## Ciclo de auditoria
 
-A auditoria é dividida em duas partes, porque só uma fração dela depende de
-máquina local:
+Há **três** prompts, e a escolha entre eles é a primeira decisão do ciclo:
 
-- [`.claude/prompts/auditoria-fonte-de-verdade.md`](.claude/prompts/auditoria-fonte-de-verdade.md)
-  — **roda na nuvem**, escopado em um repositório. Cobre os seis passos do check
-  reverso e os entregáveis A–H. É a maior parte do trabalho.
-- [`.claude/prompts/auditoria-adendo-local.md`](.claude/prompts/auditoria-adendo-local.md)
-  — **roda na máquina do projeto**, em minutos. Só o que a nuvem
-  comprovadamente não alcança: arquivos fora do git, clones antigos, planilhas
-  soltas, stashes, segredos em repouso.
+- [`auditoria-integral.md`](.claude/prompts/auditoria-integral.md) — **roda na
+  nuvem, escopado em um repositório, e corrige.** Oito frentes (settings,
+  resíduo, dependência local, documentação suja, segredo, CI, control-plane,
+  GitHub), com classes de ação declaradas: o que o agente aplica sozinho, o que
+  aplica declarando o que a mudança passa a permitir, o que só relata, e o que
+  não faz por nenhum motivo. Termina em relatório versionado na origem e PR
+  draft. É a via padrão quando a intenção é fechar trabalho.
+- [`auditoria-fonte-de-verdade.md`](.claude/prompts/auditoria-fonte-de-verdade.md)
+  — **roda na nuvem e não altera nada.** Os seis passos do check reverso e os
+  entregáveis A–H. Use quando a intenção for estabelecer uma linha de base:
+  auditoria que corrige não serve de linha de base, porque mistura o que existia
+  com o que ela mesma mudou.
+- [`auditoria-adendo-local.md`](.claude/prompts/auditoria-adendo-local.md) —
+  **roda na máquina do projeto**, em minutos. Só o que a nuvem comprovadamente
+  não alcança: arquivo fora do git, clone antigo, planilha solta, stash, segredo
+  em repouso.
 
 O ciclo:
 
 1. Abrir uma sessão na nuvem escopada em **um** projeto (R1: nunca dois).
-2. Colar o prompt de auditoria de nuvem (a partir da linha indicada no arquivo).
-3. A sessão devolve o relatório A–H, sem alterar nada.
-4. Se o entregável H pedir, rodar o adendo local no projeto e anexar o bloco.
-5. O entregável G vira/atualiza a linha do projeto no índice acima, com a data
-   na coluna "Última auditoria".
-6. Divergências de severidade alta viram trabalho no projeto de origem, não
-   aqui.
+2. Colar o prompt escolhido, substituindo `<REPOSITORIO>`.
+3. A sessão audita e — no prompt integral — aplica o que está autorizado, grava
+   o relatório **no próprio projeto** e abre PR draft lá.
+4. Se o relatório pedir, rodar o adendo local no projeto e anexar o bloco.
+5. O bloco de handoff sanitizado é trazido **por uma pessoa** e vira ficha em
+   [`docs/handoff/`](docs/handoff/), mais a linha do índice acima. Nenhuma
+   sessão faz esse transporte: ela leria o privado e escreveria no público, que
+   é exatamente o que R1 fecha.
+6. Divergência de severidade alta vira trabalho no projeto de origem, não aqui.
 
 O passo 4 é condicional de propósito. Auditoria que exige sessão local por
 padrão não acontece — e quatro departamentos passaram semanas em *não
 verificado* exatamente por isso.
+
+O passo 5 é manual pelo mesmo tipo de razão, invertida: é o único ponto em que
+conteúdo atravessa a fronteira, e uma pessoa lendo doze linhas é a última chance
+de barrar o que não devia sair.
 
 ## Onde as coisas moram
 
@@ -158,6 +172,7 @@ verificado* exatamente por isso.
 | `AGENTS.md` | Esta doutrina operacional; `CLAUDE.md` é ponteiro para cá |
 | `docs/orchestration-blueprint.md` | Autoridade de projeto — vence em caso de divergência |
 | `docs/pendencias.md` | Backlog: o que falta, com executor e critério de verificação |
+| `docs/handoff/` | Padrão e fichas de handoff — o que atravessa privado × público |
 | `SECURITY.md` | Canônico do checklist de sanitização, da regra R1, do kill-switch e do runbook de incidente |
 | `LICENSE` | Dois regimes: CC BY 4.0 para o texto, MIT para os snippets |
 | `.claude/settings.json` | Permissões do projeto e instalação do hook de push |
