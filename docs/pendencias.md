@@ -35,6 +35,7 @@
 | Item | Estado | Por quê |
 |---|---|---|
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21). Reabre se algum deixar de ser privado, ganhar colaborador, ou surgir titular externo |
+| **C1** — minutos de Actions a 90% | 🔴 aberto | 1.802/2.000, reset em 1º/set. **Não é este repo** — público não consome. Suspeita: cron diário replicado por template nos privados |
 | **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável agora** | o check obrigatório passou a existir; falta marcar no ruleset. Exigir aprovação está descartado: um único colaborador se trancaria fora |
@@ -529,6 +530,55 @@ peça ou de como o pedido seja formulado: o valor não passa por sessão de agen
 nem por chat. Quem cria o segredo é quem o digita. Registrado assim para que uma
 sessão futura não trate isso como pendência a executar.
 
+### C1 — Minutos de Actions a 90% do plano
+**Severidade: média · 🔴 ABERTO · Executor: 👤 Humano (orçamento) + ☁️ Nuvem (medir)**
+
+Alerta do GitHub em 2026-08-21: **1.802 de 2.000 minutos consumidos**, 90% do
+incluído, com reset em 1º de setembro. Restam ~198 minutos para 11 dias.
+
+**Este repositório não é a causa, e a distinção importa.** Actions é **gratuito
+em repositório público** — nada que roda aqui entra nessa conta. As execuções do
+`verificacao.yml` medidas hoje levaram **4, 7 e 11 segundos**; mesmo se fossem
+cobradas, dariam poucos minutos por dia de trabalho intenso. **Não desligue a CI
+daqui por causa deste alerta**: ela é grátis, e foi ela que encontrou o defeito
+do guardrail que uma suíte dedicada dava como verde.
+
+**A causa está nos privados**, e há duas hipóteses de peso diferente:
+
+1. **O pico de hoje** — o ciclo de fechamento mesclou dezenas de PRs em dezesseis
+   repositórios privados, e cada merge dispara CI na default, somada à CI de cada
+   PR. Isso explica um salto, mas é evento único e não se repete.
+2. **A linha de base, que é a hipótese preocupante** — o `watchdog.yml` é
+   **template distribuído pelo plugin-fundação**, com cron **diário**. Se estiver
+   instalado nos dezesseis privados, são dezesseis execuções por dia, todo dia,
+   cobradas, independentemente de haver trabalho. Um pico se absorve; uma linha
+   de base se paga todo mês.
+
+**Não verificável desta sessão:** **R1** impede a sessão do repositório público
+de abrir um privado para contar execuções. A verificação é humana, ou de uma
+sessão escopada num privado: aba *Actions*, workflow *Watchdog*, e ver se há uma
+execução por dia.
+
+**Ação (👤): decidir sobre o orçamento de $0.** O e-mail do GitHub oferece travar
+o uso adicional. Recomendo **definir**, e a razão é o modo de falha: com $0, a CI
+dos privados **para** quando os minutos acabarem, e você percebe na hora; sem $0,
+o aviso vem como fatura, depois. **Entre um controle que avisa falhando e um que
+avisa cobrando, o primeiro é melhor** — e este é reversível a qualquer momento.
+
+O custo dessa escolha é real e precisa ser dito: com o orçamento travado, um
+merge em privado pode encontrar CI parada nos próximos 11 dias, e isso vai
+parecer defeito quando for orçamento.
+
+**Verificação:** o consumo diário de Actions nos privados é conhecido, e a
+decisão sobre o orçamento está registrada com data — travado ou aceito por
+escrito.
+
+> O alerta chegou no mesmo dia em que o ciclo de fechamento rodou, e a leitura
+> fácil seria "a automação de hoje gastou tudo". Metade disso é verdade. A outra
+> metade — o cron diário replicado por template — não apareceria em nenhum
+> alerta, porque ela não tem pico: ela só sobe devagar todo mês. **O custo que
+> aparece é o do evento; o que dói é o da rotina.**
+
 ### H4 — Secret scanning e push protection: verificado e ligado
 **Severidade: alta · ✅ FECHADO em 2026-08-21 · Verificado por: 👤 Humano, na UI**
 
@@ -646,6 +696,38 @@ item existe para apontar.
 **Verificação:** `AGENTS.md` deste repositório encolhe para doutrina de fachada
 pública; a doutrina de ecossistema tem uma única cópia, no privado; e nenhum
 documento aqui afirma ser autoridade sobre o que não é público.
+
+#### "E se eu simplesmente tornar este repositório privado?" — não
+
+Perguntado pelo dono em 2026-08-21, e a resposta merece ficar escrita porque a
+pergunta é boa e a resposta é contraintuitiva. Tornar `tihh07/tihh07` privado
+resolveria **um** problema que a migração já resolve, e criaria **três** que ela
+não cria:
+
+1. **O perfil do GitHub para de existir.** O README de perfil só renderiza a
+   partir de um repositório **público** com o nome exato do usuário. Privado, a
+   página do perfil fica vazia — e essa é a função primária declarada deste
+   repositório, a primeira linha do `AGENTS.md`.
+2. **Actions passa a ser cobrado.** Hoje a CI daqui é gratuita porque o
+   repositório é público. Privado, cada execução entra na cota — exatamente o
+   problema do item **C1**, agravado em vez de resolvido.
+3. **A proteção da `main` pode se perder.** Hoje há ruleset ativo, sem ator de
+   bypass. Em 2026-08-21 descobriu-se, noutro repositório do ecossistema, que
+   **proteção de branch em repositório privado esbarra em limite de plano** — foi
+   a causa real de um item que estava registrado como falta de ferramenta.
+   Provavelmente o mesmo limite se aplicaria aqui: trocaria-se uma trava que
+   funciona por uma que o plano não permite.
+
+**O que a pergunta acerta:** o incômodo é real. Todo este arquivo é escrito sob
+restrição de sanitização, e isso já custou os nomes dos repositórios (viraram
+apelidos), os números dos achados de dado pessoal, e a lista canônica de setores.
+Um backlog que não pode ser específico é menos útil do que deveria.
+
+**Mas a cura não é mudar a visibilidade — é mudar o endereço.** Mover a doutrina
+para o privado de Fundação entrega o mesmo ganho, sem perder o perfil, sem passar
+a pagar CI e sem arriscar o ruleset. **Visibilidade e localização são eixos
+diferentes**, e confundir os dois troca um problema de conteúdo por três de
+infraestrutura.
 
 **A análise que levou a essa decisão, mantida como registro:**
 
