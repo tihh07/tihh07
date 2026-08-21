@@ -46,10 +46,18 @@ name: Verificação
 # vez no AGENTS.md, entre duas correções. A contagem viva é a saída do próprio
 # script.
 
+# GATILHO: só `pull_request`. O `push: [main]` foi removido em 2026-08-21 — ele
+# fazia todo merge rodar a verificação DUAS vezes, a do PR e a do push, sem
+# nenhuma informação nova na segunda: é o mesmo commit, já verificado. Metade das
+# execuções eram desperdício puro.
+#
+# NÃO ADICIONE `paths` OU `paths-ignore` AQUI. Parece economia e é armadilha: um
+# check marcado como obrigatório no ruleset que **não roda** nunca reporta, e um
+# check que nunca reporta **bloqueia o merge para sempre**. Filtro de caminho e
+# check obrigatório são incompatíveis. Se um dia a verificação ficar cara o
+# bastante para justificar filtro, tire-a de obrigatória primeiro.
 on:
   pull_request:
-    branches: [main]
-  push:
     branches: [main]
   workflow_dispatch:
 

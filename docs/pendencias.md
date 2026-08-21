@@ -35,7 +35,7 @@
 | Item | Estado | Por quê |
 |---|---|---|
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21). Reabre se algum deixar de ser privado, ganhar colaborador, ou surgir titular externo |
-| **C1** — minutos de Actions a 90% | 🔴 aberto | 1.802/2.000, reset em 1º/set. **Não é este repo** — público não consome. Suspeita: cron diário replicado por template nos privados |
+| **C1** — minutos de Actions a 90% | 🔴 **aberto, agora bloqueando** | cota estourou e já barra trabalho real num privado. **Não é este repo** (público não consome) e **não é o plugin** — ele distribui só o backup, que é semanal. A origem está nos privados e R1 impede olhar |
 | **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável agora** | o check obrigatório passou a existir; falta marcar no ruleset. Exigir aprovação está descartado: um único colaborador se trancaria fora |
@@ -548,11 +548,21 @@ do guardrail que uma suíte dedicada dava como verde.
 1. **O pico de hoje** — o ciclo de fechamento mesclou dezenas de PRs em dezesseis
    repositórios privados, e cada merge dispara CI na default, somada à CI de cada
    PR. Isso explica um salto, mas é evento único e não se repete.
-2. **A linha de base, que é a hipótese preocupante** — o `watchdog.yml` é
-   **template distribuído pelo plugin-fundação**, com cron **diário**. Se estiver
-   instalado nos dezesseis privados, são dezesseis execuções por dia, todo dia,
-   cobradas, independentemente de haver trabalho. Um pico se absorve; uma linha
-   de base se paga todo mês.
+2. **A linha de base, que é a hipótese preocupante** — cron replicado nos
+   privados: execução diária, todo dia, cobrada, independentemente de haver
+   trabalho. Um pico se absorve; uma linha de base se paga todo mês.
+
+   **Correção de 2026-08-21, no mesmo dia:** afirmei que o culpado era o
+   `watchdog.yml`, "template distribuído pelo plugin". **Estava errado, e os
+   arquivos deste repositório desmentem.** O plugin distribui **um** workflow, o
+   de backup, e ele já era **semanal**. O watchdog existe só aqui, no repositório
+   público, onde Actions é gratuito. Então **o que consome minuto nos privados
+   não saiu daqui** — é workflow que eles têm por conta própria, e **R1 me impede
+   de olhar**. A hipótese continua de pé na forma; perdeu o culpado nomeado.
+
+   Fica o registro do erro, porque ele repete o padrão do dia: **afirmei um
+   mecanismo plausível sem abrir o diretório que o confirmaria.** Levou um `find`
+   para derrubar.
 
 **Não verificável desta sessão:** **R1** impede a sessão do repositório público
 de abrir um privado para contar execuções. A verificação é humana, ou de uma
@@ -568,6 +578,20 @@ avisa cobrando, o primeiro é melhor** — e este é reversível a qualquer mome
 O custo dessa escolha é real e precisa ser dito: com o orçamento travado, um
 merge em privado pode encontrar CI parada nos próximos 11 dias, e isso vai
 parecer defeito quando for orçamento.
+
+**A poda feita em 2026-08-21, aqui, com o custo de cada uma declarado:**
+
+| Mudança | Ganho | O que se perde |
+|---|---|---|
+| `verificacao.yml`: removido o gatilho `push: [main]` | **metade das execuções** — todo merge rodava a verificação duas vezes, PR e push, no mesmo commit | nada. A segunda execução não trazia informação nova |
+| `watchdog.yml`: diário → **semanal** | 7× menos execuções | **latência de detecção sobe para até sete dias.** O watchdog existe para perceber quando a automação para; semanal, ele percebe mais tarde. Aceitável para operador solo, e está escrito no cabeçalho |
+| `backup-drive.yml` (template): timeout 30 → **15 min** | corta pela metade o teto do caso patológico, multiplicado por cada privado que instalou o template | nada em operação normal — backup de repositório de documentação leva minutos |
+
+**A armadilha que NÃO foi usada, e está escrita no workflow para ninguém tentar:**
+filtro `paths`/`paths-ignore` no check de verificação parece economia e é
+armadilha. Um check **obrigatório** que não roda nunca reporta, e um check que
+nunca reporta **bloqueia o merge para sempre**. Filtro de caminho e check
+obrigatório são incompatíveis.
 
 **Verificação:** o consumo diário de Actions nos privados é conhecido, e a
 decisão sobre o orçamento está registrada com data — travado ou aceito por
