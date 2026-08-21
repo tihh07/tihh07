@@ -42,7 +42,7 @@
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
 | **H3** — segredo de Actions para o PR Watch | ❌ aberto | proibido a agente por regra de conduta, não por ferramenta |
 | **H5 · L2 · L4** | ❌ aberto | decisão humana |
-| **L1** — consolidação dos handoffs | 🟡 em voo | rodada de fechamento em 2026-08-21: **12 fechados, 5 em aberto** — 3 retidos, 1 redespachado, 1 aguardando decisão de dado pessoal. Cada retenção tem causa distinta — nenhuma é falha de auditoria |
+| **L1** — consolidação dos handoffs | 🟡 em voo | rodada de fechamento em 2026-08-21: **13 fechados, 4 em aberto**. As 4 causas restantes são todas decisão humana, nenhuma é trabalho de agente. Cada retenção tem causa distinta — nenhuma é falha de auditoria |
 | **L3** — executores e hook não exercitados | ❌ aberto | depende do retorno de L1 |
 | **N6** — PR Watch nunca executou de verdade | ❌ aberto | bloqueado por **H3** |
 
@@ -1057,20 +1057,22 @@ merge só conta depois de reler a branch default e confirmar que relatório e
 ficha chegaram lá**. Esse último passo existe porque relatar merge sem reler é
 exatamente o erro que produziu o falso alarme da manhã.
 
-**Doze repositórios chegaram a estado fechado** — a branch default de cada um
-contém o relatório da auditoria. Nem todos pelo mesmo caminho:
+**Treze repositórios chegaram a estado fechado** — a branch default de cada um
+contém o relatório da auditoria. O décimo terceiro fechou depois que o humano
+aprovou, na UI, o merge que o classificador de permissão havia barrado: o
+bloqueio nunca foi técnico, era o gate funcionando. Nem todos pelo mesmo caminho:
 alguns tiveram os PRs mesclados pela própria sessão, outros já tinham sido
 mesclados pelo dono antes dela chegar. A distinção importa para não creditar à
 automação um trabalho que foi humano.
 
-**Cinco seguem em aberto, e cada um por um motivo diferente** — o que é mais útil do
+**Quatro seguem em aberto, e cada um por um motivo diferente** — o que é mais útil do
 que um número agregado:
 
 | Causa da retenção | O que ela realmente diz |
 |---|---|
 | Autorização julgada não humana | A sessão recebeu a instrução de merge por um campo de configuração, não por uma pessoa, e **se recusou**. Ver o comentário abaixo. |
 | **Guardrail do próprio repositório** | Três tentativas, três diagnósticos, e só o terceiro é o certo. Ver abaixo. |
-| Classificador de permissão | Merge barrado por classificador, não por regra do repositório. Destrava na UI, não por outra rota. **E o bloqueio saiu barato:** o mesmo repositório teve dado pessoal confirmado horas depois, e o PR seguiria adiante sem essa trava. |
+| ~~Classificador de permissão~~ | **Destravado pelo humano na UI, e o repositório fechou.** Vale reter que o bloqueio saiu barato: o mesmo repositório teve dado pessoal confirmado horas depois, e o PR teria seguido adiante sem essa trava. O classificador comprou o tempo que a varredura usou. |
 | CI vermelha por dado ausente | A CI não está quebrada: ela está **certa**, e reprova porque faltam métricas que só uma pessoa coleta. Verde aqui exigiria burlar o gate. |
 | Pergunta aberta ao humano | A sessão parou para perguntar, e a pergunta é de conteúdo, não técnica. |
 | ~~Conflito semântico já mesclado~~ | **Resolvido no mesmo dia.** Os dois lados tinham mesclado sem conflito de texto e o resultado se contradizia — o caso em que `git` diz verde e o conteúdo diz vermelho. Fechou com 5 PRs mesclados e CI verde na default. |
