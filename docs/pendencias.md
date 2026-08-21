@@ -34,7 +34,7 @@
 
 | Item | Estado | Por quê |
 |---|---|---|
-| **S1** — dado de paciente relatado em 3 repositórios | 🔴 **aberto, a mais alta** | duas sessões se contradizem; 3 verificações somente-leitura em voo — remediar antes de provar é irreversível |
+| **S1** — dado pessoal versionado em repositórios privados | 🔴 **aberto, a mais alta** | **verificado em 2026-08-21**: 1 dos 3 limpo, 2 confirmados. Detalhe fica fora deste arquivo, que é público. Trava no dever de notificar, que vem antes de apagar |
 | **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | ❌ **aberto, severidade alta** | descoberto ao reconectar a autorização |
@@ -42,7 +42,7 @@
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
 | **H3** — segredo de Actions para o PR Watch | ❌ aberto | proibido a agente por regra de conduta, não por ferramenta |
 | **H5 · L2 · L4** | ❌ aberto | decisão humana |
-| **L1** — consolidação dos handoffs | 🟡 em voo | rodada de fechamento em 2026-08-21: **11 fechados, 6 em aberto** — 4 retidos, 1 redespachado, 1 em curso. Cada retenção tem causa distinta — nenhuma é falha de auditoria |
+| **L1** — consolidação dos handoffs | 🟡 em voo | rodada de fechamento em 2026-08-21: **12 fechados, 5 em aberto** — 3 retidos, 1 redespachado, 1 aguardando decisão de dado pessoal. Cada retenção tem causa distinta — nenhuma é falha de auditoria |
 | **L3** — executores e hook não exercitados | ❌ aberto | depende do retorno de L1 |
 | **N6** — PR Watch nunca executou de verdade | ❌ aberto | bloqueado por **H3** |
 
@@ -400,66 +400,73 @@ controles que sustentam o gate humano. A nuvem só consegue **reportar que estã
 abertos**, o que este arquivo faz. Desde 2026-08-20, em vários deles a nuvem nem
 isso consegue: ver **V1**.
 
-### S1 — Dado de paciente relatado em três repositórios, ainda não verificado
-**Severidade: a mais alta deste arquivo · 🔴 ABERTO · Executor: ☁️ Nuvem (verificar) + 👤 Humano (remediar)**
+### S1 — Dado pessoal versionado: verificado, e o alarme era parcialmente real
+**Severidade: a mais alta deste arquivo · 🔴 ABERTO · Executor: 👤 Humano · verificado em 2026-08-21**
 
-Uma sessão de consolidação relatou **dado pessoal de saúde versionado em três
-repositórios privados** — um de finanças, um de operação de cliente e um de
-saúde. O achado chegou **sem `arquivo:linha`**, e uma segunda sessão, rodando no
-mesmo dia sobre um desses três repositórios, concluiu o oposto: dado sensível
-verificado como seguro.
+Uma sessão relatou dado de paciente versionado em três repositórios privados. Uma
+segunda sessão, sobre um desses três, concluiu o oposto. **Três varreduras
+somente-leitura decidiram a disputa** — árvore e histórico, proibidas de alterar
+qualquer coisa, com o contrato de três tokens que separa "não achei" de "não
+existe".
 
-**As duas não podem estar certas, e nenhuma trouxe evidência suficiente para
-vencer a outra.** É por isso que este item existe como *verificação* e não como
-*remediação*.
+**O resultado não é nem o alarme nem o desmentido.** Um dos três voltou limpo do
+que fora alegado. Os outros dois confirmaram dado real de pessoa identificável —
+e num deles em volume que a alegação original nem sugeria.
 
-**Por que não foi remediado de imediato.** A correção natural — reescrever o
-histórico do git para remover o dado — é irreversível, quebra todo clone
-existente e, se o achado for falso, destrói histórico legítimo em três
-repositórios de uma vez. Um achado plausível não é um achado provado, e num
-repositório de saúde *tudo* é plausível: fixture realista é comum, e é
-exatamente o que engana uma varredura apressada.
+**Por que os números não estão neste arquivo.** Este repositório é público. Um
+inventário de "quanto dado pessoal existe em qual repositório privado" publicado
+aqui é, ele próprio, a exposição — item 5 do checklist, e o tipo de detalhe que
+transforma um problema contido num mapa para quem quiser procurá-lo. A evidência
+por `arquivo:linha` fica no relatório de cada repositório de origem, que é
+privado; o resumo quantitativo foi entregue ao dono fora de arquivo versionado.
 
-**Por que também não pode esperar.** Se for real, é a classe de exposição mais
-séria do ecossistema inteiro: o titular do dado não é o dono do repositório, não
-consentiu e não tem como saber. Nada mais neste arquivo tem essa propriedade.
+Registrar "verificado e confirmado" sem publicar o detalhe é o que este arquivo
+consegue fazer sem virar parte do problema. **Um backlog público que documenta
+com precisão onde mora o dado pessoal do ecossistema é um mapa de fraquezas** —
+que é exatamente o defeito que o item N19 corrigiu nesta mesma reescrita.
 
-**O que está rodando (2026-08-21):** três sessões de verificação, uma por
-repositório, **somente leitura**, proibidas de alterar arquivo, abrir PR,
-mesclar ou tocar no histórico. Cada uma varre a árvore atual **e o histórico** —
-dado apagado num commit posterior continua exposto — e separa três coisas que
-uma varredura descuidada colapsa: dado real de pessoa identificável, dado
-sintético (que precisa ser *demonstrado* sintético, não presumido) e estrutura
-sem dado. Nome de coluna `cpf` num schema vazio não é vazamento.
+**A contradição se resolveu no sentido menos confortável.** A sessão de
+fechamento que declarou "dado sensível verificado como seguro" estava **errada**;
+a varredura dedicada, com histórico, achou. As duas rodaram no mesmo dia, sobre o
+mesmo repositório. A diferença não foi o modelo nem a sorte: foi que uma tinha
+varredura de dado como tarefa e a outra como item de checklist no fim de um
+fechamento.
 
-O contrato de resposta é o mesmo que desfez o falso alarme da manhã:
-`PII-CONFIRMADO`, `PII-AUSENTE` ou `INCONCLUSIVO`, e **as duas últimas não são
-sinônimos**.
+> Vale mais que o achado: **"verificado limpo" dito de passagem não é
+> verificação.** Duas sessões, mesmo dia, mesmo repositório, conclusões opostas —
+> e a que estava certa foi a que tinha isso como única tarefa. Qualquer
+> "verificado" neste arquivo que tenha vindo como subitem de outra coisa merece a
+> mesma desconfiança.
 
-**Regra que vale mesmo se o achado se confirmar:** o dado nunca é reproduzido —
-nem mascarado, nem parcial, nem "só os últimos dígitos" — em relatório, ficha,
-commit, PR ou neste arquivo. Só `arquivo:linha`, tipo e gravidade. Um relatório
-que cita o dado para provar que ele existe multiplica a exposição em vez de
-contê-la, e passa a ser mais um lugar de onde ele precisa ser removido.
+**Atenuante real, e não deve virar desculpa:** os três repositórios são
+**privados**. A exposição está contida em quem tem acesso, e isso separa este
+caso de um vazamento público — muda o prazo, não o dever.
 
-**Ordem de remediação, se confirmar** — e ela não é a intuitiva:
+**Agravante que o processo criou:** cada sessão de nuvem despachada neste ciclo
+**clonou** esses repositórios para um contêiner efêmero. A auditoria que
+encontrou o dado também o copiou, várias vezes. Não há evidência de que isso o
+tenha exposto a terceiros, mas é consequência direta do método e precisa constar
+antes de qualquer decisão sobre rodar a próxima rodada do mesmo jeito.
 
-1. **Avaliar o dever de notificar antes de apagar.** Dado pessoal de terceiro
-   exposto pode disparar obrigação legal, e apagar primeiro destrói a evidência
-   de escopo e duração de que essa avaliação depende. Isto é decisão humana, e é
-   o primeiro passo, não o último.
-2. Restringir acesso ao repositório enquanto se decide.
-3. Só então tratar o histórico.
+**A ordem de remediação, que não é a intuitiva:**
 
-**Verificação deste item:** os três vereditos chegaram, cada um com o que foi
-varrido, e cada `PII-AUSENTE` diz o suficiente para que a ausência seja
-conferível por outra pessoa. `INCONCLUSIVO` não fecha o item — reabre com um
-escopo menor.
+1. **Avaliar o dever de notificar, antes de apagar.** Dado pessoal de terceiro
+   dispara obrigação legal, e apagar primeiro destrói a evidência de escopo e
+   duração de que a avaliação depende. Decisão humana, primeiro passo.
+2. Conferir quem tem acesso a cada um dos repositórios hoje.
+3. Decidir se o dado deveria estar versionado — em vários casos a resposta é
+   que ele nunca deveria ter entrado, e a correção é de processo, não de
+   histórico.
+4. Só então tratar o histórico, sabendo que reescrevê-lo quebra todo clone
+   existente.
 
-> O item nasce de uma contradição entre duas sessões, e é assim que deveria ser.
-> **Duas sessões discordando é informação de qualidade mais alta do que uma
-> sessão afirmando** — a discordância revela que pelo menos uma varredura foi
-> rasa, coisa que nenhum relatório isolado admite sobre si mesmo.
+**Nada disso é trabalho de agente**, e nenhum passo foi executado. As varreduras
+foram explicitamente proibidas de alterar arquivo, abrir PR, mesclar ou tocar no
+histórico, e nenhuma tocou.
+
+**Verificação deste item:** fecha quando o passo 1 tiver resposta registrada —
+notificar ou não, com a razão. Apagar o dado sem essa resposta não fecha o item:
+troca um problema visível por um invisível.
 
 ### H1 — Proteção de `main`
 **Severidade: alta · 🟡 PARCIALMENTE VERIFICÁVEL · Executor: 👤 Humano**
@@ -1050,23 +1057,23 @@ merge só conta depois de reler a branch default e confirmar que relatório e
 ficha chegaram lá**. Esse último passo existe porque relatar merge sem reler é
 exatamente o erro que produziu o falso alarme da manhã.
 
-**Onze repositórios chegaram a estado fechado** — a branch default de cada um
+**Doze repositórios chegaram a estado fechado** — a branch default de cada um
 contém o relatório da auditoria. Nem todos pelo mesmo caminho:
 alguns tiveram os PRs mesclados pela própria sessão, outros já tinham sido
 mesclados pelo dono antes dela chegar. A distinção importa para não creditar à
 automação um trabalho que foi humano.
 
-**Seis não fecharam, e cada um por um motivo diferente** — o que é mais útil do
+**Cinco seguem em aberto, e cada um por um motivo diferente** — o que é mais útil do
 que um número agregado:
 
 | Causa da retenção | O que ela realmente diz |
 |---|---|
 | Autorização julgada não humana | A sessão recebeu a instrução de merge por um campo de configuração, não por uma pessoa, e **se recusou**. Ver o comentário abaixo. |
 | Clone raso sem ferramenta | A sessão concluiu "não tenho ferramenta" sem tentar chamá-la. Redespachada com o comando de `--unshallow` no enunciado. |
-| Classificador de permissão | Merge barrado por classificador, não por regra do repositório. Destrava na UI, não por outra rota. |
+| Classificador de permissão | Merge barrado por classificador, não por regra do repositório. Destrava na UI, não por outra rota. **E o bloqueio saiu barato:** o mesmo repositório teve dado pessoal confirmado horas depois, e o PR seguiria adiante sem essa trava. |
 | CI vermelha por dado ausente | A CI não está quebrada: ela está **certa**, e reprova porque faltam métricas que só uma pessoa coleta. Verde aqui exigiria burlar o gate. |
 | Pergunta aberta ao humano | A sessão parou para perguntar, e a pergunta é de conteúdo, não técnica. |
-| Conflito semântico já mesclado | Os dois lados mesclaram sem conflito de texto, mas o resultado se contradiz. Em curso — é o caso em que `git` diz verde e o conteúdo diz vermelho. |
+| ~~Conflito semântico já mesclado~~ | **Resolvido no mesmo dia.** Os dois lados tinham mesclado sem conflito de texto e o resultado se contradizia — o caso em que `git` diz verde e o conteúdo diz vermelho. Fechou com 5 PRs mesclados e CI verde na default. |
 
 > **A recusa é o achado, não o obstáculo.** Uma das sessões recebeu autorização
 > de merge por um campo de configuração e se recusou a agir sobre ela, por não

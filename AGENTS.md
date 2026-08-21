@@ -77,7 +77,7 @@ O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 | `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | auditado; fechamento **redespachado** — a 1ª sessão desistiu num clone raso | 2026-08-20 |
 | `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | **fechado** — relatório na branch default | 2026-08-20 |
 | `bena-agencia` (privado) | Operação de Cliente / Agência | **fechado** — relatório na branch default | 2026-08-20 |
-| *13 repositórios privados* | não declarado | 9 **fechados**; 4 em aberto por causas distintas | 2026-08-20 |
+| *13 repositórios privados* | não declarado | 10 **fechados**; 3 em aberto por causas distintas | 2026-08-20 |
 | `tihh07/tihh07` (público) | Fachada Pública / Marketing | **auditado** — documentação, workflows e templates; sem código de aplicação | 2026-08-20 |
 
 > **Treze linhas viraram uma.** Vários desses nomes de repositório são nomes de
@@ -93,7 +93,7 @@ O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 > assim que três fichas declararam por engano que a auditoria não existia. Por
 > isso a coluna de estado diz onde o trabalho **está**, não que ele foi feito.
 >
-> **Onze fechados, seis em aberto**, cada um por uma causa diferente — a lista
+> **Doze fechados, cinco em aberto**, cada um por uma causa diferente — a lista
 > das causas vive em [`docs/pendencias.md`](docs/pendencias.md), porque nenhuma
 > delas cabe numa célula sem virar meia-verdade.
 
