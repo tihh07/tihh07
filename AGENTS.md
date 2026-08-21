@@ -73,7 +73,7 @@ O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 
 | Repositório | Departamento | Estado | Última auditoria |
 |---|---|---|---|
-| `AI-Operating-System` (privado) | Fundação / Arquitetura | auditado; PRs **retidos** — a sessão recusou a autorização de merge por não ser humana | 2026-08-20 |
+| `AI-Operating-System` (privado) | Fundação / Arquitetura | destravado pelo humano; 3 PRs mesclados (relato da sessão, não reverificado daqui — **R1**); 1 PR segue aberto | 2026-08-20 |
 | `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | auditado; **não fechado** — relatórios nas branches de auditoria; guardrail do próprio repo barra merge por agente | 2026-08-20 |
 | `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | **fechado** — relatório na branch default | 2026-08-20 |
 | `bena-agencia` (privado) | Operação de Cliente / Agência | **fechado** — relatório na branch default | 2026-08-20 |
