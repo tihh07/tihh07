@@ -689,11 +689,17 @@ morde justamente os repositórios parados, que são os que mais dependem do
 backup. A conferência de que o agendamento continua vivo não pode morar dentro do
 repositório que ele protege.
 
-**Ação (☁️, junto):** um arquivo versionado que **descreva** a configuração das
-rotinas e dos repositórios — não como backup executável, mas para que perder a UI
-não signifique perder o conhecimento de como reconstruí-la. Sem cron, sem
-identificador e sem conector no texto: o que se registra é o desenho, não o mapa
-operacional (ver **N19**).
+**Feito em 2026-08-21:** [`control-plane.md`](control-plane.md) descreve as cinco
+classes de rotina pelo **escopo** — que é o que R1 governa —, os seis invariantes
+que uma rotina recriada não pode perder, e o procedimento de reconstrução. Sem
+cron, sem identificador, sem conector e sem nome de repositório: registra a
+forma, não o mapa operacional (**N19**).
+
+Isso **não fecha D1**, e a diferença importa: o documento mitiga a perda de
+*conhecimento*, não a perda de *configuração*. Se a UI sumir, ainda é preciso
+recriar tudo à mão — só que agora sabendo o quê e por quê, em vez de redescobrir.
+Backup executável da camada de rotinas continua não existindo, e não há via de
+agente que o crie.
 
 **Verificação:** desligar a máquina local por uma semana não muda nada
 observável — o backup continua datado do dia, e nenhuma pergunta sobre o

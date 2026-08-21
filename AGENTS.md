@@ -118,8 +118,8 @@ em dois lugares é a divergência que este repositório existe para evitar.
 | `docs/orchestration-blueprint.md` | Autoridade de projeto — vence em caso de divergência |
 | `docs/pendencias.md` | Backlog: o que falta, com executor e critério de verificação |
 | `docs/handoff/` | Padrão e fichas de handoff — o que atravessa privado × público |
+| `docs/control-plane.md` | Desenho das rotinas e da config de repo — como reconstruir se a UI sumir |
 | `SECURITY.md` | Canônico do checklist de sanitização, da regra R1, do kill-switch e do runbook de incidente |
-| `LICENSE` | Dois regimes: CC BY 4.0 para o texto, MIT para os snippets |
 | `.claude/settings.json` | Permissões do projeto e instalação do hook de push |
 | `.claude/prompts/` | Prompts reutilizáveis entre projetos |
 | `.claude/skills/` | Conteúdo versionado das rotinas (padrão prompt-ponteiro) |
@@ -127,7 +127,7 @@ em dois lugares é a divergência que este repositório existe para evitar.
 | `plugins/fundacao/` | Templates distribuíveis: executores, hook e sua suíte, telemetria, backup |
 | `.github/workflows/` | PR Watch, watchdog e backup para o Drive |
 | `.github/CODEOWNERS` | Donos por caminho — inerte até "Require review from Code Owners" |
-| `.gitignore` | Barra segredo, base de dados e mídia |
+| `.gitignore` · `LICENSE` | Barra segredo e dado; CC BY 4.0 no texto, MIT nos snippets |
 | `reports/publicacao/` | Saída semanal da rotina N2, quando há achado |
 
 ## Build, testes e lint
