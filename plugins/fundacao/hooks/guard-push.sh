@@ -167,8 +167,17 @@ verifica_segmento() {
     && deny "push de repositório inteiro (--all/--mirror/--prune) bloqueado."
 
   # Extrai o refspec: última palavra que não seja flag, remoto conhecido ou o próprio git/push.
+  # O `grep -vE '^$'` não é cosmético. `sem_redirecao` troca o redirecionamento
+  # por um espaço, então `... claude/x 2>` vira `... claude/x  ` e o `tr` produz
+  # tokens vazios no fim. Sem descartá-los, `tail -1` devolve **string vazia** em
+  # vez do refspec, o refspec "some", e o fluxo cai no fallback da branch atual
+  # logo abaixo — que acerta por acaso quando a suíte roda num checkout `claude/*`
+  # e erra em qualquer outro. Foi assim que a correção de 2026-08-21 passou 42/42
+  # na máquina local e falhou 4 casos no runner do GitHub, onde o checkout de
+  # `pull_request` deixa o HEAD destacado.
   REF=$(sem_redirecao "$SEG" \
     | tr ' ' '\n' \
+    | grep -vE '^$' \
     | grep -vE '^(git|push|origin|upstream|-u|--set-upstream|--tags|--quiet|-q|--verbose|-v)$' \
     | grep -vE '^-' \
     | tail -1)

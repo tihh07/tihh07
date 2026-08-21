@@ -168,6 +168,10 @@ A verificação, antes de qualquer PR:
   push, deleção remota e push de repositório inteiro, e libera `claude/*`.
   Guardrail sem suíte é afirmação, não controle. A contagem de casos não fica
   aqui: já envelheceu uma vez neste arquivo, calada, entre duas correções.
+  **A suíte roda num repositório descartável, nunca no diretório ambiente** — a
+  branch atual daqui é `claude/*`, e o fallback do hook libera nela, o que já
+  transformou um defeito real em teste verde. Se ela recusar rodar por não
+  conseguir montar esse repositório, é falha fechada e proposital.
 
 ## Topologia de branches
 

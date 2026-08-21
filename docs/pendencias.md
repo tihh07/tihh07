@@ -1181,6 +1181,53 @@ global desativado. Nenhum outro artefato local versionado foi encontrado.
 > ambiente** — o mesmo padrão que já apareceu no hook de push e nas três fichas.
 > Controle não exercitado é afirmação.
 
+### L6 — A suíte do guardrail não era hermética, e por isso mentia
+**Severidade: alta · Executor: ☁️ Nuvem · FECHADO em 2026-08-21**
+
+O primeiro PR a passar pelo novo check de verificação **falhou** — e o que
+falhou foi a suíte do guardrail: **42/42 na máquina local, 38/4 no runner do
+GitHub**, nos quatro casos de redirecionamento adicionados naquela manhã.
+
+**Dois defeitos, e o segundo é o que importa.**
+
+1. `sem_redirecao` troca o redirecionamento por um espaço, o que deixa **tokens
+   vazios** no fim do segmento. O `tail -1` que extrai o refspec devolvia string
+   vazia em vez de `claude/x`, e o fluxo caía no fallback da branch atual.
+2. **A suíte rodava no diretório de onde foi chamada.** Nesse repositório a
+   branch atual é sempre `claude/*` — e o fallback, nessa branch, **libera**.
+   Então o defeito 1 era resgatado pelo motivo errado e o teste ficava verde. No
+   runner, o checkout de `pull_request` deixa o HEAD **destacado**: o fallback
+   devolve `HEAD`, que não é `claude/*`, e os quatro casos falharam.
+
+O defeito 1 é um bug. O defeito 2 é a razão de ninguém ter visto o bug 1:
+**um teste cujo resultado depende de onde foi invocado não é um teste.** Ele
+media o checkout, não o hook.
+
+**Corrigido nos dois níveis.** A extração descarta tokens vazios; e todo caso
+passou a rodar dentro de um repositório descartável na branch `main`, onde o
+fallback **bloqueia** — de modo que qualquer sumiço de refspec derruba o teste em
+vez de ser mascarado. Os dois casos que testam o fallback de propósito continuam
+montando o próprio cenário, explicitamente. Sem repositório neutro a suíte
+**recusa rodar**: rodar no ambiente reintroduz o falso verde.
+
+**Verificação, feita nas duas direções:**
+
+- com o conserto, 42/42 numa branch `claude/*` **e** com HEAD destacado;
+- sem o conserto, **38/4 na branch `claude/*`** — a mesma condição em que a suíte
+  antiga dizia 42/42. A regressão agora é reproduzível localmente.
+
+> Três achados hoje têm a mesma forma: o `.gitignore` dependia do ignore global
+> da máquina, o hook dependia da branch do checkout, e uma ficha dependia de
+> qual ref alguém consultou. Em todos, **o controle existia, era afirmado como
+> funcionando, e o que o fazia passar era uma propriedade do ambiente, não o
+> controle**. O padrão vale mais que os três: *controle que nunca foi exercitado
+> fora do seu ambiente de origem é afirmação, não controle.*
+>
+> Vale também o registro a favor do CI: ele **pagou o próprio custo na primeira
+> execução**. O check foi criado para dar a `main` uma trava de plataforma, e
+> antes disso já encontrou um defeito real num guardrail de segurança que duas
+> revisões humanas e uma suíte dedicada tinham deixado passar.
+
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
 **Severidade: alta · Executor: 👤 Humano (decisão) depois ☁️ Nuvem · ABERTO**
 
