@@ -24,7 +24,7 @@
 
 | Item | Antes | Agora |
 |---|---|---|
-| **H1** — proteção de `main` | "fechado, ruleset ativo, bypass nunca" | 🔴 **verificado em 2026-08-21, e é mais fraco do que se afirmava.** O ruleset existe, está ativo e não tem bypass — isso era verdade. Mas ele exige **PR sem exigir aprovação nenhuma**, e não exige revisão de code owner. Ver **H1-bis**. |
+| **H1** — proteção de `main` | "fechado, ruleset ativo, bypass nunca" | ✅ **lido inteiro em 2026-08-21, e confere.** Enforcement ativo, zero bypass, deleção e force push bloqueados. Mas exige **PR sem exigir aprovação nenhuma** — isso não é regressão, é a configuração original, e virou **H1-bis**. |
 | **H4** — secret scanning e push protection | "fechado, ambos `enabled`" | 🟡 **não verificável pela nuvem**. O que se provou hoje é que o GitHub Advanced Security está **desligado** — o que é um flag distinto do secret scanning gratuito de repositório público. Push protection não foi verificado por via nenhuma. |
 | **L1** — quatro departamentos nunca auditados | "bloqueado por R1" | 🟢 **em voo**. Em 2026-08-20 foram despachadas **17 sessões de nuvem, uma por repositório privado**, cada uma escopada num único repositório. O que falta deixou de ser a auditoria e passou a ser o **transporte** do handoff. |
 | **L4** — ~14 repositórios fora de rotina | "~18 no ecossistema, 4 cobertos" | 🔴 **cobertura recorrente**, não cobertura pontual. São **18 repositórios** (17 privados + o público); a rodada de hoje dá cobertura pontual a todos, e a maioria segue fora de qualquer rotina agendada. |
@@ -37,9 +37,9 @@
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21). Reabre se algum deixar de ser privado, ganhar colaborador, ou surgir titular externo |
 | **C1** — minutos de Actions a 90% | 🟡 **Pro assinado; medição em voo** | teto foi a 3.000 e uma sessão escopada num privado está medindo o consumo por workflow. **Não é este repo** (público não consome) e **não é o plugin**. Assinar não fecha o item: teto maior sobre consumo não medido é adiamento |
 | **S2** — R1 cobre conteúdo, não inventário | 🔴 **novo em 2026-08-21** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
-| **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
+| **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
-| **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável agora** | o check obrigatório passou a existir; falta marcar no ruleset. Exigir aprovação está descartado: um único colaborador se trancaria fora |
+| **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável em 3 cliques** | o check `verificar` existe e já reporta verde. Falta marcá-lo no ruleset **`protect-main` que já existe** — não criar um novo. Escrita por API é barrada pelo proxy: é clique, por desenho |
 | **H4** — secret scanning e push protection | ✅ **fechado** | ambos **ativos**, conferidos na UI em 2026-08-21 com evidência visual. GHAS é flag distinto e segue desligado — não era ele que importava |
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em plano nem em ação. Nos privados o recurso passou a existir com o Pro (2026-08-21) — mas comprar a ferramenta não cria o segundo revisor |
 | **H7** — branches principais dos privados desprotegidas | 🟡 **destravado, falta configurar** | era limite de plano e não é mais. Com o Pro ativo, é clique humano na UI, um repositório por vez — e é o item de maior retorno da lista |
@@ -66,48 +66,60 @@ ninguém, daqui, pode afirmar que estão ligados.
 ## O que a nuvem não alcança — e por quê
 
 Esta seção existe porque metade do backlog dependia da frase *"uma sessão futura
-reverifica"*, e essa sessão futura não consegue.
+reverifica"*, e essa sessão futura não conseguia. **Remedida em 2026-08-21, e o
+mapa mudou:** parte do que esta seção declarava inalcançável passou a responder.
 
-Verificado em 2026-08-20, a partir de uma sessão de nuvem:
+**A medição de 2026-08-21, endpoint a endpoint, com token válido:**
+
+| Caminho | Código | Mensagem literal | Causa |
+|---|---|---|---|
+| dados do repositório | **200** | — | **abriu** desde 20/08 |
+| `/rulesets` (leitura) | **200** | — | **abriu** desde 20/08 |
+| `/rulesets` (escrita) | 403 | *"Write access to this GitHub API path is not permitted through this proxy"* | allowlist do proxy |
+| `/branches/*/protection` | 403 | *"Resource not accessible by integration"* | escopo do app, **não** o proxy |
+| `/secret-scanning/alerts` · `/collaborators` | 403 | *"Access to this GitHub API path is not permitted through this proxy"* | allowlist do proxy |
+| `/actions/secrets` · `/actions/permissions` | 403 | *"Access to this GitHub Actions path is not permitted through this proxy"* | allowlist do proxy |
+
+**O que isso derruba.** Em 20/08 os dois primeiros caminhos devolviam *"GitHub
+access is not enabled for this session"* — autorização do GitHub App —, e a
+seção registrava que **H1** só voltaria a ser verificável se alguém reconectasse
+essa autorização. Alguém reconectou, ou ela se resolveu sozinha; ninguém
+percebeu, porque **ninguém tentou de novo**. O item ficou marcado como
+inalcançável por um dia inteiro depois de deixar de ser.
+
+> A lição não é sobre o GitHub. Um bloqueio medido uma vez virou propriedade
+> permanente do arquivo, e a frase que o registrava — *"é a rede"* — era enfática
+> demais para convidar nova medição. **Bloqueio tem data de validade, e este
+> arquivo não escrevia nenhuma.** Toda linha de "não dá" daqui em diante carrega
+> a data em que foi medida, e essa data é o convite para remedir.
+
+**O que continua fora de alcance, agora com a distinção certa:** toda **escrita**
+de configuração, e as leituras de secret scanning, segredos de Actions,
+colaboradores e proteção de branch clássica. A escrita é o corte mais importante,
+e ele é limpo: **a nuvem lê configuração, e não a aplica.** Aplicar continua sendo
+clique humano.
 
 - O binário `gh` **não existe** neste ambiente (`command -v gh` devolve vazio).
-  Todo comando do apêndice antigo era inexecutável aqui.
-- Os caminhos de configuração de repositório da API do GitHub devolvem **HTTP
-  403, mesmo com token válido** (o mesmo token responde `200` em identidade).
-  **Mas não pela mesma causa** — e a rodada de 2026-08-20 tratou as duas como
-  uma só, o que era impreciso:
-
-  | Caminho | Mensagem literal | Causa | Tem conserto? |
-  |---|---|---|---|
-  | dados do repositório, rulesets, proteção de branch | *"GitHub access is not enabled for this session. An org admin must connect the Claude GitHub App"* | autorização do GitHub App | **sim, humano** |
-  | alertas de secret scanning, segredos de Actions | *"Access to this GitHub API path is not permitted through this proxy"* | allowlist do proxy | não |
-
-  A primeira linha muda de estado se a autorização do GitHub for reconectada —
-  e aí **H1 volta a ser verificável**. A segunda não muda. Escopo de token não é
-  o problema em nenhuma das duas: pedir permissão maior não destrava nada e só
-  amplia agência à toa.
-- Nenhuma ferramenta MCP disponível expõe ruleset ou proteção de branch.
+- Nenhuma ferramenta MCP disponível expõe ruleset ou proteção de branch — nem
+  leitura nem escrita. O que abriu foi a API REST, não o MCP.
 - A ferramenta de secret scanning recusa com *"Repository does not have GitHub
   Advanced Security enabled"* — o que prova o estado do GHAS e nada além dele.
 
-**Consequência:** ruleset, proteção de branch, secret scanning, push protection e
-existência de segredo de Actions não são alcançáveis por agente algum a partir da
-nuvem. Não é uma limitação desta sessão nem uma regra de conduta que se possa
-argumentar: é a rede.
+**A regra do arquivo muda de forma, e fica mais exigente, não menos:**
 
-Todo item que dependia de reverificação por sessão de nuvem precisa de um
-substituto. Há dois realistas, e eles não são excludentes:
+- Item de configuração cuja **leitura** responde hoje pode ser verificado por
+  sessão de nuvem, e deve ser — com a data e o código HTTP no registro. **H1
+  entra nessa classe** e foi verificado em 21/08.
+- Item cuja leitura **não** responde continua valendo a regra antiga: nenhuma
+  sessão de nuvem escreve "fechado"; escreve "não verificável daqui em <data>,
+  conferir na UI".
+- **Nenhuma sessão de nuvem aplica configuração**, e isso não é limite de rede —
+  a rede só confirma. É o gate.
 
-1. **Conferência humana na UI** — cinco minutos, responde tudo, não escala e
-   depende de alguém lembrar.
-2. **Um workflow do Actions** rodando dentro do próprio repositório, com o token
-   nativo da execução, que **não passa pelo proxy**. Publicaria o estado da
-   configuração como saída de job, e a partir daí a nuvem lê o que sempre pôde
-   ler: o resultado de um workflow. É o item **V1**.
-
-Enquanto nenhum dos dois existir, a regra deste arquivo passa a ser: **nenhuma
-sessão de nuvem escreve "fechado" em item de configuração**. Escreve, no máximo,
-"não verificável daqui, conferir na UI".
+O substituto continua desejável para o que não responde: **V1**, um workflow do
+Actions rodando dentro do repositório com o token nativo da execução, que não
+passa pelo proxy. Ele encolheu de escopo — não precisa mais cobrir ruleset — e
+por isso ficou mais barato.
 
 ## Retomada — por onde a próxima sessão começa
 
@@ -526,26 +538,35 @@ conteúdo de repositório e **não** inventário de repositórios — ou a topol
 mudou. Qualquer uma fecha; o estado atual, em que a regra é silenciosa sobre o
 ponto, não.
 
-### H1 — Proteção de `main`
-**Severidade: alta · 🟡 PARCIALMENTE VERIFICÁVEL · Executor: 👤 Humano**
+### H1 — Proteção de `main`: lida inteira, e ela é o que se dizia
+**Severidade: alta · ✅ VERIFICADO em 2026-08-21 · Verificado por: ☁️ Nuvem, via API**
 
-Um controle de proteção de `main` foi criado em 2026-08-08 e, na ocasião, a API
-confirmou regras de bloqueio de deleção, de force push e de exigência de PR, sem
-bypass para ninguém — inclusive o dono.
+Este item passou 24 horas marcado como *"parcialmente verificável"* porque a
+leitura do ruleset devolvia 403. Em 2026-08-21 o mesmo endpoint devolveu **200**,
+e o controle foi lido por inteiro em vez de inferido.
 
-**O que se pode afirmar hoje, 2026-08-20:** a API devolve `main` como protegida.
-Isso prova que existe **alguma** proteção. Não diz qual regra, não diz o
-enforcement, não diz quem tem bypass. Os endpoints que responderiam a isso estão
-bloqueados pelo proxy de saída (**V1**).
+**O que a leitura devolveu**, e é o registro que faltava:
 
-**Não há indício de regressão.** Há a constatação de que a frase "H1 está
-fechado" deixou de ser verificável por quem escreve este arquivo, e por isso ela
-não vai continuar escrita como se fosse.
+| Propriedade | Estado |
+|---|---|
+| Enforcement | **ativo** |
+| Alvo | a branch default |
+| Atores com bypass | **nenhum** — inclusive o dono |
+| Deleção da branch | **bloqueada** |
+| Histórico reescrito (force push) | **bloqueado** |
+| Pull request | **exigido** — e com **zero aprovações**, que é o **H1-bis** |
 
-**Ação (👤):** conferir na UI, em *Settings → Rules*, que o controle segue ativo,
-com enforcement ativo e sem bypass concedido. Cinco minutos.
+**Nada regrediu, e é a primeira vez que isso pode ser dito com evidência.** O que
+foi criado em 2026-08-08 está de pé, do jeito que foi descrito. O item fecha
+aqui; o que ele deixou em aberto — a contagem de aprovações em zero — não é
+regressão, é a configuração original, e vive em **H1-bis**.
 
-**Verificação:** um push direto para `main` é recusado, e um PR é exigido.
+**A nota de método vale mais que o resultado.** O item não estava bloqueado; ele
+estava **medido uma vez e nunca remedido**. O 403 de 20/08 virou propriedade
+permanente do arquivo porque a frase que o registrava era enfática o bastante
+para desencorajar a segunda tentativa. Custou uma requisição descobrir. Ver a
+[seção sobre o que a nuvem alcança](#o-que-a-nuvem-não-alcança--e-por-quê), que
+por causa disso passou a datar cada bloqueio.
 
 > O controle **tem rota de saída** — ele pode ser removido na mesma tela em que é
 > conferido. Fica registrado que ela existe, e onde, porque controle sem rota de
@@ -1277,6 +1298,33 @@ raciocínio que barrou exigir PR na branch principal do dossiê pessoal vale aqu
    **sem depender de um segundo revisor que não existe**. Não impede um agente
    de mesclar o próprio PR; impede que qualquer PR entre com o repositório
    quebrado, que é o dano concreto que a doutrina sozinha não previne.
+
+**Tentado por API em 2026-08-21, e barrado — o que é informação, não obstáculo.**
+A leitura do ruleset passou (200); a **escrita** devolveu 403 com
+*"Write access to this GitHub API path is not permitted through this proxy"*. O
+corte é limpo e vale registrar como desenho, não como falha: **a nuvem lê
+configuração e não a aplica.** Não há rota alternativa a procurar, e procurar uma
+seria o comportamento que o guardrail existe para impedir.
+
+**O clique, com a precisão que evita o erro provável.** A tela de *New branch
+ruleset* é a errada: **já existe** um ruleset `protect-main` ativo sobre a branch
+default, e criar um segundo empilha duas regras sobre o mesmo alvo — mais difícil
+de auditar, e a próxima sessão que ler *"o ruleset"* vai ler o errado. O caminho
+é **editar o que existe**:
+
+*Settings → Rules → Rulesets → `protect-main` → Require status checks to pass →
+Add checks → `verificar` (fonte: GitHub Actions) → Save.*
+
+**Deixe "Require branches to be up to date before merging" DESMARCADO.** Marcá-la
+obriga cada PR a incorporar `main` antes de mesclar, e cada incorporação dispara
+a CI de novo. Com um único colaborador isso é atrito sem ganho — e cada
+re-execução custa minuto, que é o **C1**. A opção existe para times com merges
+concorrentes; aqui não há concorrência.
+
+**O check já provou que reporta:** `verificar` aparece verde no head do PR #13,
+publicado pelo app do GitHub Actions. Isso importa porque exigir um check que
+nunca reportou bloqueia todo merge — é a mesma armadilha que o cabeçalho do
+workflow documenta sobre filtro de `paths`.
 
 **A ordem importa, e é contraintuitiva:** o workflow tem de existir e ter rodado
 ao menos uma vez **antes** de ser exigido. Exigir um check que nunca rodou
