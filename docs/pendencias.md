@@ -542,6 +542,83 @@ dias e três merges depois, continua valendo.
 
 ## 3. Ainda em aberto ☁️ / 🏠
 
+### A1 — O orquestrador está no prédio errado
+**Severidade: alta · Executor: 👤 Humano (decisão de arquitetura) · PROPOSTA**
+
+Levantado pelo dono em 2026-08-21: *e se quem orquestra fosse o repositório
+privado de fundação, em vez deste?*
+
+**A primeira linha do `AGENTS.md` deste repositório já diz o problema** — que ele
+tem *"duas funções que não devem se misturar"*: perfil público e orquestrador. A
+rodada de 2026-08-20/21 mostrou que a frase é mais forte do que parecia. As duas
+funções não apenas não se misturam: **uma delas está no prédio errado.**
+
+#### O que a rodada provou
+
+Tudo que travou nesta auditoria travou pelo mesmo motivo — o orquestrador mora
+num repositório N2:
+
+| O que o orquestrador precisa | O que acontece aqui |
+|---|---|
+| Nomear os 18 repositórios | 13 não podem ser nomeados (itens 1 e 7 do checklist) |
+| Guardar a ficha de cada departamento | não podem atravessar; ficam na origem |
+| Versionar o mapa setor → repositório | não pode ser publicado |
+| Versionar o mapa setor → destino de backup | não pode ser publicado |
+| Consolidar pendência de projeto privado | precisa de transporte humano, uma a uma |
+
+Nenhum desses limites é acidente ou excesso de zelo: são **R1 funcionando como
+projetado**. O problema não é a regra — é que o orquestrador foi posto do lado
+errado dela e passa a vida contornando a própria fronteira.
+
+#### O que muda de lado
+
+**Vai para o repositório privado de fundação:** o índice com nomes reais, as
+fichas de handoff, os dois mapas (setor → repositório, setor → destino), e os
+itens de backlog que tratam de projeto privado.
+
+**Fica aqui, porque é o que este repositório faz bem:** o blueprint — que é
+documento publicado, sanitizado e feito para ser lido por terceiros —, o perfil,
+o `SECURITY.md` como doutrina pública, o marketplace e o plugin distribuível, e
+os prompts genéricos de auditoria.
+
+#### R1 não some — muda de posição, e afrouxa
+
+Com o orquestrador do lado privado, ele pode ler outros repositórios privados
+sem violar nada: **R1 proíbe misturar privado com o público, não privado com
+privado.** O gargalo de hoje evapora.
+
+O que **não** evapora é o corolário registrado em **L4**: *sessão não deveria
+montar repositórios cujos dados pertencem a donos diferentes.* Orquestrador
+privado montado junto com repositório de empregador continua sendo a mesma classe
+de risco, em escala menor. A fronteira deixa de ser dura e passa a ser de
+julgamento — o que é mais confortável e menos seguro, e vale saber disso ao
+decidir.
+
+E a fronteira pública continua existindo: o que for publicado aqui segue passando
+pelo checklist inteiro. A diferença é que **o orquestrador deixa de ser a coisa
+que precisa atravessar**.
+
+#### O custo, para a decisão ser honesta
+
+Mover não é grátis. O `AGENTS.md` e o blueprint descrevem este repositório como
+orquestrador em vários lugares; a rotina de governança N2 pressupõe isso; e o
+índice publicado — que hoje conta 18 sem nomear — some do lado público, o que
+significa que **o perfil deixa de responder "o que existe"**. Se essa resposta
+pública tiver valor de vitrine, ela precisa ser reescrita como recorte
+deliberado, não como índice.
+
+**Ação (👤):** decidir. Se for mover, a ordem que evita ficar com dois
+orquestradores meio-prontos é: (1) criar o índice real no repositório de fundação
+a partir das fichas que já estão nas origens; (2) reescrever aqui o que descreve
+este repositório como orquestrador; (3) reapontar a rotina de governança; (4) só
+então apagar o índice daqui.
+
+**Verificação:** uma pessoa consegue responder *o que existe, onde está a
+verdade, o que está pendente* abrindo **um** repositório — e esse repositório não
+precisa esconder metade da resposta.
+
+---
+
 ### D1 — O que ainda depende de uma máquina ligada
 **Severidade: alta · Executor: ☁️ Nuvem (workflow, feito) + 👤 Humano (credencial) · PARCIAL**
 
