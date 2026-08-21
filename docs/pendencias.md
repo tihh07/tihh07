@@ -36,6 +36,7 @@
 |---|---|---|
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21). Reabre se algum deixar de ser privado, ganhar colaborador, ou surgir titular externo |
 | **C1** — minutos de Actions a 90% | 🟡 **Pro assinado; medição em voo** | teto foi a 3.000 e uma sessão escopada num privado está medindo o consumo por workflow. **Não é este repo** (público não consome) e **não é o plugin**. Assinar não fecha o item: teto maior sobre consumo não medido é adiamento |
+| **S2** — R1 cobre conteúdo, não inventário | 🔴 **novo em 2026-08-21** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
 | **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável agora** | o check obrigatório passou a existir; falta marcar no ruleset. Exigir aprovação está descartado: um único colaborador se trancaria fora |
@@ -143,10 +144,10 @@ nada esperando merge aqui.
 entregaram e dezessete fichas foram escritas, cada uma na origem. Restam **dois
 repositórios em aberto**, e nenhum por falta de execução de agente — ver **L1**.
 
-**5. O que sobra é quase todo humano.** S1 (dado pessoal, risco aceito), C1
-(orçamento do Actions), H1-bis (marcar o check), H7 (proteger as branches dos
-privados), H5 e L2 (decisão), L4 (criar rotina na UI), A1 (sessão escopada num
-privado). **Nenhum destrava insistindo daqui** — e A1 e L4, tentados daqui,
+**5. O que sobra é quase todo humano.** S1 (dado pessoal, risco aceito), S2
+(alcance de R1), C1 (orçamento do Actions), H1-bis (marcar o check), H7 (proteger
+as branches dos privados), H5 e L2 (decisão), L4 (criar rotina na UI), A1 (sessão
+escopada num privado). **Nenhum destrava insistindo daqui** — e A1 e L4, tentados daqui,
 violariam R1 ou repetiriam o defeito do P0.
 
 ### Achados que pertencem a outros repositórios
@@ -464,6 +465,66 @@ adicionado, ou se surgir titular externo identificável no dado.
 > garantir que a aceitação seja **explícita e datada** em vez de virar omissão —
 > risco aceito sem registro reaparece como surpresa, e aí já não há decisão, só
 > consequência.
+
+### S2 — R1 protege o conteúdo dos privados, não a lista deles
+**Severidade: média · 🔴 ABERTO · Descoberto em 2026-08-21 · Executor: 👤 Humano (decisão de desenho)**
+
+**Como apareceu.** Esta sessão — a do repositório **público** — consultou o
+estado de uma sessão de nuvem para saber se um trabalho tinha terminado. A
+resposta trouxe, junto, **a lista completa dos repositórios no escopo daquela
+sessão**: dezessete nomes reais de repositório privado, entregues a uma sessão
+que **R1** existe para manter do lado de fora.
+
+Nenhuma regra foi quebrada. Nenhum repositório privado foi clonado, aberto ou
+lido. **R1 continua íntegro no que ele protege** — e o que ele protege é
+conteúdo.
+
+**O que o achado diz, e é desconfortável:** as ferramentas de *metadados de
+sessão* atravessam a fronteira que as de repositório respeitam. Qualquer sessão
+deste ambiente, inclusive esta, consegue **enumerar os repositórios** da conta
+sem tocar em nenhum. A barreira é de leitura de arquivo, não de nomes.
+
+**Por que isso importa aqui em particular.** Ontem este repositório trocou
+dezessete nomes reais por apelidos e escreveu, no `SECURITY.md`, que o
+mapeamento *"vive num repositório privado"*. A metade cara desse controle segue
+de pé: **qual apelido corresponde a qual repositório** continua fora daqui. A
+metade barata não: **a lista de que repositórios existem** é obtenível por
+qualquer sessão da conta, sem clonar nada.
+
+Vale dizer sem eufemismo o que isso faz com o controle: L7 impede a
+**publicação** dos nomes — e essa era e continua sendo a exposição que importa,
+porque publicação alcança terceiros. O que ele não faz, e nunca fez, é impedir
+que uma sessão da própria conta os veja.
+
+**O que NÃO fazer.** Não há remediação de agente aqui, e tentar uma seria pior
+que o problema: deixar de consultar o estado das sessões de nuvem trocaria uma
+exposição interna por relatos não verificados — que é exatamente o defeito que
+custou três diagnósticos errados em **L1**. E abster-se de uma leitura que a
+plataforma oferece não a torna indisponível para a próxima sessão.
+
+**Ação (👤): decidir o enquadramento, não construir controle.** Duas leituras, e
+a diferença não é retórica:
+
+1. **Aceitável por desenho** — é a conta do próprio dono olhando os próprios
+   repositórios, e nenhum terceiro entra nisso. Então o item fecha como risco
+   aceito, com a data, e **R1 passa a declarar explicitamente que cobre conteúdo
+   e não inventário** — hoje ele não diz nem uma coisa nem outra, e é a omissão
+   que faz o controle parecer mais amplo do que é.
+2. **Não aceitável** — e aí o que muda não é a regra, é a topologia: sessões da
+   frente pública precisariam de uma conta ou ambiente separado dos privados.
+   Isso é caro, e a decisão é de quem paga.
+
+**Recomendo a primeira**, e a razão é a mesma que governa **S1**: a exposição é
+para a própria conta do dono, o inventário não contém dado de terceiro, e o custo
+da segunda é desproporcional ao que ela remove. Mas registro em vez de assumir —
+a diferença entre um controle que cobre menos do que se pensava e um controle
+que cobre exatamente o que se declarou é toda a diferença, e só se sabe qual é
+depois de alguém dizer.
+
+**Verificação:** o `SECURITY.md` declara, no texto de R1, que a regra cobre
+conteúdo de repositório e **não** inventário de repositórios — ou a topologia
+mudou. Qualquer uma fecha; o estado atual, em que a regra é silenciosa sobre o
+ponto, não.
 
 ### H1 — Proteção de `main`
 **Severidade: alta · 🟡 PARCIALMENTE VERIFICÁVEL · Executor: 👤 Humano**
