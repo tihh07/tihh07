@@ -38,7 +38,7 @@
 | **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável agora** | o check obrigatório passou a existir; falta marcar no ruleset. Exigir aprovação está descartado: um único colaborador se trancaria fora |
-| **H4** — secret scanning e push protection | 🟡 parcial | campo ausente na resposta da API; só a UI responde |
+| **H4** — secret scanning e push protection | ✅ **fechado** | ambos **ativos**, conferidos na UI em 2026-08-21 com evidência visual. GHAS é flag distinto e segue desligado — não era ele que importava |
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
 | **H3 · N6** — PR Watch | ✅ **fechado por remoção** | 22 disparos, **zero execuções** — nunca alcançou a action. Removido em 2026-08-21 a pedido do dono. Deixá-lo parado era cobertura aparente |
 | **H5 · L2** | ❌ aberto | decisão humana |
@@ -529,35 +529,36 @@ peça ou de como o pedido seja formulado: o valor não passa por sessão de agen
 nem por chat. Quem cria o segredo é quem o digita. Registrado assim para que uma
 sessão futura não trate isso como pendência a executar.
 
-### H4 — Secret scanning e push protection
-**Severidade: alta · 🟡 NÃO VERIFICÁVEL PELA NUVEM · Executor: 👤 Humano**
+### H4 — Secret scanning e push protection: verificado e ligado
+**Severidade: alta · ✅ FECHADO em 2026-08-21 · Verificado por: 👤 Humano, na UI**
 
-Em 2026-08-08 este item foi marcado como fechado com base numa leitura da API.
-Hoje essa leitura não se repete, e o que se conseguiu apurar é **mais estreito do
-que o item supunha**:
-
-- A ferramenta de secret scanning disponível recusou com *"Repository does not
-  have GitHub Advanced Security enabled"*. Isso prova que o **GHAS está
-  desligado**.
-- GHAS é um flag **distinto** do secret scanning gratuito de repositório público.
-  A recusa acima não diz nada sobre esse segundo flag, que só se lê pelo endpoint
-  bloqueado.
-- **Push protection não foi verificado por via nenhuma.**
+**Os dois estão ativos.** Conferido na UI em *Settings → Advanced Security*, com
+evidência visual: tanto **Secret Protection** quanto **Push protection** exibem o
+botão **"Disable"** — o que só aparece quando o recurso está ligado. A leitura do
+botão importa: um print com "Enable" provaria o contrário, e é o tipo de detalhe
+que se lê errado com pressa.
 
 Num repositório público N2, push protection é a única barreira que age **antes**
-de o segredo virar público. Depois do push, conteúdo público é comprometido, não
-corrigível — é o que o runbook do [`SECURITY.md`](../SECURITY.md) diz. Saber se
-essa barreira existe não é detalhe de inventário.
+de o segredo virar público. Depois do push, conteúdo público é comprometido e não
+corrigível. Saber que ela existe muda o perfil de risco de todo o repositório.
 
-**Ação (👤):** conferir na UI, em *Settings → Advanced Security*, o estado de
-secret scanning e de push protection, e registrar aqui a data da conferência.
+**O que o item supunha e estava errado.** A sessão de nuvem tinha concluído que o
+GHAS estava desligado — e estava certa sobre isso, mas tirou daí a inferência de
+que a proteção poderia não existir. **GHAS é um flag distinto do secret scanning
+de repositório público**, e a distinção era exatamente o que a sessão não
+conseguia ler. O que faltava não era a proteção; era a via de leitura.
 
-**Verificação:** um push contendo um segredo de padrão conhecido é recusado.
+**Recomendação lateral, sem urgência:** *Dependency graph* e *Dependabot alerts*
+aparecem desligados. Este repositório não tem gerenciador de pacotes, então o
+ganho é estreito — mas os workflows usam actions de terceiros com versão fixada
+(`actions/checkout@v4`), e é isso que o Dependabot manteria atualizado. Decisão
+de conveniência, não de risco.
 
-> Fica o registro do erro de método, porque ele vale mais que o dado: um item foi
-> dado como fechado por uma consulta que ninguém garantiu ser repetível. O
-> critério novo está na seção "O que a nuvem não alcança" — item de configuração
-> não fecha por leitura de agente.
+> Este item passou por três estados em duas semanas: fechado por leitura de API
+> não repetível, reaberto como não verificável, e agora fechado com evidência
+> visual e data. O padrão que fica: **item de configuração não fecha por leitura
+> de agente** — mas também não fica aberto para sempre por isso. Fecha quando um
+> humano olha e registra o que viu, que foi o que aconteceu aqui.
 
 ### H5 — Pré-condições jurídicas não verificadas
 **Severidade: alta · Executor: 👤 Humano · ABERTO**
