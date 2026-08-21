@@ -34,7 +34,7 @@
 
 | Item | Estado | Por quê |
 |---|---|---|
-| **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21). Reabre se algum deixar de ser privado, ganhar colaborador, ou surgir titular externo |
+| **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
 | **C1** — minutos de Actions a 90% | 🟡 **Pro assinado; medição em voo** | teto foi a 3.000 e uma sessão escopada num privado está medindo o consumo por workflow. **Não é este repo** (público não consome) e **não é o plugin**. Assinar não fecha o item: teto maior sobre consumo não medido é adiamento |
 | **S2** — R1 cobre conteúdo, não inventário | 🔴 **novo em 2026-08-21** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
 | **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
@@ -471,6 +471,23 @@ repositório. Aceitar o risco implica, portanto:
 **Verificação deste item:** a aceitação está registrada com data. Ele reabre se
 qualquer um dos três repositórios deixar de ser privado, se um colaborador for
 adicionado, ou se surgir titular externo identificável no dado.
+
+**Quarta condição, acrescentada no fim de 2026-08-21 sem mexer na decisão.** No
+mesmo dia, uma sessão escopada nos privados produziu **14 PRs de remoção de dado
+pessoal, em 12 repositórios**, a pedido do dono. Confirmado com ele: **a decisão
+de manter vale, e é a que este item registra.** Os PRs ficaram abertos.
+
+Isso cria um estado que o item precisa vigiar, e é por isso que vira condição de
+reabertura em vez de nota de rodapé: **se aqueles PRs entrarem, este registro
+passa a descrever uma realidade que acabou** — dirá "o dado fica" sobre
+repositórios de onde o dado saiu. Não é hipótese remota; é trabalho pronto,
+esperando um merge, e merge de PR aberto é a coisa mais fácil de acontecer sem
+ninguém avisar o backlog.
+
+**R1 impede esta sessão de verificar aquele estado**, então a condição é escrita
+para quem tiver acesso: se os PRs de remoção forem mesclados, este item não
+reabre — ele **fecha por outro caminho**, e o texto tem de dizer que o dado saiu,
+não que foi mantido.
 
 > A decisão não é a que eu recomendaria por padrão, e é legítima: o dono é quem
 > pode aceitar risco sobre o próprio dado. O que este arquivo pode fazer é
