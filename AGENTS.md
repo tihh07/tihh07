@@ -49,19 +49,11 @@ Duas regras do blueprint valem em toda sessão neste repo:
 ## Frontmatter de identificação
 
 Todo `AGENTS.md` do ecossistema abre com um bloco YAML declarando a que o
-repositório pertence e o que pode sair dele. A rotina semanal de control-plane
-fiscaliza esses campos, então não são decorativos:
-
-| Campo | O que declara |
-|---|---|
-| `setor` | A que setor do ecossistema o repositório pertence. Valor deste repo: `marca-pessoal`. |
-| `nivel` | Classificação de exposição. `N2` = público, rigor máximo de sanitização. |
-| `emite_pratica` | Se o repositório publica prática reutilizável por outros, ou só consome. |
-| `nunca_sai` | O que nunca pode aparecer em arquivo versionado, mesmo fora do `README.md`. |
-
-A lista canônica de setores vive fora daqui, barrada pela mesma decisão humana
-que barra os treze nomes do índice abaixo. Este arquivo declara o próprio setor
-e não afirma o conjunto.
+repositório pertence e o que pode sair dele — `setor`, `nivel`, `emite_pratica`,
+`nunca_sai`. Os campos e o que cada um significa vivem no
+[blueprint](docs/orchestration-blueprint.md#frontmatter-de-identificação), que é
+a autoridade de projeto; descrevem o ecossistema, não este repositório. O valor
+deste repo está no topo do arquivo.
 
 ## Índice de projetos
 
@@ -71,31 +63,42 @@ define; cada linha aqui vem do bloco de handoff que a auditoria devolve.
 
 O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 
-| Repositório | Departamento | Estado | Última auditoria |
+| Repo | Departamento | Estado do ciclo | Última auditoria |
 |---|---|---|---|
-| `AI-Operating-System` (privado) | Fundação / Arquitetura | destravado pelo humano; 3 PRs mesclados (relato da sessão, não reverificado daqui — **R1**); 1 PR segue aberto | 2026-08-20 |
-| `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | auditado; **não fechado** — relatórios nas branches de auditoria; guardrail do próprio repo barra merge por agente | 2026-08-20 |
-| `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | **fechado** — relatório na branch default | 2026-08-20 |
-| `bena-agencia` (privado) | Operação de Cliente / Agência | **fechado** — relatório na branch default | 2026-08-20 |
-| *13 repositórios privados* | não declarado | 11 **fechados**; 2 em aberto por causas distintas | 2026-08-20 |
-| `tihh07/tihh07` (público) | Fachada Pública / Marketing | **auditado** — documentação, workflows e templates; sem código de aplicação | 2026-08-20 |
+| `P01` | Fundação / Arquitetura | em aberto — 1 PR restante | 2026-08-20 |
+| `P02` | Segundo Cérebro | **não fechado** — guardrail do próprio repo barra escrita de agente | 2026-08-20 |
+| `P03` | Inteligência Comercial & Mercado | fechado | 2026-08-20 |
+| `P04` | Operação de Cliente / Agência | fechado | 2026-08-20 |
+| `P05` | não declarado | fechado | 2026-08-20 |
+| `P06` | não declarado | fechado | 2026-08-20 |
+| `P07` | não declarado | fechado | 2026-08-20 |
+| `P08` | não declarado | fechado | 2026-08-20 |
+| `P09` | não declarado | fechado | 2026-08-20 |
+| `P10` | não declarado | fechado | 2026-08-20 |
+| `P11` | não declarado | fechado | 2026-08-20 |
+| `P12` | não declarado | fechado | 2026-08-20 |
+| `P13` | não declarado | fechado | 2026-08-20 |
+| `P14` | não declarado | fechado | 2026-08-20 |
+| `P15` | não declarado | fechado | 2026-08-20 |
+| `P16` | não declarado | em aberto — CI vermelha por dado que só uma pessoa coleta | 2026-08-20 |
+| `P17` | não declarado | em aberto — ficha em correção | 2026-08-20 |
+| `tihh07/tihh07` (público) | Fachada Pública / Marketing | auditado — documentação, workflows e templates | 2026-08-20 |
 
-> **Treze linhas viraram uma.** Vários desses nomes de repositório são nomes de
-> organização, e publicá-los aciona os itens 1 e 7 do checklist do
-> [`SECURITY.md`](SECURITY.md). Um índice que esconde treze dos dezoito descreve
-> um recorte; um que os publica sem decisão humana vaza. Contar sem nomear é a
-> única das três opções que não mente nem expõe — e **um dos quatro já nomeados
-> cai na mesma decisão**.
+> **Por que apelido, e não nome.** Publicar os nomes reais entregaria identidade de
+> terceiro — empregador, cliente, conselho — e aciona os itens 1 e 7 do checklist do
+> [`SECURITY.md`](SECURITY.md), onde a regra vive. Publicar só alguns seria pior:
+> **esconder seletivamente aponta para o que está escondido**, e a omissão vira o
+> índice. O mapeamento apelido → repositório mora fora daqui, num privado.
 >
-> **"Auditado" não é "fechado".** As 17 auditorias de 2026-08-20 entregaram — a
-> coluna de data é delas. Mas relatório que fica em PR não mesclado é
-> indistinguível de relatório inexistente para qualquer sessão futura, e foi
-> assim que três fichas declararam por engano que a auditoria não existia. Por
-> isso a coluna de estado diz onde o trabalho **está**, não que ele foi feito.
+> O apelido é **estável**: uma vez atribuído, nunca é reciclado nem renumerado, senão
+> duas leituras do mesmo índice descrevem repositórios diferentes.
 >
-> **Treze fechados, quatro em aberto**, cada um por uma causa diferente — a lista
-> das causas vive em [`docs/pendencias.md`](docs/pendencias.md), porque nenhuma
-> delas cabe numa célula sem virar meia-verdade.
+> **"Auditado" não é "fechado".** As 17 auditorias de 2026-08-20 entregaram — a coluna
+> de data é delas. Relatório que fica em PR não mesclado, porém, é indistinguível de
+> relatório inexistente para qualquer sessão futura: por isso a coluna de estado diz
+> onde o trabalho **está**, não que ele foi feito. Nenhuma célula aqui registra achado
+> de conteúdo — dado sensível por repositório é justamente o que um índice público não
+> pode mapear.
 
 Achados que não cabem na tabela vivem em
 [`docs/pendencias.md`](docs/pendencias.md), com evidência, executor e critério de
@@ -176,11 +179,9 @@ A verificação, antes de qualquer PR:
 ## Topologia de branches
 
 **`main` é a única branch permanente**, e o que ela contém é o que o perfil
-público mostra. Branches de trabalho saem de `main`, voltam por PR e são apagadas
-no merge — por isso esta seção não as lista: uma lista dessas envelhece no
-primeiro merge. `git branch -r` responde melhor que qualquer documento.
-
-O gate humano vale para todas: nada entra em `main` sem PR revisado.
+público mostra. Branches de trabalho saem dela, voltam por PR revisado e somem no
+merge — não são listadas aqui porque `git branch -r` responde melhor e não
+envelhece.
 
 ## Convenções deste repositório
 
@@ -199,10 +200,17 @@ O gate humano vale para todas: nada entra em `main` sem PR revisado.
   omissão. A contagem exata não fica aqui de propósito: número no texto envelhece
   calado, e `git log` responde melhor.
 - **Orçamento de contexto** — `CLAUDE.md` importa este arquivo na linha 1, então
-  os dois ocupam o mesmo orçamento e o limite de 200 linhas que o blueprint fixa
-  para a identidade de um departamento vale na prática **para a soma**. Seção
-  nova exige poda de outra: crescer sem podar empurra doutrina para fora do
-  contexto de toda sessão, calado.
+  os dois ocupam o mesmo orçamento, e o limite de 200 linhas que o blueprint fixa
+  vale **para a soma**. Seção nova exige poda de outra: crescer sem podar empurra
+  doutrina para fora do contexto de toda sessão, calado.
+  **Em 2026-08-21 a soma passou de 200**, e fica dito em vez de escondido: o
+  índice virou uma linha por repositório (dezoito, contra seis), que era o preço
+  de parar de agregar treze estados numa célula. Foram podadas em troca a seção
+  de frontmatter, que descrevia o ecossistema e foi para o blueprint, e a
+  topologia de branches. O excedente se resolve em **A1**: com a doutrina de
+  ecossistema no privado, o que sobra aqui é fachada pública e cabe folgado.
+  Enquanto isso, o número real vale mais que o número redondo — o pecado da
+  regra é o crescimento **calado**, não o crescimento.
 - **Sanitização** — nada de caminho local absoluto, nome de cliente, token ou
   URL interna em arquivo versionado, inclusive fora do `README.md`. O índice
   acima guarda caminhos locais apenas se forem genéricos; caso contrário,

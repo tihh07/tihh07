@@ -34,17 +34,19 @@
 
 | Item | Estado | Por quê |
 |---|---|---|
-| **S1** — dado pessoal versionado em repositórios privados | 🔴 **aberto, a mais alta** | **verificado em 2026-08-21**: 1 dos 3 limpo, 2 confirmados. Detalhe fica fora deste arquivo, que é público. Trava no dever de notificar, que vem antes de apagar |
+| **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21). Reabre se algum deixar de ser privado, ganhar colaborador, ou surgir titular externo |
 | **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável agora** | o check obrigatório passou a existir; falta marcar no ruleset. Exigir aprovação está descartado: um único colaborador se trancaria fora |
 | **H4** — secret scanning e push protection | 🟡 parcial | campo ausente na resposta da API; só a UI responde |
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
-| **H3** — segredo de Actions para o PR Watch | ❌ aberto | proibido a agente por regra de conduta, não por ferramenta. Duas saídas: criar `ANTHROPIC_API_KEY`, ou remover o workflow em vez de deixá-lo parecendo cobertura |
-| **H5 · L2 · L4** | ❌ aberto | decisão humana |
+| **H3 · N6** — PR Watch | ✅ **fechado por remoção** | 22 disparos, **zero execuções** — nunca alcançou a action. Removido em 2026-08-21 a pedido do dono. Deixá-lo parado era cobertura aparente |
+| **H5 · L2** | ❌ aberto | decisão humana |
+| **L4** — cobertura recorrente | 🟡 **decidido** | desenho C (uma rotina por setor). Criar a rotina é na UI: daqui herdaria o ambiente público e repetiria o defeito do P0 |
+| **A1** — orquestrador no prédio errado | 🟡 **decidido** | vai para o departamento de Fundação. Migrar daqui violaria R1 — é sessão escopada no privado, ou à mão |
 | **L1** — consolidação dos handoffs | 🟡 em voo | rodada de fechamento em 2026-08-21: **13 fechados, 4 em aberto**. As 4 causas restantes são todas decisão humana, nenhuma é trabalho de agente. Cada retenção tem causa distinta — nenhuma é falha de auditoria |
 | **L3** — executores e hook não exercitados | ❌ aberto | depende do retorno de L1 |
-| **N6** — PR Watch nunca executou de verdade | ❌ aberto | bloqueado por **H3** |
+| **L7** — nomes dos privados no índice público | ✅ **fechado** | apelidos `P01`–`P17` em 2026-08-21; regra no `SECURITY.md`; varredura confirma nenhum nome real em arquivo versionado |
 
 Os abertos **não são resíduo de esforço**: cada um está preso a um limite
 declarado — política de rede, permissão de ferramenta, regra de conduta ou
@@ -400,73 +402,48 @@ controles que sustentam o gate humano. A nuvem só consegue **reportar que estã
 abertos**, o que este arquivo faz. Desde 2026-08-20, em vários deles a nuvem nem
 isso consegue: ver **V1**.
 
-### S1 — Dado pessoal versionado: verificado, e o alarme era parcialmente real
-**Severidade: a mais alta deste arquivo · 🔴 ABERTO · Executor: 👤 Humano · verificado em 2026-08-21**
+### S1 — Dado pessoal versionado: verificado, e o risco foi aceito pelo dono
+**Severidade: a mais alta deste arquivo · 🟡 RISCO ACEITO em 2026-08-21 · Executor: 👤 Humano**
 
-Uma sessão relatou dado de paciente versionado em três repositórios privados. Uma
-segunda sessão, sobre um desses três, concluiu o oposto. **Três varreduras
-somente-leitura decidiram a disputa** — árvore e histórico, proibidas de alterar
-qualquer coisa, com o contrato de três tokens que separa "não achei" de "não
-existe".
+Três varreduras somente-leitura decidiram uma contradição entre duas sessões:
+**um repositório limpo do que se alegou, dois com dado real de pessoa
+identificável** — num deles em volume que a alegação original não sugeria.
 
-**O resultado não é nem o alarme nem o desmentido.** Um dos três voltou limpo do
-que fora alegado. Os outros dois confirmaram dado real de pessoa identificável —
-e num deles em volume que a alegação original nem sugeria.
+**A decisão do dono, em 2026-08-21:** não apagar. Os repositórios seguem
+**privados**, o acesso é dele, e os agentes que operam neles operam em nome dele.
+O risco fica **aceito e registrado**, que é o desfecho que a ordem de remediação
+deste item pedia — avaliar antes de apagar — resolvido no primeiro passo.
 
-**Por que os números não estão neste arquivo.** Este repositório é público. Um
-inventário de "quanto dado pessoal existe em qual repositório privado" publicado
-aqui é, ele próprio, a exposição — item 5 do checklist, e o tipo de detalhe que
-transforma um problema contido num mapa para quem quiser procurá-lo. A evidência
-por `arquivo:linha` fica no relatório de cada repositório de origem, que é
-privado; o resumo quantitativo foi entregue ao dono fora de arquivo versionado.
+**O que essa decisão resolve, e o que ela não resolve.** Ela resolve o que estava
+travado: nada é apagado, nenhum histórico é reescrito, nenhum clone quebra. Ela
+**não** transforma dado de terceiro em dado próprio. Se parte do dado pertence a
+pessoas que não são o dono do repositório, a obrigação eventual de notificá-las
+não depende do repositório ser privado — ela depende de haver titular e de haver
+exposição. Isso fica dito uma vez, aqui, porque é o tipo de coisa que ninguém
+lembra de reabrir: **manter privado contém a exposição, não extingue o dever.**
 
-Registrar "verificado e confirmado" sem publicar o detalhe é o que este arquivo
-consegue fazer sem virar parte do problema. **Um backlog público que documenta
-com precisão onde mora o dado pessoal do ecossistema é um mapa de fraquezas** —
-que é exatamente o defeito que o item N19 corrigiu nesta mesma reescrita.
+**O controle que a decisão torna necessário.** "Privado com meu acesso" só
+descreve a realidade enquanto o acesso for de fato restrito, e há uma via que não
+é óbvia: **toda sessão de nuvem despachada para um desses repositórios clona o
+conteúdo** para um contêiner efêmero. Neste ciclo isso aconteceu várias vezes por
+repositório. Aceitar o risco implica, portanto:
 
-**A contradição se resolveu no sentido menos confortável.** A sessão de
-fechamento que declarou "dado sensível verificado como seguro" estava **errada**;
-a varredura dedicada, com histórico, achou. As duas rodaram no mesmo dia, sobre o
-mesmo repositório. A diferença não foi o modelo nem a sorte: foi que uma tinha
-varredura de dado como tarefa e a outra como item de checklist no fim de um
-fechamento.
+- não anexar esses repositórios como fonte de sessão sem necessidade — em
+  particular, nunca numa sessão multi-repositório, que multiplica cópias sem
+  ganho;
+- preferir varredura escopada a fechamento genérico quando o alvo é um deles;
+- revisar periodicamente quem tem acesso, porque a premissa "só eu" é a única
+  coisa que sustenta a aceitação.
 
-> Vale mais que o achado: **"verificado limpo" dito de passagem não é
-> verificação.** Duas sessões, mesmo dia, mesmo repositório, conclusões opostas —
-> e a que estava certa foi a que tinha isso como única tarefa. Qualquer
-> "verificado" neste arquivo que tenha vindo como subitem de outra coisa merece a
-> mesma desconfiança.
+**Verificação deste item:** a aceitação está registrada com data. Ele reabre se
+qualquer um dos três repositórios deixar de ser privado, se um colaborador for
+adicionado, ou se surgir titular externo identificável no dado.
 
-**Atenuante real, e não deve virar desculpa:** os três repositórios são
-**privados**. A exposição está contida em quem tem acesso, e isso separa este
-caso de um vazamento público — muda o prazo, não o dever.
-
-**Agravante que o processo criou:** cada sessão de nuvem despachada neste ciclo
-**clonou** esses repositórios para um contêiner efêmero. A auditoria que
-encontrou o dado também o copiou, várias vezes. Não há evidência de que isso o
-tenha exposto a terceiros, mas é consequência direta do método e precisa constar
-antes de qualquer decisão sobre rodar a próxima rodada do mesmo jeito.
-
-**A ordem de remediação, que não é a intuitiva:**
-
-1. **Avaliar o dever de notificar, antes de apagar.** Dado pessoal de terceiro
-   dispara obrigação legal, e apagar primeiro destrói a evidência de escopo e
-   duração de que a avaliação depende. Decisão humana, primeiro passo.
-2. Conferir quem tem acesso a cada um dos repositórios hoje.
-3. Decidir se o dado deveria estar versionado — em vários casos a resposta é
-   que ele nunca deveria ter entrado, e a correção é de processo, não de
-   histórico.
-4. Só então tratar o histórico, sabendo que reescrevê-lo quebra todo clone
-   existente.
-
-**Nada disso é trabalho de agente**, e nenhum passo foi executado. As varreduras
-foram explicitamente proibidas de alterar arquivo, abrir PR, mesclar ou tocar no
-histórico, e nenhuma tocou.
-
-**Verificação deste item:** fecha quando o passo 1 tiver resposta registrada —
-notificar ou não, com a razão. Apagar o dado sem essa resposta não fecha o item:
-troca um problema visível por um invisível.
+> A decisão não é a que eu recomendaria por padrão, e é legítima: o dono é quem
+> pode aceitar risco sobre o próprio dado. O que este arquivo pode fazer é
+> garantir que a aceitação seja **explícita e datada** em vez de virar omissão —
+> risco aceito sem registro reaparece como surpresa, e aí já não há decisão, só
+> consequência.
 
 ### H1 — Proteção de `main`
 **Severidade: alta · 🟡 PARCIALMENTE VERIFICÁVEL · Executor: 👤 Humano**
@@ -627,7 +604,50 @@ dias e três merges depois, continua valendo.
 
 ## 3. Ainda em aberto ☁️ / 🏠
 
-### A1 — O orquestrador está no prédio errado
+### A1 — O orquestrador está no prédio errado (decidido: muda)
+
+**DECIDIDO em 2026-08-21 — vai para o privado.**
+
+O item registrava que o orquestrador pode estar do lado errado de **R1**: a
+doutrina operacional, o backlog e o blueprint descrevem o ecossistema inteiro e
+vivem no único repositório **público**.
+
+**Decidido: vai para um repositório privado.** E o destino não é um repositório
+novo — é o **departamento de Fundação / Arquitetura** (`P01` no índice), que o
+blueprint já define como "princípios, padrões, o sistema operacional" e como
+departamento-piloto. A pergunta do dono — *"já não deveria ser esse cara?"* —
+está certa, e vale registrar por quê: o blueprint **já** atribuía essa missão a
+ele. O orquestrador morar no público nunca foi um desenho; foi o resto do
+ecossistema crescendo em volta do primeiro repositório que existiu.
+
+**O que muda de lado:** `AGENTS.md` (doutrina operacional), `docs/pendencias.md`
+(backlog), `docs/orchestration-blueprint.md` (autoridade de projeto),
+`docs/handoff/`, `docs/control-plane.md`, e o mapeamento apelido → repositório,
+que hoje não tem casa versionada.
+
+**O que fica, e é o ponto:** `README.md` — o perfil público —, `LICENSE`,
+`SECURITY.md` na parte que é política de publicação, o plugin-fundação (que é
+prática emitida de propósito) e os workflows deste repositório. O que sobra aqui
+passa a ser **fachada pública**, que é o que o blueprint sempre disse que este
+departamento é.
+
+**O ganho concreto, além da doutrina:** hoje cada linha deste backlog é escrita
+sob restrição de sanitização, e várias já foram podadas por isso — o detalhe dos
+achados de dado pessoal, os nomes dos repositórios, a lista de setores. No
+privado, o backlog volta a poder ser específico, que é o que um backlog precisa
+ser para servir.
+
+**Por que não migrei nesta sessão.** A migração escreve num repositório privado, e
+**R1 proíbe esta sessão — a pública — de tocar nele**. É trabalho de uma sessão
+escopada em `P01`, ou seu, à mão. Migrar daqui seria cometer a violação que o
+item existe para apontar.
+
+**Verificação:** `AGENTS.md` deste repositório encolhe para doutrina de fachada
+pública; a doutrina de ecossistema tem uma única cópia, no privado; e nenhum
+documento aqui afirma ser autoridade sobre o que não é público.
+
+**A análise que levou a essa decisão, mantida como registro:**
+
 **Severidade: alta · Executor: 👤 Humano (decisão de arquitetura) · PROPOSTA**
 
 Levantado pelo dono em 2026-08-21: *e se quem orquestra fosse o repositório
@@ -1318,7 +1338,31 @@ entrada malformada e as quatro liberações.
 > registrado porque um teste que afirma a coisa errada é pior que teste nenhum:
 > ele reprova o código correto e, invertido, aprova o errado.
 
-### L4 — Cobertura recorrente: a maioria dos 18 segue fora de rotina
+### L4 — Cobertura recorrente (decidido: desenho C)
+
+**DECIDIDO em 2026-08-21 — desenho C.**
+
+Das três formas propostas, o dono escolheu **C — uma rotina por setor**, ~6
+rotinas, cada uma escopada num setor. A recomendação era essa: A é uma sessão
+única sobre todos os privados, que contraria o espírito de **R1**; B são 18
+rotinas para manter.
+
+**O que já dá para preparar da nuvem:** o conteúdo de cada rotina vive em
+`.claude/skills/<nome>/SKILL.md` e o prompt da rotina é um ponteiro para ele —
+padrão já fixado por **P2**. Isso é versionável e revisável aqui.
+
+**O que NÃO pode ser criado desta sessão, e a razão não é permissão.** Criar a
+rotina exige anexar os repositórios privados do setor como fontes. Uma rotina
+criada a partir desta sessão herdaria o ambiente **deste repositório, que é o
+público** — e produziria exatamente o defeito que o item **P0** corrigiu: uma
+rotina misturando privados com o público. A criação é na UI, com as fontes certas,
+uma rotina por vez.
+
+**Verificação:** cada rotina existe, tem escopo de um único setor, nenhum
+conector anexado (**R4**), e o prompt é um ponteiro para a skill versionada.
+
+**A análise que levou a essa escolha, mantida como registro:**
+
 **Severidade: média · Executor: 👤 Humano (escolher) depois ☁️ Nuvem (executar) · PROPOSTA PRONTA**
 
 O ecossistema tem **18 repositórios** (17 privados + o público). A rodada de

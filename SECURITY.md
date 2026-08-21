@@ -76,6 +76,39 @@ carrega nome de cliente, número de faturamento ou estrutura interna
 reconhecível de um caso real. Sanitização deixa rastro. Exemplo publicado deve
 ser construído como exemplo, não derivado de um caso.
 
+### Nome de repositório privado é um caso do item 1, e tem regra própria
+
+Decidido em 2026-08-21.
+
+> **Publica-se o nome real de um repositório privado apenas quando ele nomeia
+> exclusivamente trabalho do próprio dono e não aponta para onde mora dado
+> sensível. Identidade de terceiro — empregador, cliente, conselho, agência —
+> nunca sai.**
+
+Na prática isso significa **nenhum**: o índice público usa apelido estável
+(`P01`, `P02`, …) para todos os dezessete privados, e o mapeamento apelido →
+repositório vive num repositório privado.
+
+**Por que todos, e não só os sensíveis.** Nomear treze e esconder quatro é pior
+que esconder os dezessete: **esconder seletivamente aponta para o que está
+escondido**, e a lista dos ocultos vira a lista dos sensíveis. A omissão passa a
+ser o índice. Ou nomeia todos — o que a regra acima proíbe — ou nenhum.
+
+**Cuidado com o caminho indireto.** Não basta tirar o nome da tabela: qualquer
+documento que ligue apelido a nome real reconstrói o mapa. Foi o que aconteceu
+aqui — o blueprint publicava a correspondência em cinco lugares enquanto o índice
+já contava sem nomear. Ao aplicar esta regra, varra **todos** os arquivos
+versionados, não só o índice.
+
+**O apelido é estável.** Uma vez atribuído, nunca é reciclado nem renumerado:
+dois textos que usem o mesmo apelido para repositórios diferentes são piores que
+nenhum apelido.
+
+**Retirar não desfaz.** Nome já publicado permanece no histórico do git. A
+remoção interrompe a repetição daqui em diante; ela não apaga o que já saiu, e
+reescrever histórico público por causa de um nome de repositório costuma custar
+mais do que o risco que remove. Decida sabendo que a correção é parcial.
+
 ## Backup: uma superfície que o checklist não cobria
 
 A cópia de segurança fora do GitHub cria duas exposições que não existiam, e
