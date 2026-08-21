@@ -32,6 +32,17 @@ escolher o modelo, sem perguntar a ninguém.
 Na dúvida entre dois níveis, **escolha o mais alto**. Errar para cima custa
 tokens; errar para baixo custa um achado que ninguém viu.
 
+> **Ser dono não baixa a sensibilidade.** Titularidade e sensibilidade são eixos
+> diferentes, e confundi-los é o erro mais fácil de cometer aqui. Que o
+> repositório seja de um negócio próprio resolve o **item 7** — o conteúdo é de
+> quem publica, e ele decide o que fazer com ele. Não toca no **item 3**: os
+> titulares do dado continuam sendo outras pessoas, que não deixaram de existir
+> porque a empresa é sua.
+>
+> Um repositório com dado de cliente, paciente ou usuário é `alta` **mesmo sendo
+> cem por cento seu**. O campo decide o modelo da auditoria, e o que ele mede é o
+> custo de um falso negativo — que não muda com o CNPJ.
+
 ## Fonte de verdade
 
 O que este departamento é canônico para responder, e onde. Uma linha por

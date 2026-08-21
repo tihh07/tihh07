@@ -659,6 +659,29 @@ Duas notas de viabilidade, para não voltarem à mesa: **Yahoo não serve** — 
 expõe armazenamento com API utilizável para isso. E conta Google pessoal esbarra
 na cota da service account, tratada no README do template.
 
+**Resolvido em 2026-08-21 para o setor de negócio próprio.** Confirmado pelo dono
+que aquele setor é empresa dele, não cliente: o item 7 (titularidade) está
+satisfeito e o destino em conta própria é legítimo. **O caminho do Google Drive
+já cobre esse setor** — é só executar os sete passos acima.
+
+Com isso, a variante **OneDrive/Entra ID deixa de ser caminho crítico**: ela passa
+a ser necessária só para o setor de empregador, que é um, não três. Continua sendo
+lacuna real — aquele setor segue sem backup automatizado —, mas não bloqueia o
+resto.
+
+> **Uma distinção que vale fixar, porque ela reaparece:** ser dono resolve
+> *titularidade*, não *sensibilidade*. Um repositório de negócio próprio que
+> contém dado de cliente, paciente ou usuário continua com titulares que são
+> outras pessoas — o item 3 do checklist não se mexe, a ficha de handoff continua
+> marcando `sensibilidade: alta`, e a auditoria continua no modelo mais capaz.
+>
+> Consequência prática para o backup, enquanto o negócio se digitaliza: à medida
+> que ele ganhar conta corporativa própria, o destino deveria migrar para lá.
+> Cópia de dado de terceiro numa conta **pessoal** é uma exposição diferente da
+> mesma cópia numa conta **da empresa** — e a diferença só aparece no dia em que
+> entra sócio, funcionário ou auditoria. Não é urgente; é barato agora e caro
+> depois.
+
 **Armadilha declarada, que o próprio GitHub cria:** workflow agendado é
 **desabilitado automaticamente após 60 dias sem atividade no repositório**. Para
 um backup, esse é o modo de falha silenciosa que ele existe para evitar — e ele
