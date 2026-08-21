@@ -44,7 +44,7 @@
 | **H3 · N6** — PR Watch | ✅ **fechado por remoção** | 22 disparos, **zero execuções** — nunca alcançou a action. Removido em 2026-08-21 a pedido do dono. Deixá-lo parado era cobertura aparente |
 | **H5 · L2** | ❌ aberto | decisão humana |
 | **L4** — cobertura recorrente | 🟡 **decidido** | desenho C (uma rotina por setor). Criar a rotina é na UI: daqui herdaria o ambiente público e repetiria o defeito do P0 |
-| **A1** — orquestrador no prédio errado | 🟡 **decidido** | vai para o departamento de Fundação. Migrar daqui violaria R1 — é sessão escopada no privado, ou à mão |
+| **A1** — orquestrador no prédio errado | 🟡 **decidido, plano escrito** | vai para o departamento de Fundação; visibilidade deste repo **não muda**. Ordem: criar no privado, conferir, só então podar aqui. Executa uma sessão escopada no privado — daqui violaria R1 |
 | **L1** — consolidação dos handoffs | 🟡 em voo | rodada de fechamento em 2026-08-21: **13 fechados, 4 em aberto**. As 4 causas restantes são todas decisão humana, nenhuma é trabalho de agente. Cada retenção tem causa distinta — nenhuma é falha de auditoria |
 | **L3** — executores e hook não exercitados | ❌ aberto | depende do retorno de L1 |
 | **L7** — nomes dos privados no índice público | ✅ **fechado** | apelidos `P01`–`P17` em 2026-08-21; regra no `SECURITY.md`; varredura confirma nenhum nome real em arquivo versionado |
@@ -728,6 +728,60 @@ para o privado de Fundação entrega o mesmo ganho, sem perder o perfil, sem pas
 a pagar CI e sem arriscar o ruleset. **Visibilidade e localização são eixos
 diferentes**, e confundir os dois troca um problema de conteúdo por três de
 infraestrutura.
+
+#### O plano de migração — confirmado em 2026-08-21
+
+O dono confirmou: **o repositório continua público**, e a migração é que resolve
+o incômodo. Segue o plano executável, para a decisão não virar intenção.
+
+**O que sai daqui**, para o privado de Fundação (`P01`):
+
+| O quê | Por que lá |
+|---|---|
+| A doutrina de **ecossistema** do `AGENTS.md` — índice de projetos, ciclo de auditoria, R1 | Descreve dezoito repositórios, dos quais dezessete são privados |
+| `docs/pendencias.md` | Backlog que hoje é podado por sanitização a cada linha |
+| `docs/orchestration-blueprint.md` | Autoridade de projeto sobre o ecossistema inteiro |
+| `docs/handoff/` | O padrão descreve o que atravessa a fronteira; o lugar dele é do lado privado |
+| `docs/control-plane.md` | Desenho de rotinas que operam privados |
+| **O mapeamento `P01`–`P17` → nome real** | Hoje **não tem casa versionada nenhuma**, e é o item que mais precisa de uma |
+
+**O que fica, e não é sobra:** `README.md` (o perfil, que só renderiza em
+público), `LICENSE`, o `SECURITY.md` na parte que é **política de publicação
+deste repositório** (checklist N2, regra de apelidos, sanitização),
+`plugins/fundacao/` — prática emitida de propósito —, os workflows, e o
+`.claude/settings.json` com o hook.
+
+**A armadilha que quase ninguém vê antes de cair nela.** Depois da migração,
+**uma sessão escopada neste repositório não poderá ler a doutrina que foi para o
+privado** — é o mesmo R1, agora apontando para o outro lado. Então o que fica
+aqui **não pode ser só fachada**: tem de ser a doutrina **completa para operar
+este repositório** — branch, verificação, sanitização, gate de `main` — menos a
+visão de ecossistema. Se a poda for feita por "isto é público, isto é privado" em
+vez de "isto opera este repo, isto descreve o conjunto", a próxima sessão daqui
+fica sem regra e vai improvisar.
+
+**A ordem, e ela é o oposto da intuitiva:**
+
+1. **Criar o conteúdo no privado primeiro**, completo, sem apagar nada aqui.
+2. **Verificar lendo** que o privado está íntegro e navegável — links, referências
+   cruzadas, o mapeamento.
+3. **Só então podar aqui**, trocando o que saiu por ponteiro que **não repete
+   conteúdo** — ponteiro que resume é a origem da divergência que este
+   repositório existe para evitar.
+
+Apagar antes de conferir arrisca perder o canônico; e há um detalhe que a ordem
+não resolve: **retirar daqui não retira do histórico do git.** A migração
+interrompe a publicação daqui pra frente, não desfaz a que já houve. Vale para a
+doutrina como valeu para o nome de cliente.
+
+**Quem executa:** sessão escopada no `P01`. **Não esta.** Escrever num privado a
+partir da sessão pública é a violação de R1 que este item existe para apontar —
+e fazê-la em nome de corrigir R1 seria a ironia mais cara do ciclo.
+
+**Verificação:** o `AGENTS.md` daqui descreve apenas este repositório e é
+suficiente para operá-lo sozinho; a doutrina de ecossistema tem **uma única**
+cópia, no privado; o mapeamento de apelidos está versionado lá; e nenhum
+documento público afirma autoridade sobre o que não é público.
 
 **A análise que levou a essa decisão, mantida como registro:**
 
