@@ -40,7 +40,7 @@
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável agora** | o check obrigatório passou a existir; falta marcar no ruleset. Exigir aprovação está descartado: um único colaborador se trancaria fora |
 | **H4** — secret scanning e push protection | ✅ **fechado** | ambos **ativos**, conferidos na UI em 2026-08-21 com evidência visual. GHAS é flag distinto e segue desligado — não era ele que importava |
-| **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
+| **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação. Em privado, *code owners* exige plano Pro — confirmado na documentação |
 | **H3 · N6** — PR Watch | ✅ **fechado por remoção** | 22 disparos, **zero execuções** — nunca alcançou a action. Removido em 2026-08-21 a pedido do dono. Deixá-lo parado era cobertura aparente |
 | **H5 · L2** | ❌ aberto | decisão humana |
 | **L4** — cobertura recorrente | 🟡 **decidido** | desenho C (uma rotina por setor). Criar a rotina é na UI: daqui herdaria o ambiente público e repetiria o defeito do P0 |
@@ -593,9 +593,31 @@ armadilha. Um check **obrigatório** que não roda nunca reporta, e um check que
 nunca reporta **bloqueia o merge para sempre**. Filtro de caminho e check
 obrigatório são incompatíveis.
 
-**Verificação:** o consumo diário de Actions nos privados é conhecido, e a
-decisão sobre o orçamento está registrada com data — travado ou aceito por
-escrito.
+**O plano Pro: o que ele resolve e o que não resolve.** Verificado na
+documentação do GitHub em 2026-08-21, não inferido:
+
+| Recurso | Free | Pro | Vale para este problema? |
+|---|---|---|---|
+| Minutos em repositório **privado** | 2.000 | **3.000** | **+50%, não é solução.** Teto maior sobre um consumo não medido |
+| Actions em repositório **público** | grátis | grátis | *"The use of standard GitHub-hosted runners is free: In public repositories"* — por isso o check deste repo não entra na conta |
+| **Branches protegidos** em privado | ❌ | ✅ | **É o argumento de compra.** Fecha o item de branch principal desprotegida, que estava registrado como falta de ferramenta e era limite de plano |
+| **Code owners** em privado | ❌ | ✅ | Dá sentido ao **H2** fora do repositório público |
+| **Secret scanning / push protection** em privado | ❌ | ❌ | **Não vem no Pro.** Em repositório de usuário exige Enterprise Cloud com Managed Users, ou Enterprise Server com Secret Protection |
+
+**A conclusão, e ela separa duas coisas que se confundem:** o Pro é uma **compra
+de governança**, não de capacidade de CI. Proteger dezesseis branches principais
+justifica o custo sozinho. Os 3.000 minutos são consequência.
+
+**E o buraco que permanece depois de assinar é justamente o deste ecossistema:**
+os repositórios com dado pessoal confirmado são privados, e o Pro **não** coloca
+push protection neles. A única barreira que age *antes* do segredo entrar
+continua existindo só no repositório público — que é, ironicamente, o único onde
+ela é grátis e o único que não guarda esse tipo de dado.
+
+**Verificação:** o consumo de Actions nos privados é **medido** — aba Actions de
+um privado, ordenada por consumo — e a decisão sobre o orçamento está registrada
+com data, travado ou aceito por escrito. Assinar o Pro **não** fecha este item:
+teto maior sobre consumo não medido é adiamento, não conserto.
 
 > O alerta chegou no mesmo dia em que o ciclo de fechamento rodou, e a leitura
 > fácil seria "a automação de hoje gastou tudo". Metade disso é verdade. A outra
