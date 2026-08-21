@@ -41,7 +41,7 @@
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
 | **H3** — segredo de Actions para o PR Watch | ❌ aberto | proibido a agente por regra de conduta, não por ferramenta |
 | **H5 · L2 · L4** | ❌ aberto | decisão humana |
-| **L1** — consolidação dos handoffs | 🟢 em voo | 17 fichas gravadas na origem em 2026-08-21; 3 relatórios não localizados barram 3 linhas do índice |
+| **L1** — consolidação dos handoffs | 🟢 em voo | 17 fichas gravadas na origem em 2026-08-21; os 3 relatórios "ausentes" foram encontrados (defeito de ficha, não de auditoria) — falta corrigir as 3 fichas |
 | **L3** — executores e hook não exercitados | ❌ aberto | depende do retorno de L1 |
 | **N6** — PR Watch nunca executou de verdade | ❌ aberto | bloqueado por **H3** |
 
@@ -929,31 +929,30 @@ com ele a superfície de vazamento.
 
 Duas coisas apareceram nessa rodada e não cabem no item como estava escrito:
 
-1. **Três fichas relataram que o relatório de auditoria não existe onde
-   deveria** — os repositórios cujos setores são de *agência*, *análise de
-   conversas* e *dossiê pessoal*. A sessão de ficha procurou
-   `docs/auditoria/2026-08-20-integral.md` e não achou. As três auditorias
-   correspondentes terminaram em 2026-08-20 declarando trabalho concluído. Ou o
-   relatório ficou numa branch que a sessão de ficha não consultou, ou a
-   auditoria relatou uma entrega que não gravou. **Enquanto isso não for
-   resolvido, esses três não podem virar linha datada no índice** — datar sem
-   relatório é exatamente o "em voo virou verificado" que o `AGENTS.md` avisa
-   para não fazer.
+1. **Três fichas relataram relatório de auditoria ausente — e estavam erradas.
+   Verificado em 2026-08-21.** Uma sessão por repositório, somente leitura, com
+   contrato de resposta que separava `AUSENTE` de `INCONCLUSIVO`. Resultado:
+   **3 de 3 encontrados**, todos em `docs/auditoria/2026-08-20-integral.md`, na
+   branch de auditoria, com o PR draft aberto e não mesclado — exatamente onde a
+   hipótese dizia que estariam.
 
-   **Hipótese, com teste barato.** A explicação mais econômica não é que a
-   auditoria mentiu: as três relataram trabalho concluído com detalhe
-   verificável. É que ela gravou o relatório **na branch de auditoria**, cujo PR
-   nunca foi mesclado, e a sessão de ficha leu a branch default. Um comando por
-   repositório decide:
+   O achado inverte de sentido. Não é auditoria que não entregou: é **ficha
+   lendo a ref errada**. As três auditorias tinham gravado o relatório; a sessão
+   de ficha consultou só a branch default, não achou, e escreveu ausência como
+   se fosse fato. Corrigido na causa, em `docs/handoff/README.md`: ausência só
+   conta como informação depois que a branch de auditoria também foi consultada,
+   e o comando está lá.
 
-   ```
-   git show origin/claude/auditoria-integral-2026-08-20:docs/auditoria/2026-08-20-integral.md
-   ```
+   **O que sobra como trabalho:** as três fichas carregam a afirmação falsa nos
+   respectivos PRs draft. Precisam ser corrigidas na origem antes de qualquer
+   uma virar linha do índice — uma ficha que erra sobre a própria auditoria não
+   é fonte confiável para as duas células que o orquestrador consome.
 
-   Se a hipótese estiver certa, o mesmo merge que destrava o gargalo abaixo
-   resolve os três, e o achado deixa de ser "auditoria não entregou" para virar
-   "ficha leu a ref errada" — que é um defeito do prompt de ficha, não da
-   auditoria, e vale corrigir antes da próxima rodada.
+   > Custo de descobrir: três sessões pontuais, poucos minutos. Custo de não
+   > descobrir: três repositórios marcados como não auditados no índice, e uma
+   > rodada inteira de auditoria dada como perdida. **A verificação mais barata
+   > deste ciclo desfez o achado mais alarmante dele** — e o que a tornou barata
+   > foi exigir que a sessão distinguisse "não achei" de "não existe".
 
 2. **O slug de setor não é único por repositório.** Dois repositórios gravaram
    ficha sob o mesmo `setor:`. Isso não causa colisão de arquivo — cada ficha
@@ -962,8 +961,9 @@ Duas coisas apareceram nessa rodada e não cabem no item como estava escrito:
    frontmatter precisa de um campo que distinga os dois. Decisão de desenho,
    não de urgência.
 
-**Verificação adicional:** nenhum dos três repositórios acima aparece com data
-no índice enquanto o relatório não for localizado ou refeito.
+**Verificação adicional:** os três repositórios acima só aparecem com data no
+índice depois que a ficha de cada um for corrigida na origem — o relatório já
+está localizado.
 
 **E o item muda de gargalo.** Passou semanas descrito como bloqueado por R1;
 depois virou "aguardando retorno". As duas rodadas mostram que nenhum dos dois
