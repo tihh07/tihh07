@@ -619,6 +619,32 @@ verificar** — R1 — e o número não deve ser adivinhado.
 Pro ativo, proteção de branch existe em repositório privado. O item saiu de
 "decidir se vale pagar, ou aceitar o risco por escrito" e virou configuração.
 
+**Duas paredes independentes impedem um agente de aplicar isto, e a distinção
+importa porque uma delas é um botão que você tem** (e não deve apertar):
+
+| Parede | Evidência de 2026-08-21 | Configurável? |
+|---|---|---|
+| **1. Mediador da integração** | o `PUT` **nunca chega ao GitHub**: resposta sem `Server: github.com` e sem `X-Github-Request-Id`, corpo *"Write access to this GitHub API path is not permitted through this proxy"*. O token do ambiente tem 14 caracteres e prefixo `prox` — é um marcador, não credencial: a credencial real vive no mediador | **não.** Não há ajuste, e não é a política de egresso da conta — essa está limpa (`recentRelayFailures` vazio) |
+| **2. Permissão do GitHub App** | `/branches/*/protection` **chega ao GitHub** e o GitHub recusa: `X-Accepted-Github-Permissions: administration=read`. Ler ruleset pede `metadata=read`, que o app tem; escrever pede `administration=write`, que ele não tem | **sim** — e conceder **não destrava nada**, porque a parede 1 é anterior |
+
+> **Não conceda `Administration` ao app na esperança de destravar isto.** Amplia o
+> que agentes alcançam em todos os repositórios e não compra a escrita, porque a
+> recusa acontece antes de o GitHub ser consultado. É o pior tipo de troca: custo
+> real, benefício zero, e o benefício zero só se descobre depois de conceder.
+
+**O único caminho que de fato contorna** é um workflow do Actions com um PAT em
+segredo, rodando dentro do próprio repositório — ele não passa pelo mediador. E
+ele se anula: quem consegue adicionar um workflow consegue usar o segredo, então
+proteger a branch com uma chave capaz de desprotegê-la, guardada atrás dessa
+mesma branch, é circular. O `SECURITY.md` já registra exatamente esse raciocínio
+para a credencial de backup.
+
+**O que dá para entregar sem contornar nada:** a configuração pronta, revisável
+em diff, em
+[`plugins/fundacao/templates/ruleset/`](../plugins/fundacao/templates/ruleset/README.md).
+Quatro campos, as três decisões embutidas explicadas, e o aviso sobre a lista de
+bypass — que é o campo que mais fácil se preenche sem querer.
+
 **Ação (👤), um repositório por vez, na UI:** exigir PR antes do merge, proibir
 force push e proibir deleção da branch default. **Não exija aprovação** — é a
 mesma armadilha que este repositório documenta em **H1-bis**: com um único
