@@ -41,7 +41,7 @@
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
 | **H3** — segredo de Actions para o PR Watch | ❌ aberto | proibido a agente por regra de conduta, não por ferramenta |
 | **H5 · L2 · L4** | ❌ aberto | decisão humana |
-| **L1** — consolidação dos handoffs | 🟢 em voo | transporte humano, R1 preservado |
+| **L1** — consolidação dos handoffs | 🟢 em voo | 17 fichas gravadas na origem em 2026-08-21; 3 relatórios não localizados barram 3 linhas do índice |
 | **L3** — executores e hook não exercitados | ❌ aberto | depende do retorno de L1 |
 | **N6** — PR Watch nunca executou de verdade | ❌ aberto | bloqueado por **H3** |
 
@@ -918,6 +918,37 @@ em *não verificado*, e cada célula preenchida tem data de auditoria.
 > de uma sessão por repositório resolveram um item que passou semanas descrito
 > como impossível. Nem todo item marcado como bloqueado está bloqueado pelo que
 > sua descrição diz.
+
+**Rodada de fichas — 2026-08-21.** Despachadas 17 sessões novas, uma por
+repositório privado, cada uma com a única tarefa de gravar
+`docs/handoff/<setor>.md` **na origem**, a partir do relatório que a auditoria
+deixou lá. Todas as 17 concluíram e abriram PR draft no próprio repositório. O
+transporte para cá deixou de ser "trazer o conteúdo" e passou a ser "ler a ficha
+e copiar duas células": estado e data. O que atravessa a fronteira encolheu, e
+com ele a superfície de vazamento.
+
+Duas coisas apareceram nessa rodada e não cabem no item como estava escrito:
+
+1. **Três fichas relataram que o relatório de auditoria não existe onde
+   deveria** — os repositórios cujos setores são de *agência*, *análise de
+   conversas* e *dossiê pessoal*. A sessão de ficha procurou
+   `docs/auditoria/2026-08-20-integral.md` e não achou. As três auditorias
+   correspondentes terminaram em 2026-08-20 declarando trabalho concluído. Ou o
+   relatório ficou numa branch que a sessão de ficha não consultou, ou a
+   auditoria relatou uma entrega que não gravou. **Enquanto isso não for
+   resolvido, esses três não podem virar linha datada no índice** — datar sem
+   relatório é exatamente o "em voo virou verificado" que o `AGENTS.md` avisa
+   para não fazer.
+
+2. **O slug de setor não é único por repositório.** Dois repositórios gravaram
+   ficha sob o mesmo `setor:`. Isso não causa colisão de arquivo — cada ficha
+   vive na sua origem — mas quebra a premissa de que uma linha do índice mapeia
+   um setor. O índice precisa de chave composta (setor + repositório) ou o
+   frontmatter precisa de um campo que distinga os dois. Decisão de desenho,
+   não de urgência.
+
+**Verificação adicional:** nenhum dos três repositórios acima aparece com data
+no índice enquanto o relatório não for localizado ou refeito.
 
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
 **Severidade: alta · Executor: 👤 Humano (decisão) depois ☁️ Nuvem · ABERTO**
