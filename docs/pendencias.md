@@ -627,6 +627,28 @@ importa porque uma delas é um botão que você tem** (e não deve apertar):
 | **1. Mediador da integração** | o `PUT` **nunca chega ao GitHub**: resposta sem `Server: github.com` e sem `X-Github-Request-Id`, corpo *"Write access to this GitHub API path is not permitted through this proxy"*. O token do ambiente tem 14 caracteres e prefixo `prox` — é um marcador, não credencial: a credencial real vive no mediador | **não.** Não há ajuste, e não é a política de egresso da conta — essa está limpa (`recentRelayFailures` vazio) |
 | **2. Permissão do GitHub App** | `/branches/*/protection` **chega ao GitHub** e o GitHub recusa: `X-Accepted-Github-Permissions: administration=read`. Ler ruleset pede `metadata=read`, que o app tem; escrever pede `administration=write`, que ele não tem | **sim** — e conceder **não destrava nada**, porque a parede 1 é anterior |
 
+**E há um terceiro fato, medido depois, que torna a pergunta "como liberar isso"
+malposta.** Mandei uma requisição para a API do GitHub com um token deliberadamente
+inválido, e depois **sem cabeçalho de autorização nenhum**. As duas voltaram
+`200`, identificando a conta corretamente.
+
+**A sessão não tem credencial do GitHub.** Ela tem uma **identidade emprestada**:
+o mediador injeta a credencial real, seja lá o que a sessão mande — ou não mande.
+Não existe token aqui para ampliar, restringir ou vazar. O que decide quem a
+sessão é, e o que ela pode escrever, mora inteiramente do outro lado.
+
+Isso reenquadra as duas paredes acima: não é que uma credencial esteja sendo
+filtrada. É que **nunca houve uma**. Perguntar como liberar o proxy é perguntar
+como usar uma chave que a sessão não tem — e a resposta não é "peça mais
+permissão", é que a permissão não é um objeto que exista deste lado.
+
+> Vale para qualquer superfície da Claude, não só esta sessão: outra sessão, um
+> agente com navegador, um ambiente diferente — todos chegam ao GitHub pelo mesmo
+> mediador, com a mesma identidade emprestada. Um navegador não muda isso; muda
+> só de onde a requisição parte. Para um agente agir **como você** nas telas de
+> configuração, ele precisaria da sua senha e do seu segundo fator — o que é
+> entregar credencial, classe 3 do `SECURITY.md`, e não se faz.
+
 > **Não conceda `Administration` ao app na esperança de destravar isto.** Amplia o
 > que agentes alcançam em todos os repositórios e não compra a escrita, porque a
 > recusa acontece antes de o GitHub ser consultado. É o pior tipo de troca: custo
@@ -639,11 +661,21 @@ proteger a branch com uma chave capaz de desprotegê-la, guardada atrás dessa
 mesma branch, é circular. O `SECURITY.md` já registra exatamente esse raciocínio
 para a credencial de backup.
 
-**O que dá para entregar sem contornar nada:** a configuração pronta, revisável
-em diff, em
+**O que dá para entregar sem contornar nada:** a configuração pronta e um script
+que a aplica em lote, ambos em
 [`plugins/fundacao/templates/ruleset/`](../plugins/fundacao/templates/ruleset/README.md).
-Quatro campos, as três decisões embutidas explicadas, e o aviso sobre a lista de
-bypass — que é o campo que mais fácil se preenche sem querer.
+
+O script é explicitamente **para o dono rodar, nunca um agente** — e a distinção
+não é cerimônia: rodá-lo por agente seria contornar a parede 2 com o token de
+outra pessoa, que é a definição de rota alternativa. Ele simula por padrão, exige
+`--aplicar` para escrever, **nunca sobrescreve ruleset existente** (um já
+instalado pode ter regras que o modelo não conhece, e substituí-lo em silêncio
+removeria proteção em nome de aplicá-la), descobre os repositórios pela API — em
+vez de carregar uma lista de privados dentro de um repositório público — e falha
+fechada se não conseguir interpretar a resposta.
+
+Dezoito repositórios viram um comando. O gate não se move: continua sendo uma
+pessoa, com a credencial dela, decidindo aplicar.
 
 **Ação (👤), um repositório por vez, na UI:** exigir PR antes do merge, proibir
 force push e proibir deleção da branch default. **Não exija aprovação** — é a

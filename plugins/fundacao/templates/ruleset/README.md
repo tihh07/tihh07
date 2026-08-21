@@ -11,7 +11,20 @@ independentes, medidas em 2026-08-21 e documentadas em
 Então o que um agente pode entregar é isto: a configuração exata, revisável em
 diff, para uma pessoa aplicar.
 
-## Aplicar
+## Aplicar em muitos de uma vez
+
+`aplicar-ruleset.sh`, ao lado, roda isto em todos os seus repositórios de uma
+vez. Leia o cabeçalho dele antes: **é para o dono rodar, nunca um agente**, e a
+distinção não é cerimônia — rodá-lo por agente seria contornar, com o token de
+outra pessoa, a permissão que existe justamente para que agente não reconfigure
+repositório.
+
+Ele **simula por padrão** e só escreve com `--aplicar`. Nunca sobrescreve um
+ruleset que já exista com este nome: o que está instalado pode ter regras que
+este modelo não conhece, e substituir em silêncio removeria proteção em nome de
+aplicá-la.
+
+## Aplicar um a um, na tela
 
 Na tela *Settings → Rules → Rulesets → New ruleset*, se houver a opção de
 **importar um ruleset**, cole este arquivo. Caso contrário, reproduza os campos
