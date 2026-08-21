@@ -73,11 +73,11 @@ O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 
 | Repositório | Departamento | Estado | Última auditoria |
 |---|---|---|---|
-| `AI-Operating-System` (privado) | Fundação / Arquitetura | auditoria despachada | em voo |
-| `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | auditoria despachada | em voo |
-| `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | auditoria despachada | em voo |
-| `bena-agencia` (privado) | Operação de Cliente / Agência | auditoria despachada | em voo |
-| *13 repositórios privados* | não declarado | auditoria despachada | em voo |
+| `AI-Operating-System` (privado) | Fundação / Arquitetura | auditado; PRs **retidos** — a sessão recusou a autorização de merge por não ser humana | 2026-08-20 |
+| `ia-fonte-de-conhecimento` (privado) | Segundo Cérebro | auditado; fechamento **redespachado** — a 1ª sessão desistiu num clone raso | 2026-08-20 |
+| `gtm-ciclo-do-pedido` (privado) | Inteligência Comercial & Mercado | **fechado** — relatório na branch default | 2026-08-20 |
+| `bena-agencia` (privado) | Operação de Cliente / Agência | **fechado** — relatório na branch default | 2026-08-20 |
+| *13 repositórios privados* | não declarado | 9 **fechados**; 4 em aberto por causas distintas | 2026-08-20 |
 | `tihh07/tihh07` (público) | Fachada Pública / Marketing | **auditado** — documentação, workflows e templates; sem código de aplicação | 2026-08-20 |
 
 > **Treze linhas viraram uma.** Vários desses nomes de repositório são nomes de
@@ -87,9 +87,15 @@ O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 > única das três opções que não mente nem expõe — e **um dos quatro já nomeados
 > cai na mesma decisão**.
 >
-> **"Em voo" não é "verificado".** Em 2026-08-20 foram despachadas 17 sessões de
-> nuvem, uma por repositório privado, cada uma escopada no seu. A coluna vira
-> data quando o handoff chegar: despachar não é auditar.
+> **"Auditado" não é "fechado".** As 17 auditorias de 2026-08-20 entregaram — a
+> coluna de data é delas. Mas relatório que fica em PR não mesclado é
+> indistinguível de relatório inexistente para qualquer sessão futura, e foi
+> assim que três fichas declararam por engano que a auditoria não existia. Por
+> isso a coluna de estado diz onde o trabalho **está**, não que ele foi feito.
+>
+> **Onze fechados, seis em aberto**, cada um por uma causa diferente — a lista
+> das causas vive em [`docs/pendencias.md`](docs/pendencias.md), porque nenhuma
+> delas cabe numa célula sem virar meia-verdade.
 
 Achados que não cabem na tabela vivem em
 [`docs/pendencias.md`](docs/pendencias.md), com evidência, executor e critério de

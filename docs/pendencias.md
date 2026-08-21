@@ -34,6 +34,7 @@
 
 | Item | Estado | Por quê |
 |---|---|---|
+| **S1** — dado de paciente relatado em 3 repositórios | 🔴 **aberto, a mais alta** | duas sessões se contradizem; 3 verificações somente-leitura em voo — remediar antes de provar é irreversível |
 | **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | ❌ **aberto, severidade alta** | descoberto ao reconectar a autorização |
@@ -41,7 +42,7 @@
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
 | **H3** — segredo de Actions para o PR Watch | ❌ aberto | proibido a agente por regra de conduta, não por ferramenta |
 | **H5 · L2 · L4** | ❌ aberto | decisão humana |
-| **L1** — consolidação dos handoffs | 🟢 em voo | 17 fichas gravadas na origem em 2026-08-21; os 3 relatórios "ausentes" foram encontrados (defeito de ficha, não de auditoria) — falta corrigir as 3 fichas |
+| **L1** — consolidação dos handoffs | 🟡 em voo | rodada de fechamento em 2026-08-21: **11 fechados, 6 em aberto** — 4 retidos, 1 redespachado, 1 em curso. Cada retenção tem causa distinta — nenhuma é falha de auditoria |
 | **L3** — executores e hook não exercitados | ❌ aberto | depende do retorno de L1 |
 | **N6** — PR Watch nunca executou de verdade | ❌ aberto | bloqueado por **H3** |
 
@@ -398,6 +399,67 @@ Nenhum agente executa estes itens, e essa é a intenção — são exatamente os
 controles que sustentam o gate humano. A nuvem só consegue **reportar que estão
 abertos**, o que este arquivo faz. Desde 2026-08-20, em vários deles a nuvem nem
 isso consegue: ver **V1**.
+
+### S1 — Dado de paciente relatado em três repositórios, ainda não verificado
+**Severidade: a mais alta deste arquivo · 🔴 ABERTO · Executor: ☁️ Nuvem (verificar) + 👤 Humano (remediar)**
+
+Uma sessão de consolidação relatou **dado pessoal de saúde versionado em três
+repositórios privados** — um de finanças, um de operação de cliente e um de
+saúde. O achado chegou **sem `arquivo:linha`**, e uma segunda sessão, rodando no
+mesmo dia sobre um desses três repositórios, concluiu o oposto: dado sensível
+verificado como seguro.
+
+**As duas não podem estar certas, e nenhuma trouxe evidência suficiente para
+vencer a outra.** É por isso que este item existe como *verificação* e não como
+*remediação*.
+
+**Por que não foi remediado de imediato.** A correção natural — reescrever o
+histórico do git para remover o dado — é irreversível, quebra todo clone
+existente e, se o achado for falso, destrói histórico legítimo em três
+repositórios de uma vez. Um achado plausível não é um achado provado, e num
+repositório de saúde *tudo* é plausível: fixture realista é comum, e é
+exatamente o que engana uma varredura apressada.
+
+**Por que também não pode esperar.** Se for real, é a classe de exposição mais
+séria do ecossistema inteiro: o titular do dado não é o dono do repositório, não
+consentiu e não tem como saber. Nada mais neste arquivo tem essa propriedade.
+
+**O que está rodando (2026-08-21):** três sessões de verificação, uma por
+repositório, **somente leitura**, proibidas de alterar arquivo, abrir PR,
+mesclar ou tocar no histórico. Cada uma varre a árvore atual **e o histórico** —
+dado apagado num commit posterior continua exposto — e separa três coisas que
+uma varredura descuidada colapsa: dado real de pessoa identificável, dado
+sintético (que precisa ser *demonstrado* sintético, não presumido) e estrutura
+sem dado. Nome de coluna `cpf` num schema vazio não é vazamento.
+
+O contrato de resposta é o mesmo que desfez o falso alarme da manhã:
+`PII-CONFIRMADO`, `PII-AUSENTE` ou `INCONCLUSIVO`, e **as duas últimas não são
+sinônimos**.
+
+**Regra que vale mesmo se o achado se confirmar:** o dado nunca é reproduzido —
+nem mascarado, nem parcial, nem "só os últimos dígitos" — em relatório, ficha,
+commit, PR ou neste arquivo. Só `arquivo:linha`, tipo e gravidade. Um relatório
+que cita o dado para provar que ele existe multiplica a exposição em vez de
+contê-la, e passa a ser mais um lugar de onde ele precisa ser removido.
+
+**Ordem de remediação, se confirmar** — e ela não é a intuitiva:
+
+1. **Avaliar o dever de notificar antes de apagar.** Dado pessoal de terceiro
+   exposto pode disparar obrigação legal, e apagar primeiro destrói a evidência
+   de escopo e duração de que essa avaliação depende. Isto é decisão humana, e é
+   o primeiro passo, não o último.
+2. Restringir acesso ao repositório enquanto se decide.
+3. Só então tratar o histórico.
+
+**Verificação deste item:** os três vereditos chegaram, cada um com o que foi
+varrido, e cada `PII-AUSENTE` diz o suficiente para que a ausência seja
+conferível por outra pessoa. `INCONCLUSIVO` não fecha o item — reabre com um
+escopo menor.
+
+> O item nasce de uma contradição entre duas sessões, e é assim que deveria ser.
+> **Duas sessões discordando é informação de qualidade mais alta do que uma
+> sessão afirmando** — a discordância revela que pelo menos uma varredura foi
+> rasa, coisa que nenhum relatório isolado admite sobre si mesmo.
 
 ### H1 — Proteção de `main`
 **Severidade: alta · 🟡 PARCIALMENTE VERIFICÁVEL · Executor: 👤 Humano**
@@ -979,6 +1041,51 @@ como política; a fila que ele acumula é que virou o risco.
 > real.** Primeiro era R1, e não era. Depois era o transporte, e não era. Vale
 > desconfiar de qualquer item deste arquivo cuja descrição de bloqueio nunca foi
 > testada.
+
+**Rodada de fechamento — 2026-08-21.** Com o merge autorizado nos privados (o
+público segue no gate), foram despachadas sessões de fechamento, uma por
+repositório, com a mesma trava em todas: CI vermelha não mescla, conflito se
+resolve trazendo a base para dentro — nunca rebase, nunca force push — e **o
+merge só conta depois de reler a branch default e confirmar que relatório e
+ficha chegaram lá**. Esse último passo existe porque relatar merge sem reler é
+exatamente o erro que produziu o falso alarme da manhã.
+
+**Onze repositórios chegaram a estado fechado** — a branch default de cada um
+contém o relatório da auditoria. Nem todos pelo mesmo caminho:
+alguns tiveram os PRs mesclados pela própria sessão, outros já tinham sido
+mesclados pelo dono antes dela chegar. A distinção importa para não creditar à
+automação um trabalho que foi humano.
+
+**Seis não fecharam, e cada um por um motivo diferente** — o que é mais útil do
+que um número agregado:
+
+| Causa da retenção | O que ela realmente diz |
+|---|---|
+| Autorização julgada não humana | A sessão recebeu a instrução de merge por um campo de configuração, não por uma pessoa, e **se recusou**. Ver o comentário abaixo. |
+| Clone raso sem ferramenta | A sessão concluiu "não tenho ferramenta" sem tentar chamá-la. Redespachada com o comando de `--unshallow` no enunciado. |
+| Classificador de permissão | Merge barrado por classificador, não por regra do repositório. Destrava na UI, não por outra rota. |
+| CI vermelha por dado ausente | A CI não está quebrada: ela está **certa**, e reprova porque faltam métricas que só uma pessoa coleta. Verde aqui exigiria burlar o gate. |
+| Pergunta aberta ao humano | A sessão parou para perguntar, e a pergunta é de conteúdo, não técnica. |
+| Conflito semântico já mesclado | Os dois lados mesclaram sem conflito de texto, mas o resultado se contradiz. Em curso — é o caso em que `git` diz verde e o conteúdo diz vermelho. |
+
+> **A recusa é o achado, não o obstáculo.** Uma das sessões recebeu autorização
+> de merge por um campo de configuração e se recusou a agir sobre ela, por não
+> conseguir estabelecer que a autorização era humana. Ela estava certa: um campo
+> de configuração legível por agente não é assinatura de ninguém. É o mesmo
+> raciocínio que o gate do repositório público impõe, aplicado por uma sessão
+> que não tinha como saber que a pessoa havia confirmado noutro canal.
+>
+> Vale reter o desenho: **a autorização de merge precisa de um caminho que o
+> agente consiga distinguir de configuração**, ou toda sessão bem-comportada vai
+> travar nela — e as que não travarem serão justamente as que não deveriam ter
+> agido.
+
+**Um risco fechou com a resposta errada esperada.** A branch principal de um dos
+repositórios continua sem proteção, e a causa não é a que o backlog registrava.
+Não é ferramenta sem endpoint: é **limite do plano** — proteção de branch em
+repositório privado exige plano pago. Isso muda o item de "tentar de novo por
+outra via" para "decidir se vale pagar, ou aceitar o risco por escrito". Nenhuma
+das duas é trabalho de agente.
 
 ### L5 — O `.gitignore` dependia do ignore global da máquina
 **Severidade: média · Executor: ☁️ Nuvem · FECHADO em 2026-08-21**
