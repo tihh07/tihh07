@@ -29,5 +29,15 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Config local de agente — nunca versionada
+#
+# Estes arquivos guardam concessões de permissão da máquina de quem roda, e num
+# repositório N2 isso é estrutura interna publicada (item 5 do checklist).
+# Até 2026-08-21 quem os barrava era o ignore global da máquina, não este
+# arquivo: em qualquer clone sem aquela config eles entrariam no commit. Barreira
+# que depende do ambiente de quem clona não é barreira do repositório.
+**/.claude/settings.local.json
+**/.claude/*.local.json
+
 # Dependências (caso o repo passe a ter build tooling)
 node_modules/

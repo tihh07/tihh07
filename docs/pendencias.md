@@ -980,6 +980,28 @@ como política; a fila que ele acumula é que virou o risco.
 > desconfiar de qualquer item deste arquivo cuja descrição de bloqueio nunca foi
 > testada.
 
+### L5 — O `.gitignore` dependia do ignore global da máquina
+**Severidade: média · Executor: ☁️ Nuvem · FECHADO em 2026-08-21**
+
+`.claude/settings.local.json` guarda concessões de permissão locais. Ele não
+estava versionado — mas quem o barrava era `/root/.config/git/ignore`, o ignore
+global do ambiente, **não o `.gitignore` deste repositório**. Provado com
+`git -c core.excludesFile=/dev/null check-ignore`: sem aquela config, o arquivo
+entraria no primeiro `git add`.
+
+Num repositório N2 isso publica estrutura interna (item 5 do checklist), e o
+modo de falha é silencioso: nada quebra, nada avisa, o arquivo simplesmente
+aparece num clone feito de outra máquina. **Barreira que depende do ambiente de
+quem clona não é barreira do repositório** — é sorte de configuração.
+
+Fechado adicionando os dois padrões ao `.gitignore` e reverificando com o ignore
+global desativado. Nenhum outro artefato local versionado foi encontrado.
+
+> Achado durante a rotina de verificação de PR, não numa auditoria. Vale a nota:
+> **o `.gitignore` foi dado como controle sem nunca ter sido testado isolado do
+> ambiente** — o mesmo padrão que já apareceu no hook de push e nas três fichas.
+> Controle não exercitado é afirmação.
+
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
 **Severidade: alta · Executor: 👤 Humano (decisão) depois ☁️ Nuvem · ABERTO**
 
