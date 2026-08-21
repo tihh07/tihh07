@@ -126,6 +126,22 @@ e_um_push() {
   [ "${w[$i]:-}" = "push" ]
 }
 
+# Redirecionamento é sintaxe do shell, não destino de push. `git push -u origin
+# claude/x 2>&1` termina com um token `2>` depois que o segmentador quebra no
+# `&`, e a extração de refspec abaixo — que pega a última palavra que não é flag
+# — lia esse `2>` como o destino e negava o envio. Foi o que aconteceu em
+# 2026-08-21, num push para uma branch claude/* perfeitamente legítima.
+#
+# A limpeza vale SÓ para descobrir o refspec. As travas de força, deleção,
+# branch protegida e repositório inteiro já rodaram sobre o segmento inteiro,
+# antes daqui: nada que esta função apague escapa delas. E ela só remove
+# sintaxe de redirecionamento, que nunca é um ref válido — na pior hipótese o
+# refspec some e o hook cai no fallback da branch atual, que é o caminho mais
+# restritivo, não o mais frouxo.
+sem_redirecao() {
+  printf '%s' "$1" | sed -E 's/[0-9]*(>>|>|<)[[:space:]]*(&[0-9-]+)?[^[:space:]]*/ /g'
+}
+
 verifica_segmento() {
   local SEG="$1"
 
@@ -151,8 +167,17 @@ verifica_segmento() {
     && deny "push de repositório inteiro (--all/--mirror/--prune) bloqueado."
 
   # Extrai o refspec: última palavra que não seja flag, remoto conhecido ou o próprio git/push.
-  REF=$(printf '%s' "$SEG" \
+  # O `grep -vE '^$'` não é cosmético. `sem_redirecao` troca o redirecionamento
+  # por um espaço, então `... claude/x 2>` vira `... claude/x  ` e o `tr` produz
+  # tokens vazios no fim. Sem descartá-los, `tail -1` devolve **string vazia** em
+  # vez do refspec, o refspec "some", e o fluxo cai no fallback da branch atual
+  # logo abaixo — que acerta por acaso quando a suíte roda num checkout `claude/*`
+  # e erra em qualquer outro. Foi assim que a correção de 2026-08-21 passou 42/42
+  # na máquina local e falhou 4 casos no runner do GitHub, onde o checkout de
+  # `pull_request` deixa o HEAD destacado.
+  REF=$(sem_redirecao "$SEG" \
     | tr ' ' '\n' \
+    | grep -vE '^$' \
     | grep -vE '^(git|push|origin|upstream|-u|--set-upstream|--tags|--quiet|-q|--verbose|-v)$' \
     | grep -vE '^-' \
     | tail -1)

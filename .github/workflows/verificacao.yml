@@ -1,0 +1,164 @@
+name: Verificação
+
+# Executa, a cada PR, a verificação que o AGENTS.md já descrevia como
+# obrigatória antes de abrir PR — e que até 2026-08-21 dependia de alguém
+# lembrar de rodar à mão.
+#
+# POR QUE ESTE ARQUIVO EXISTE, e não é só conveniência:
+# `main` está protegida por um ruleset que exige PR mas **zero aprovações**, e o
+# repositório tem um único colaborador. Exigir aprovação trancaria o dono fora
+# do próprio repositório — ninguém aprova o próprio PR, e o ruleset não tem ator
+# de bypass. O resultado é que o "gate humano" era doutrina, não controle: valia
+# porque os agentes obedeciam, não porque a plataforma impedia (item H1-bis do
+# backlog).
+# Um check obrigatório é a única trava que fecha esse buraco **sem** depender de
+# um segundo revisor que não existe. É por isso que este workflow vem antes de
+# marcar "Require status checks to pass" no ruleset: exigir um check que não
+# existe bloqueia todo merge; criar o check primeiro e exigir depois, não.
+#
+# ---------------------------------------------------------------------------
+# O QUE ESTE WORKFLOW *NÃO* COBRE
+# ---------------------------------------------------------------------------
+# Verde aqui significa: **os checks mecânicos abaixo passaram**. Não significa
+# que o conteúdo está correto, nem que o PR é publicável. Especificamente, ele
+# NÃO verifica:
+#
+# - **Sanitização N2.** Nenhum dos itens do checklist do SECURITY.md é checado
+#   aqui. Nome de cliente, dado pessoal, estrutura interna e titularidade são
+#   julgamento, não casamento de padrão: uma regex que "verifica sanitização"
+#   dá falsa segurança, que num repositório público é pior que nenhuma. Quem
+#   faz isso é a rotina semanal read-only de governança N2, e ela recomenda —
+#   não corrige, e não bloqueia merge.
+# - **Renderização do README no perfil.** Nenhuma máquina confere isso; o
+#   AGENTS.md pede olho humano e continua pedindo.
+# - **Validade de link.** Link quebrado passa verde aqui.
+# - **Coerência de doutrina.** Um documento que contradiz o blueprint passa
+#   verde aqui. É o que a auditoria de poda procura, e ela também não bloqueia.
+# - **Conteúdo dos blocos `run:`.** O passo 3 roda `bash -n`, que é análise de
+#   sintaxe: ele pega parêntese não fechado, não pega comando errado. Script
+#   sintaticamente perfeito que apaga a árvore passa.
+#
+# PORTABILIDADE: depende de `python3` com PyYAML, presente na imagem
+# `ubuntu-latest` do GitHub. Em runner self-hosted enxuto, instale antes. A
+# suíte do guardrail (passo 4) é bash puro e não tem essa dependência.
+#
+# NÃO REGISTRE AQUI UMA CONTAGEM DE CASOS DA SUÍTE: ela já envelheceu calada uma
+# vez no AGENTS.md, entre duas correções. A contagem viva é a saída do próprio
+# script.
+
+# GATILHO: só `pull_request`. O `push: [main]` foi removido em 2026-08-21 — ele
+# fazia todo merge rodar a verificação DUAS vezes, a do PR e a do push, sem
+# nenhuma informação nova na segunda: é o mesmo commit, já verificado. Metade das
+# execuções eram desperdício puro.
+#
+# NÃO ADICIONE `paths` OU `paths-ignore` AQUI. Parece economia e é armadilha: um
+# check marcado como obrigatório no ruleset que **não roda** nunca reporta, e um
+# check que nunca reporta **bloqueia o merge para sempre**. Filtro de caminho e
+# check obrigatório são incompatíveis. Se um dia a verificação ficar cara o
+# bastante para justificar filtro, tire-a de obrigatória primeiro.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Princípio do mínimo: este workflow só lê.
+permissions:
+  contents: read
+
+concurrency:
+  group: verificacao-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Estrutura — YAML dos workflows, JSON dos manifestos, sintaxe dos blocos run
+        run: |
+          python3 - <<'PY'
+          import glob, json, os, subprocess, sys, tempfile
+          import yaml
+
+          falhas = []
+
+          # 1. Todo workflow precisa ser YAML válido.
+          wfs = sorted(glob.glob('.github/workflows/*.yml')
+                       + glob.glob('.github/workflows/*.yaml'))
+          if not wfs:
+              falhas.append('nenhum workflow encontrado — o glob está errado ou o diretório sumiu')
+          docs = {}
+          for f in wfs:
+              try:
+                  docs[f] = yaml.safe_load(open(f, encoding='utf-8'))
+              except Exception as e:
+                  falhas.append('YAML inválido: %s: %s' % (f, e))
+
+          # 2. Manifestos JSON. O glob antigo era `.claude-plugin/*.json`, que
+          #    deixava o manifesto do plugin de fora — por isso `**/`.
+          alvos = sorted(set(glob.glob('**/.claude-plugin/*.json', recursive=True)
+                             + ['.claude/settings.json']))
+          for f in alvos:
+              if not os.path.exists(f):
+                  falhas.append('JSON esperado e ausente: %s' % f)
+                  continue
+              try:
+                  json.load(open(f, encoding='utf-8'))
+              except Exception as e:
+                  falhas.append('JSON inválido: %s: %s' % (f, e))
+
+          # 3. `bash -n` em cada bloco `run:`. Sintaxe, não semântica.
+          def blocos(no):
+              if isinstance(no, dict):
+                  for k, v in no.items():
+                      if k == 'run' and isinstance(v, str):
+                          yield v
+                      else:
+                          yield from blocos(v)
+              elif isinstance(no, list):
+                  for v in no:
+                      yield from blocos(v)
+
+          total = 0
+          for f, doc in docs.items():
+              for i, bloco in enumerate(blocos(doc), 1):
+                  total += 1
+                  with tempfile.NamedTemporaryFile('w', suffix='.sh', delete=False,
+                                                   encoding='utf-8') as t:
+                      t.write(bloco)
+                      caminho = t.name
+                  r = subprocess.run(['bash', '-n', caminho],
+                                     capture_output=True, text=True)
+                  os.unlink(caminho)
+                  if r.returncode != 0:
+                      falhas.append('bash -n falhou em %s, bloco %d: %s'
+                                    % (f, i, r.stderr.strip()))
+
+          print('workflows: %d · manifestos JSON: %d · blocos run: %d'
+                % (len(wfs), len(alvos), total))
+          for f in falhas:
+              print('FALHA: %s' % f)
+          sys.exit(1 if falhas else 0)
+          PY
+
+      - name: Sintaxe dos shell scripts versionados
+        run: |
+          encontrados=0
+          while IFS= read -r script; do
+            encontrados=$((encontrados + 1))
+            bash -n "$script" || exit 1
+          done < <(find . -path ./.git -prune -o -name '*.sh' -print)
+          if [ "$encontrados" -eq 0 ]; then
+            echo "FALHA: nenhum script .sh encontrado — o find está errado" >&2
+            exit 1
+          fi
+          echo "scripts conferidos: $encontrados"
+
+      - name: Suíte do guardrail de push
+        # A única verificação executável do repositório: prova que o hook bloqueia
+        # push para main, force push, deleção remota e push de repositório inteiro,
+        # e libera claude/*. Guardrail sem suíte é afirmação, não controle.
+        run: bash plugins/fundacao/hooks/test-guard-push.sh

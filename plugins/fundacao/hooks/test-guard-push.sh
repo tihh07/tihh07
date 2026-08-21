@@ -23,6 +23,40 @@ HOOK="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/guard-push.sh"
 PASS=0
 FAIL=0
 
+# ---------------------------------------------------------------------------
+# REPOSITÓRIO NEUTRO — por que a suíte não pode rodar onde foi chamada
+# ---------------------------------------------------------------------------
+# Quando o refspec sai vazio, o hook cai no fallback da branch atual. Rodando a
+# suíte de dentro deste repositório, essa branch é `claude/*` — e o fallback
+# LIBERA. Resultado: qualquer defeito que faça o refspec sumir vira um teste
+# verde, porque o fallback resgata o caso pelo motivo errado.
+#
+# Não é hipótese. Em 2026-08-21 a correção de redirecionamento deixava tokens
+# vazios no fim, `tail -1` devolvia string vazia, e os quatro casos de
+# redirecionamento passavam **só** porque o checkout local estava numa branch
+# `claude/*`. No runner do GitHub, onde o checkout de `pull_request` deixa o HEAD
+# destacado, os mesmos quatro falharam. A suíte dizia 42/42 e não provava nada
+# sobre eles.
+#
+# Por isso todo caso roda dentro de um repositório descartável cuja branch atual
+# é `main`: se o refspec sumir, o fallback **bloqueia**, e o teste falha como
+# deve. Os dois casos de fallback lá no fim continuam montando o próprio cenário,
+# explicitamente, que é a única forma honesta de testá-lo.
+#
+# Falha fechada: sem repositório neutro a suíte não roda. Rodar no diretório
+# ambiente reintroduz exatamente o falso verde descrito acima, e um resultado que
+# depende de onde foi invocado não é resultado.
+NEUTRO=$(mktemp -d 2>/dev/null) || NEUTRO=""
+if [ -z "$NEUTRO" ] || ! git -C "$NEUTRO" init -q 2>/dev/null; then
+  echo "FALHA: não foi possível criar o repositório neutro (mktemp/git init)." >&2
+  echo "       A suíte não roda no diretório ambiente: o fallback da branch" >&2
+  echo "       atual mascararia defeito de extração de refspec." >&2
+  exit 1
+fi
+git -C "$NEUTRO" -c user.email=t@e -c user.name=t commit -q --allow-empty -m init 2>/dev/null
+git -C "$NEUTRO" branch -M main 2>/dev/null
+trap 'rm -rf "$NEUTRO"' EXIT
+
 # Constrói {"tool_input":{"command":"..."}} escapando \ e " — sem depender de jq
 # nem de python, que é justamente o que o hook precisa tolerar.
 json_para() {
@@ -36,8 +70,10 @@ json_para() {
 # caso <esperado 0|2> <descrição> <comando>
 caso() {
   local esperado="$1" desc="$2" cmd="$3" obtido
-  json_para "$cmd" | "$HOOK" >/dev/null 2>&1
-  obtido=$?
+  # Roda no repositório neutro (branch `main`), nunca no diretório ambiente —
+  # ver o bloco NEUTRO acima para o porquê.
+  obtido=0
+  ( cd "$NEUTRO" && json_para "$cmd" | "$HOOK" >/dev/null 2>&1 ) || obtido=$?
   if [ "$obtido" -eq "$esperado" ]; then
     PASS=$((PASS + 1))
     printf '  ok    %s\n' "$desc"
@@ -97,6 +133,22 @@ caso 0 "não é push: comando que cita push"   'echo "não faça git pushes"'
 # sobre o próprio guardrail, um heredoc que gerasse um script, um exemplo em
 # documentação. Guardrail que nega demais convida à desinstalação.
 caso 0 "commit cuja mensagem cita push"       'git commit -m "wire the push hook"'
+
+# Regressão de 2026-08-21. O segmentador quebra em `&`, então `2>&1` vira o token
+# `2>`, e a extração de refspec — última palavra que não é flag — o lia como
+# destino: um push legítimo para claude/* era negado com "destino '2>' fora de
+# claude/*". Guardrail que nega o caminho que ele existe para permitir gasta a
+# confiança que faz alguém mantê-lo instalado.
+caso 0 "redirecionamento 2>&1 no fim"         'git push -u origin claude/x 2>&1 | tail -3'
+caso 0 "saída para arquivo"                   'git push origin claude/x > /tmp/log'
+caso 0 "stderr para arquivo, colado"          'git push origin claude/x 2>/tmp/err'
+caso 0 "descarte de saída"                    'git push -u origin claude/x >/dev/null 2>&1'
+
+# E a limpeza não pode virar rota de fuga: o alvo proibido continua proibido
+# quando cercado de redirecionamento.
+caso 2 "main com redirecionamento"            'git push origin main 2>&1 | tail -3'
+caso 2 "main com saída descartada"            'git push origin main >/dev/null'
+caso 2 "force em claude/* com redirect"       'git push --force origin claude/x 2>&1'
 caso 0 "opção global antes de um não-push"    'git -c user.name=t commit -m "push guardrail"'
 caso 0 "corpo de heredoc não é comando"       'cat <<EOF
 git push origin main

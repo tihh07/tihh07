@@ -12,7 +12,7 @@ tem em vez de estimar.
 Toda rotina termina anexando uma linha. Sem exceção, inclusive quando falha.
 
 ```json
-{"ts":"2026-08-01T09:00:00Z","routine_id":"rotina-semanal-fundacao","session_id":"<CLAUDE_CODE_REMOTE_SESSION_ID>","repo":"AI-Operating-System","model":"fable","prompt_version":"a1b2c3d","outcome":"success","duration_s":540,"pr_url":null,"files_changed":3,"tokens":null}
+{"ts":"2026-08-01T09:00:00Z","routine_id":"rotina-semanal-fundacao","session_id":"<CLAUDE_CODE_REMOTE_SESSION_ID>","repo":"<nome-do-repo>","model":"fable","prompt_version":"a1b2c3d","outcome":"success","duration_s":540,"pr_url":null,"files_changed":3,"tokens":null}
 ```
 
 | Campo | Regra |

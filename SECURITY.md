@@ -76,6 +76,39 @@ carrega nome de cliente, número de faturamento ou estrutura interna
 reconhecível de um caso real. Sanitização deixa rastro. Exemplo publicado deve
 ser construído como exemplo, não derivado de um caso.
 
+### Nome de repositório privado é um caso do item 1, e tem regra própria
+
+Decidido em 2026-08-21.
+
+> **Publica-se o nome real de um repositório privado apenas quando ele nomeia
+> exclusivamente trabalho do próprio dono e não aponta para onde mora dado
+> sensível. Identidade de terceiro — empregador, cliente, conselho, agência —
+> nunca sai.**
+
+Na prática isso significa **nenhum**: o índice público usa apelido estável
+(`P01`, `P02`, …) para todos os dezessete privados, e o mapeamento apelido →
+repositório vive num repositório privado.
+
+**Por que todos, e não só os sensíveis.** Nomear treze e esconder quatro é pior
+que esconder os dezessete: **esconder seletivamente aponta para o que está
+escondido**, e a lista dos ocultos vira a lista dos sensíveis. A omissão passa a
+ser o índice. Ou nomeia todos — o que a regra acima proíbe — ou nenhum.
+
+**Cuidado com o caminho indireto.** Não basta tirar o nome da tabela: qualquer
+documento que ligue apelido a nome real reconstrói o mapa. Foi o que aconteceu
+aqui — o blueprint publicava a correspondência em cinco lugares enquanto o índice
+já contava sem nomear. Ao aplicar esta regra, varra **todos** os arquivos
+versionados, não só o índice.
+
+**O apelido é estável.** Uma vez atribuído, nunca é reciclado nem renumerado:
+dois textos que usem o mesmo apelido para repositórios diferentes são piores que
+nenhum apelido.
+
+**Retirar não desfaz.** Nome já publicado permanece no histórico do git. A
+remoção interrompe a repetição daqui em diante; ela não apaga o que já saiu, e
+reescrever histórico público por causa de um nome de repositório costuma custar
+mais do que o risco que remove. Decida sabendo que a correção é parcial.
+
 ## Backup: uma superfície que o checklist não cobria
 
 A cópia de segurança fora do GitHub cria duas exposições que não existiam, e
@@ -127,11 +160,51 @@ Três níveis, do mais rápido ao mais completo:
 Depois: auditar sessões e branches `claude/*`, rotacionar segredos, revisar o
 histórico do repositório público.
 
-## Gates que nenhum agente atravessa
+## Autonomia do agente: o que restringe é a irreversibilidade
 
-Merge em `main` · qualquer commit direto no repositório público · alteração em
-`.claude/**`, `.mcp.json` ou `.github/**` · criação e edição de rotinas ·
-adição de conectores · mudança de escopo de rede.
+**O padrão é agir.** Dentro das regras do repositório, o agente decide e executa
+sem pedir autorização caso a caso: ler, escrever, abrir branch, abrir e atualizar
+PR, **mesclar**, resolver conflito trazendo a base para dentro, consertar CI,
+responder revisão, fechar PR, **apagar branch já mesclada**, e usar as ferramentas
+do GitHub ponta a ponta.
+
+Isso é decisão de desenho, não descuido. **Uma lista de proibições longa demais
+compete com o julgamento em vez de guiá-lo:** o agente passa a gastar atenção
+conferindo se pode, e não avaliando se deve. O custo de restringir é real e não
+aparece em lugar nenhum — some como problema não resolvido, e ninguém atribui a
+perda à trava que a causou.
+
+Três classes ficam de fora, e **nenhuma é desconfiança de raciocínio**:
+
+**1. O que não tem desfazer.** Apagar branch **não** mesclada · reescrever
+histórico publicado (force push, `--amend`, rebase de branch publicada) · apagar
+dado · apagar repositório. O argumento é a assimetria, não a gravidade: um merge
+errado se reverte em um comando, e o pior caso é um commit feio no histórico. Um
+histórico reescrito quebra o checkout de todo mundo que já tinha a branch; um dado
+apagado leva junto a evidência de qual era o escopo do problema.
+
+**2. O que atravessa a fronteira privado × público** (**R1**, nível **N2**). Aqui
+o erro se chama publicação, e publicação não se retira: remover do arquivo não
+remove do histórico, do cache de quem clonou, nem da memória de quem leu.
+
+**3. O que só uma pessoa pode legitimamente fazer.** Manipular segredo ou
+credencial · aceitar risco sobre dado de terceiro · decisão jurídica, contratual
+ou comercial. Não é limitação de capacidade — é **titularidade**. Um agente pode
+avaliar um risco; não pode assumi-lo em nome de alguém.
+
+Some-se a essas o gate que este repositório mantém por ser o único público:
+**merge em `main` e commit direto aqui continuam humanos**, e é caso da classe 2.
+
+**Fora disso, aja e relate o que fez.** "Relate" não é pedir permissão depois: é
+deixar rastro do que foi decidido e por quê, para a próxima sessão não
+redescobrir.
+
+> Uma ressalva honesta, porque o oposto também tem evidência: em 2026-08-21 um
+> classificador de permissão barrou um merge, e o bloqueio **comprou o tempo** que
+> a varredura de dado pessoal usou — o mesmo repositório teve dado real confirmado
+> horas depois, e o PR teria passado antes de alguém olhar. Trava não é gratuita
+> nos dois sentidos: custa quando sobra, salva quando é a certa. Isso é argumento
+> para **poucas travas bem escolhidas**, não para nenhuma nem para muitas.
 
 Estado atual desses controles: ver o backlog em
 [`docs/pendencias.md`](docs/pendencias.md). Vários são intenção documentada e

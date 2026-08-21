@@ -106,10 +106,10 @@ rotina); triggers GitHub exigem o Claude GitHub App; runs agem com a identidade 
 ```mermaid
 flowchart TD
     CEO["🧠 Orquestrador Fable 5<br/>(agente da sessão principal)"]
-    CEO --> FUND["🏛️ Fundação / Arquitetura<br/><i>AI-Operating-System</i><br/>🔜 piloto Fase 1"]
-    CEO --> BRAIN["📚 Segundo Cérebro<br/><i>ia-fonte-de-conhecimento</i><br/>🔜"]
-    CEO --> IC["📈 Inteligência Comercial & Mercado<br/><i>gtm-ciclo-do-pedido</i><br/>🔜"]
-    CEO --> AG["🤝 Operação de Cliente<br/><i>bena-agencia</i><br/>🔜"]
+    CEO --> FUND["🏛️ Fundação / Arquitetura<br/><i>P01</i><br/>🔜 piloto Fase 1"]
+    CEO --> BRAIN["📚 Segundo Cérebro<br/><i>P02</i><br/>🔜"]
+    CEO --> IC["📈 Inteligência Comercial & Mercado<br/><i>P03</i><br/>🔜"]
+    CEO --> AG["🤝 Operação de Cliente<br/><i>P04</i><br/>🔜"]
     CEO --> PUB["🌐 Fachada Pública / Marketing<br/><i>tihh07/tihh07</i><br/>✅ este documento"]
     IC -. "cliente interno" .-> AG
     FUND -- "padrões e templates<br/>(plugin sanitizado)" --> BRAIN & IC & AG & PUB
@@ -117,16 +117,36 @@ flowchart TD
 
 | Repo | Departamento | Missão |
 |---|---|---|
-| `AI-Operating-System` (privado) | **Fundação / Arquitetura** | Princípios, padrões, o "sistema operacional"; **departamento-piloto da Fase 1** |
-| `ia-fonte-de-conhecimento` (privado) | **Segundo Cérebro** | Base de conhecimento e contexto que alimenta os demais |
-| `gtm-ciclo-do-pedido` (privado) | **Inteligência Comercial & Mercado** | Sede do setor de IC (seção 6.1) |
-| `bena-agencia` (privado) | **Operação de Cliente / Agência** | Trabalho de cliente real; cliente interno do setor de IC |
+| `P01` (privado) | **Fundação / Arquitetura** | Princípios, padrões, o "sistema operacional"; **departamento-piloto da Fase 1** |
+| `P02` (privado) | **Segundo Cérebro** | Base de conhecimento e contexto que alimenta os demais |
+| `P03` (privado) | **Inteligência Comercial & Mercado** | Sede do setor de IC (seção 6.1) |
+| `P04` (privado) | **Operação de Cliente / Agência** | Trabalho de cliente real; cliente interno do setor de IC |
 | `tihh07/tihh07` (público) | **Fachada Pública / Marketing** | Este blueprint e o control-plane sanitizado |
 
 **Padrão para anexar um novo departamento** (🔜 replicável): criar/adicionar o repo → instalar o
 plugin-fundação (templates de agents/skills/rules) → escrever o CLAUDE.md do departamento (<200
 linhas: missão, quadro, critérios) → configurar rulesets de branch e secret scanning → só então (e
 só se provar necessidade) criar a rotina semanal do departamento.
+
+---
+
+### Frontmatter de identificação
+
+Todo `AGENTS.md` do ecossistema abre com um bloco YAML declarando a que o
+repositório pertence e o que pode sair dele. A rotina semanal de control-plane
+fiscaliza esses campos, então não são decorativos:
+
+| Campo | O que declara |
+|---|---|
+| `setor` | A que setor do ecossistema o repositório pertence. Valor deste repo: `marca-pessoal`. |
+| `nivel` | Classificação de exposição. `N2` = público, rigor máximo de sanitização. |
+| `emite_pratica` | Se o repositório publica prática reutilizável por outros, ou só consome. |
+| `nunca_sai` | O que nunca pode aparecer em arquivo versionado, mesmo fora do `README.md`. |
+
+A lista canônica de setores vive fora daqui, pela mesma razão que os nomes dos
+repositórios: setor mapeia repositório, e a lista completa reconstruiria o que o
+índice abaixo deixa de publicar. Este arquivo declara o próprio setor e não
+afirma o conjunto.
 
 ---
 
@@ -188,7 +208,7 @@ Fable/Opus só para orquestração e síntese**.
 ### 5.1 Setor de Inteligência Comercial & Mercado 🔜
 
 O departamento-especialidade do ecossistema — "os cientistas e analistas que se adaptam ao segmento".
-Sede em `gtm-ciclo-do-pedido`; atende `bena-agencia` como cliente interno.
+Sede em `P03`; atende `P04` como cliente interno.
 
 | Especialista | Papel |
 |---|---|
@@ -212,7 +232,7 @@ pessoais — aplica com rigor máximo a regra R1 (seção 8) e as condições LG
 ## 6. Rotinas: começando por UMA — 🔜 no piloto / ✅ fora dele
 
 **Decisão de dimensionamento (o plano):** o ecossistema é pequeno — a Fase 2 previa **uma única
-rotina semanal** no departamento-piloto (`AI-Operating-System`), consolidando num só run: validação
+rotina semanal** no departamento-piloto (`P01`), consolidando num só run: validação
 + diagnóstico + auditoria de segurança + relatório executivo. Isso cabe folgado no cap de runs
 (~4–5/mês vs. teto de ~15/dia), gera ~1 PR/semana para revisão (≤30–60 min de atenção humana) e
 respeita "validar antes de escalar".
@@ -475,7 +495,7 @@ corte: rotina que consome mais tempo de revisão do que economiza, por 3 semanas
 
 - **Fase 0 — Fundação documental** ✅: este RFC, validado por 6 pareceres (arquitetura, CISO,
   CFO/CMO/COO, red team, jurídico/LGPD, plataforma de dados) em 2 rodadas de cross-validation.
-- **Fase 1 — Piloto** 🔜 (`AI-Operating-System`): plugin-fundação; orquestrador (`claude --agent`);
+- **Fase 1 — Piloto** 🔜 (`P01`): plugin-fundação; orquestrador (`claude --agent`);
   3–4 executores com `memory: project`; hooks de guardrail; watchdog; rulesets + CODEOWNERS +
   secret scanning nos 5 repos; opt-out de treinamento confirmado.
 - **Fase 2 — Primeira rotina** 🔜: 1 rotina semanal (prompt-ponteiro → skill); telemetria
@@ -562,7 +582,7 @@ exit 0
 **Linha de telemetria** (`telemetry/runs.jsonl`):
 
 ```json
-{"ts":"2026-08-01T09:00:00Z","routine_id":"rotina-semanal-fundacao","session_id":"<CLAUDE_CODE_REMOTE_SESSION_ID>","repo":"AI-Operating-System","model":"fable","prompt_version":"a1b2c3d","outcome":"success","duration_s":540,"pr_url":null,"files_changed":3,"tokens":null}
+{"ts":"2026-08-01T09:00:00Z","routine_id":"rotina-semanal-fundacao","session_id":"<CLAUDE_CODE_REMOTE_SESSION_ID>","repo":"P01","model":"fable","prompt_version":"a1b2c3d","outcome":"success","duration_s":540,"pr_url":null,"files_changed":3,"tokens":null}
 ```
 
 **Entrada de aprendizado** (`AGENTLOG.jsonl`):

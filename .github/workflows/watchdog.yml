@@ -49,9 +49,20 @@ name: Watchdog
 # - Não verifica secret scanning, ruleset de branch nem proteção de main. Esses
 #   são configuração de repositório e não aparecem aqui.
 
+# CADÊNCIA: semanal, não diária. Mudado em 2026-08-21, com o custo declarado.
+#
+# O watchdog existe para detectar quando a automação PARA. Rodando semanal, a
+# latência de detecção passa a ser de até sete dias — isso é uma perda real, não
+# um detalhe, e está escrito aqui para quem for mexer depois saber o que está
+# trocando. A troca se justifica para um operador solo: descobrir na segunda que
+# algo parou na quarta é aceitável; pagar execução diária em cada repositório
+# privado do ecossistema, não.
+#
+# Segunda 08:00 UTC, quatro horas depois do backup (04:17), para os dois não
+# disputarem a fila de agendamento do GitHub — que atrasa no topo da hora.
 on:
   schedule:
-    - cron: '0 8 * * *'
+    - cron: '0 8 * * 1'
   workflow_dispatch:
 
 permissions:

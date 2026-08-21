@@ -116,7 +116,14 @@ concurrency:
 jobs:
   backup:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 15, não 30. Reduzido em 2026-08-21: este template é instalado em cada
+    # repositório privado do ecossistema, e lá o minuto é COBRADO. O timeout não
+    # é o custo normal — é o teto do caso patológico, e é ele que precisa ser
+    # apertado: uma execução travada a 30 minutos, multiplicada pelos
+    # repositórios que têm o template, é a cauda que estoura a cota sem ninguém
+    # perceber. Backup de repositório de documentação leva minutos; 15 já é
+    # folga generosa.
+    timeout-minutes: 15
     steps:
       - name: Pré-voo — secrets obrigatórios
         env:
