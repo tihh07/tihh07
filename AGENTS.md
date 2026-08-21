@@ -66,7 +66,7 @@ O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 | Repo | Departamento | Estado do ciclo | Última auditoria |
 |---|---|---|---|
 | `P01` | Fundação / Arquitetura | em aberto — 1 PR restante | 2026-08-20 |
-| `P02` | Segundo Cérebro | **não fechado** — guardrail do próprio repo barra escrita de agente | 2026-08-20 |
+| `P02` | Segundo Cérebro | merge relatado pela sessão às 18:12Z, **não reverificado daqui** (R1) | 2026-08-20 |
 | `P03` | Inteligência Comercial & Mercado | fechado | 2026-08-20 |
 | `P04` | Operação de Cliente / Agência | fechado | 2026-08-20 |
 | `P05` | não declarado | fechado | 2026-08-20 |

@@ -1126,7 +1126,7 @@ que um número agregado:
 | Causa da retenção | O que ela realmente diz |
 |---|---|
 | ~~Autorização julgada não humana~~ | **Destravado pelo humano; 3 PRs entraram na branch default e 1 segue aberto.** A recusa continua sendo o achado — ver o comentário abaixo. Nota de método: quem confirmou o merge foi a própria sessão, e **R1 impede esta sessão de reverificar num repositório privado**. O relato vale como relato. |
-| **Guardrail do próprio repositório** | Três tentativas, três diagnósticos, e só o terceiro é o certo. Ver abaixo. |
+| ~~Guardrail do próprio repositório~~ | Três tentativas, três diagnósticos — e um quarto capítulo. **A sessão voltou sozinha às 18:12Z relatando merge concluído** (201 arquivos varridos, security gate confirmado). Se procede, o que o guardrail barrava era a escrita **cosmética** no PR, não o merge — e o terceiro diagnóstico, que parecia o certo, também não era. **Não reverificado daqui: R1.** Vale como relato até alguém abrir a branch default. |
 | ~~Classificador de permissão~~ | **Destravado pelo humano na UI, e o repositório fechou.** Vale reter que o bloqueio saiu barato: o mesmo repositório teve dado pessoal confirmado horas depois, e o PR teria seguido adiante sem essa trava. O classificador comprou o tempo que a varredura usou. |
 | CI vermelha por dado ausente | A CI não está quebrada: ela está **certa**, e reprova porque faltam métricas que só uma pessoa coleta. Verde aqui exigiria burlar o gate. |
 | Pergunta aberta ao humano | A sessão parou para perguntar, e a pergunta é de conteúdo, não técnica. |
