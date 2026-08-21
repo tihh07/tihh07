@@ -97,6 +97,22 @@ caso 0 "não é push: comando que cita push"   'echo "não faça git pushes"'
 # sobre o próprio guardrail, um heredoc que gerasse um script, um exemplo em
 # documentação. Guardrail que nega demais convida à desinstalação.
 caso 0 "commit cuja mensagem cita push"       'git commit -m "wire the push hook"'
+
+# Regressão de 2026-08-21. O segmentador quebra em `&`, então `2>&1` vira o token
+# `2>`, e a extração de refspec — última palavra que não é flag — o lia como
+# destino: um push legítimo para claude/* era negado com "destino '2>' fora de
+# claude/*". Guardrail que nega o caminho que ele existe para permitir gasta a
+# confiança que faz alguém mantê-lo instalado.
+caso 0 "redirecionamento 2>&1 no fim"         'git push -u origin claude/x 2>&1 | tail -3'
+caso 0 "saída para arquivo"                   'git push origin claude/x > /tmp/log'
+caso 0 "stderr para arquivo, colado"          'git push origin claude/x 2>/tmp/err'
+caso 0 "descarte de saída"                    'git push -u origin claude/x >/dev/null 2>&1'
+
+# E a limpeza não pode virar rota de fuga: o alvo proibido continua proibido
+# quando cercado de redirecionamento.
+caso 2 "main com redirecionamento"            'git push origin main 2>&1 | tail -3'
+caso 2 "main com saída descartada"            'git push origin main >/dev/null'
+caso 2 "force em claude/* com redirect"       'git push --force origin claude/x 2>&1'
 caso 0 "opção global antes de um não-push"    'git -c user.name=t commit -m "push guardrail"'
 caso 0 "corpo de heredoc não é comando"       'cat <<EOF
 git push origin main
