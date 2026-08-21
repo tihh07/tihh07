@@ -102,6 +102,21 @@ mente melhor do que a ausência dela.
 O mesmo vale para auditoria despachada e ainda em curso: enquanto o bloco não
 chegar, o estado é *em voo*, não *auditado*. Despachar não é auditar.
 
+**Mas confira a ref antes de declarar ausência.** A auditoria grava o relatório
+na branch de auditoria, e o PR dela normalmente ainda não foi mesclado quando a
+ficha é escrita — então o relatório **não está na branch default**. Quem procura
+só na default conclui que a auditoria não entregou, e escreve isso na ficha.
+Aconteceu com três repositórios em 2026-08-21. Antes de registrar relatório
+ausente, procure na branch da auditoria:
+
+```
+git show origin/claude/auditoria-integral-<data>:docs/auditoria/<data>-integral.md
+```
+
+Ausência só é informação depois que as duas refs foram consultadas. Antes disso
+é ruído — e ruído que vira linha de backlog custa mais caro do que o comando
+acima.
+
 ## Modelo
 
 [`_modelo.md`](_modelo.md) — copie, preencha, apague o que não se aplica. Não

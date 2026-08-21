@@ -940,6 +940,21 @@ Duas coisas apareceram nessa rodada e não cabem no item como estava escrito:
    relatório é exatamente o "em voo virou verificado" que o `AGENTS.md` avisa
    para não fazer.
 
+   **Hipótese, com teste barato.** A explicação mais econômica não é que a
+   auditoria mentiu: as três relataram trabalho concluído com detalhe
+   verificável. É que ela gravou o relatório **na branch de auditoria**, cujo PR
+   nunca foi mesclado, e a sessão de ficha leu a branch default. Um comando por
+   repositório decide:
+
+   ```
+   git show origin/claude/auditoria-integral-2026-08-20:docs/auditoria/2026-08-20-integral.md
+   ```
+
+   Se a hipótese estiver certa, o mesmo merge que destrava o gargalo abaixo
+   resolve os três, e o achado deixa de ser "auditoria não entregou" para virar
+   "ficha leu a ref errada" — que é um defeito do prompt de ficha, não da
+   auditoria, e vale corrigir antes da próxima rodada.
+
 2. **O slug de setor não é único por repositório.** Dois repositórios gravaram
    ficha sob o mesmo `setor:`. Isso não causa colisão de arquivo — cada ficha
    vive na sua origem — mas quebra a premissa de que uma linha do índice mapeia
@@ -949,6 +964,21 @@ Duas coisas apareceram nessa rodada e não cabem no item como estava escrito:
 
 **Verificação adicional:** nenhum dos três repositórios acima aparece com data
 no índice enquanto o relatório não for localizado ou refeito.
+
+**E o item muda de gargalo.** Passou semanas descrito como bloqueado por R1;
+depois virou "aguardando retorno". As duas rodadas mostram que nenhum dos dois
+era o gargalo real: **é o merge**. As 34 sessões deixaram cerca de 32 PRs em
+draft, e só dois repositórios tiveram algo entrando na branch default. Trabalho
+completo que não entra na default é indistinguível de trabalho não feito para
+qualquer sessão futura que leia aquele repositório — foi exatamente assim que
+três fichas concluíram que a auditoria não existia. O gate humano continua certo
+como política; a fila que ele acumula é que virou o risco.
+
+> Terceira vez que este item é redescrito, e o padrão já se repetiu vezes
+> demais para ser coincidência: **a barreira declarada quase nunca é a barreira
+> real.** Primeiro era R1, e não era. Depois era o transporte, e não era. Vale
+> desconfiar de qualquer item deste arquivo cuja descrição de bloqueio nunca foi
+> testada.
 
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
 **Severidade: alta · Executor: 👤 Humano (decisão) depois ☁️ Nuvem · ABERTO**
