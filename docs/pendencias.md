@@ -668,11 +668,27 @@ que a aplica em lote, ambos em
 O script é explicitamente **para o dono rodar, nunca um agente** — e a distinção
 não é cerimônia: rodá-lo por agente seria contornar a parede 2 com o token de
 outra pessoa, que é a definição de rota alternativa. Ele simula por padrão, exige
-`--aplicar` para escrever, **nunca sobrescreve ruleset existente** (um já
-instalado pode ter regras que o modelo não conhece, e substituí-lo em silêncio
-removeria proteção em nome de aplicá-la), descobre os repositórios pela API — em
-vez de carregar uma lista de privados dentro de um repositório público — e falha
-fechada se não conseguir interpretar a resposta.
+`--aplicar` para escrever, descobre os repositórios pela API — em vez de carregar
+uma lista de privados dentro de um repositório público — e falha fechada quando
+não consegue interpretar uma resposta.
+
+**Duas correções vieram de rodá-lo, não de relê-lo**, e as duas eram do mesmo
+tipo — código que parecia certo e nunca tinha sido exercitado:
+
+1. **Ele perguntava se existia um ruleset com o nome dele**, em vez de perguntar
+   se a branch já estava protegida. Rodando contra este repositório, que já tinha
+   `protect-main`, a simulação anunciou que criaria `protect-default` **em cima**
+   — o empilhamento que o README ao lado mandava evitar e que o código não
+   implementava. Corrigido para consultar as regras **efetivas** da branch, que é
+   a pergunta certa.
+2. **Ele presumia `main`.** Repositório antigo ainda é `master`, e proteger a
+   branch errada é pior que não proteger: parece feito. Passou a ler a branch
+   default de cada repositório.
+
+> A primeira dessas é a mais instrutiva: **o README descrevia o comportamento
+> correto e o código fazia outro.** Documentação e implementação divergindo em
+> silêncio é o defeito que este repositório inteiro existe para caçar — e ele
+> apareceu dentro do arquivo que eu tinha acabado de escrever para caçá-lo.
 
 Dezoito repositórios viram um comando. O gate não se move: continua sendo uma
 pessoa, com a credencial dela, decidindo aplicar.

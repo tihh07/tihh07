@@ -116,29 +116,65 @@ printf '%-42s %s\n' "REPOSITÓRIO" "RESULTADO"
 
 CRIADOS=0; JA_TINHA=0; FALHOU=0
 for repo in "${ALVOS[@]}"; do
-  resp=$(api GET "/repos/$DONO/$repo/rulesets")
+  # Qual é a branch default? Não presuma "main": vários repositórios antigos
+  # ainda são "master", e proteger a branch errada é pior que não proteger —
+  # parece feito.
+  resp=$(api GET "/repos/$DONO/$repo")
   corpo=${resp%$'\n'*}; codigo=${resp##*$'\n'}
   if [ "$codigo" != "200" ]; then
-    printf '%-42s %s\n' "$repo" "ERRO ao ler rulesets (HTTP $codigo)"
+    printf '%-42s %s\n' "$repo" "ERRO ao ler o repositório (HTTP $codigo)"
     FALHOU=$((FALHOU + 1)); continue
   fi
-  # Já existe um ruleset com este nome? Nunca sobrescreve: um ruleset existente
-  # pode ter regras que este modelo não conhece, e substituí-lo em silêncio
-  # removeria proteção em nome de aplicá-la.
-  existe=$(printf '%s' "$corpo" | NOME_RULESET="$NOME_RULESET" python3 -c "
-import json,sys,os
-alvo=os.environ['NOME_RULESET']
-print('sim' if any(r.get('name')==alvo for r in json.load(sys.stdin)) else 'nao')")
-  if [ "$existe" != "sim" ] && [ "$existe" != "nao" ]; then
-    printf '%-42s %s\n' "$repo" "ERRO ao interpretar a lista de rulesets — pulado"
+  BRANCH=$(printf '%s' "$corpo" | python3 -c "
+import json,sys
+print(json.load(sys.stdin).get('default_branch',''))")
+  if [ -z "$BRANCH" ]; then
+    printf '%-42s %s\n' "$repo" "ERRO: não consegui determinar a branch default — pulado"
     FALHOU=$((FALHOU + 1)); continue
   fi
-  if [ "$existe" = "sim" ]; then
-    printf '%-42s %s\n' "$repo" "já tem '$NOME_RULESET' — pulado, nada sobrescrito"
+
+  # A branch default já está protegida por ALGUÉM?
+  #
+  # A primeira versão comparava só o NOME do ruleset, e era o defeito que o
+  # README ao lado descrevia sem o código implementar: o repositório público já
+  # tinha um `protect-main` protegendo a default, e a simulação anunciou que
+  # criaria `protect-default` em cima. Duas regras empilhadas no mesmo alvo.
+  #
+  # Empilhar não é inofensivo — as regras se somam, ninguém sabe qual nega o
+  # quê, e quem ler "o ruleset" depois vai ler um dos dois, possivelmente o mais
+  # frouxo.
+  #
+  # `/rules/branches/<branch>` devolve as regras EFETIVAS naquela branch, venham
+  # de onde vierem. É a pergunta certa — "esta branch já está protegida?" — em
+  # vez da pergunta cômoda, "existe um ruleset com o meu nome?". Decidir se a
+  # proteção existente basta é julgamento humano, não do script.
+  BRANCH_URL=$(printf '%s' "$BRANCH" | python3 -c "
+import sys,urllib.parse
+print(urllib.parse.quote(sys.stdin.read().strip(), safe=''))")
+  resp=$(api GET "/repos/$DONO/$repo/rules/branches/$BRANCH_URL")
+  corpo=${resp%$'\n'*}; codigo=${resp##*$'\n'}
+  if [ "$codigo" != "200" ]; then
+    printf '%-42s %s\n' "$repo" "ERRO ao ler regras de '$BRANCH' (HTTP $codigo)"
+    FALHOU=$((FALHOU + 1)); continue
+  fi
+  existe=$(printf '%s' "$corpo" | python3 -c "
+import json,sys
+regras=json.load(sys.stdin)
+if not regras:
+    print('nao')
+else:
+    print(','.join(sorted({str(r.get('ruleset_source') or r.get('ruleset_id')) for r in regras})))")
+  if [ -z "$existe" ]; then
+    printf '%-42s %s\n' "$repo" "ERRO ao interpretar as regras de '$BRANCH' — pulado"
+    FALHOU=$((FALHOU + 1)); continue
+  fi
+  if [ "$existe" != "nao" ]; then
+    printf '%-42s %s\n' "$repo" "'$BRANCH' JÁ protegida (por: $existe) — pulado"
     JA_TINHA=$((JA_TINHA + 1)); continue
   fi
+
   if [ "$APLICAR" -eq 0 ]; then
-    printf '%-42s %s\n' "$repo" "criaria '$NOME_RULESET'"
+    printf '%-42s %s\n' "$repo" "criaria '$NOME_RULESET' sobre '$BRANCH' (hoje desprotegida)"
     CRIADOS=$((CRIADOS + 1)); continue
   fi
   resp=$(api POST "/repos/$DONO/$repo/rulesets" "$MODELO")

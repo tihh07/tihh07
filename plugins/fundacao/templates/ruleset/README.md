@@ -19,10 +19,22 @@ distinção não é cerimônia — rodá-lo por agente seria contornar, com o to
 outra pessoa, a permissão que existe justamente para que agente não reconfigure
 repositório.
 
-Ele **simula por padrão** e só escreve com `--aplicar`. Nunca sobrescreve um
-ruleset que já exista com este nome: o que está instalado pode ter regras que
-este modelo não conhece, e substituir em silêncio removeria proteção em nome de
-aplicá-la.
+Ele **simula por padrão** e só escreve com `--aplicar`.
+
+**Ele nunca toca numa branch default que já esteja protegida** — por qualquer
+ruleset, com qualquer nome. A pergunta que ele faz é *"esta branch já está
+protegida?"*, não *"existe um ruleset com o meu nome?"*, e a diferença não é
+sutil: a segunda versão dele fazia a pergunta cômoda e anunciou que criaria um
+`protect-default` em cima do `protect-main` que já protegia este repositório.
+
+Empilhar dois rulesets no mesmo alvo não é inofensivo. As regras se somam,
+ninguém sabe qual delas nega o quê, e quem ler *"o ruleset"* depois vai ler um
+dos dois — possivelmente o mais frouxo. Decidir se a proteção que já existe basta
+é julgamento humano; o script só recusa mexer e diz quem já está lá.
+
+Ele também **não presume que a branch default se chame `main`**. Repositório
+antigo ainda é `master`, e proteger a branch errada é pior que não proteger:
+parece feito.
 
 ## Aplicar um a um, na tela
 
