@@ -24,7 +24,7 @@
 
 | Item | Antes | Agora |
 |---|---|---|
-| **H1** — proteção de `main` | "fechado, ruleset ativo, bypass nunca" | 🟡 **parcialmente verificável**. A API confirma que `main` está protegida; **não** diz qual regra, qual enforcement, nem quem tem bypass. Afirmar mais que isso daqui é suposição. |
+| **H1** — proteção de `main` | "fechado, ruleset ativo, bypass nunca" | 🔴 **verificado em 2026-08-21, e é mais fraco do que se afirmava.** O ruleset existe, está ativo e não tem bypass — isso era verdade. Mas ele exige **PR sem exigir aprovação nenhuma**, e não exige revisão de code owner. Ver **H1-bis**. |
 | **H4** — secret scanning e push protection | "fechado, ambos `enabled`" | 🟡 **não verificável pela nuvem**. O que se provou hoje é que o GitHub Advanced Security está **desligado** — o que é um flag distinto do secret scanning gratuito de repositório público. Push protection não foi verificado por via nenhuma. |
 | **L1** — quatro departamentos nunca auditados | "bloqueado por R1" | 🟢 **em voo**. Em 2026-08-20 foram despachadas **17 sessões de nuvem, uma por repositório privado**, cada uma escopada num único repositório. O que falta deixou de ser a auditoria e passou a ser o **transporte** do handoff. |
 | **L4** — ~14 repositórios fora de rotina | "~18 no ecossistema, 4 cobertos" | 🔴 **cobertura recorrente**, não cobertura pontual. São **18 repositórios** (17 privados + o público); a rodada de hoje dá cobertura pontual a todos, e a maioria segue fora de qualquer rotina agendada. |
@@ -36,7 +36,8 @@
 |---|---|---|
 | **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
-| **H1 · H4** — estado real dos controles | 🟡 parcial | só a UI responde |
+| **H1-bis** — `main` exige PR, mas zero aprovação | ❌ **aberto, severidade alta** | descoberto ao reconectar a autorização |
+| **H4** — secret scanning e push protection | 🟡 parcial | campo ausente na resposta da API; só a UI responde |
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
 | **H3** — segredo de Actions para o PR Watch | ❌ aberto | proibido a agente por regra de conduta, não por ferramenta |
 | **H5 · L2 · L4** | ❌ aberto | decisão humana |
@@ -711,6 +712,59 @@ partir de um bundle**: backup sem restauração testada é intenção, não cont
 > O que está refém não é disco — é **configuração que não é arquivo**. Um plano de
 > durabilidade que só resolve o backup de arquivos resolve a parte que já estava
 > resolvida.
+
+---
+
+### H1-bis — O gate humano de `main` é doutrina, não controle
+**Severidade: alta · Executor: 👤 Humano · ABERTO**
+
+Em 2026-08-21 o dono reconectou a autorização do GitHub, e os caminhos que
+respondiam 403 por essa causa passaram a responder. Pela primeira vez foi
+possível **ler** o ruleset em vez de inferir dele.
+
+O que se confirmou, e estava certo: o ruleset existe, o enforcement está ativo,
+não há nenhum ator com bypass, e `main` está protegida contra deleção e contra
+histórico reescrito.
+
+**O que ninguém tinha verificado:** a regra de pull request está configurada para
+exigir PR **sem exigir aprovação alguma**, e sem exigir revisão de code owner.
+Traduzindo: qualquer identidade com acesso de escrita — inclusive uma sessão de
+agente — pode abrir um PR e mesclá-lo sozinha, sem que pessoa nenhuma olhe. O
+ruleset barra empurrar direto em `main`; não barra passar por `main` via PR
+próprio.
+
+Isso reclassifica o controle mais importante do ecossistema. *"Nada é mesclado em
+`main` por agente"* era descrito como gate. **É doutrina** — vale porque está
+escrito nos prompts e porque os agentes obedecem, não porque a plataforma impede.
+Doutrina é um controle real, e este vinha sendo respeitado; mas um controle que
+depende de todo agente lembrar a regra falha de um jeito diferente de um que
+recusa a operação.
+
+Isso também explica **H2** sem mistério: o `CODEOWNERS` é inerte porque a regra
+não pede revisão de code owner. Não é só a opção "Require review from Code
+Owners" que falta — é a contagem de aprovações em zero.
+
+**Ação (👤):** decidir entre duas posturas, e as duas são defensáveis:
+
+1. **Exigir aprovação.** Fecha o buraco, e trava: com um único dono, ninguém
+   aprova o próprio PR. Vira gargalo real, não teórico.
+2. **Assumir a doutrina como o controle**, declarando-a como tal em vez de
+   chamá-la de gate. Honesto, e não bloqueia — mas exige que todo prompt de
+   agente continue carregando a regra, para sempre.
+
+A escolha depende de haver um segundo revisor, que é a mesma pré-condição que já
+trava **H2**. Enquanto não houver, a opção 2 é a única executável — e o mínimo é
+o texto parar de chamar de gate o que é doutrina.
+
+**Verificação:** o texto do ecossistema descreve o controle pelo que ele faz. Se
+a opção 1 for adotada, a contagem de aprovações deixa de ser zero.
+
+> Vale registrar como o achado apareceu, porque é o argumento a favor de
+> reconectar autorização em vez de conviver com o 403: **este item ficou seis
+> meses descrito como fechado sem nunca ter sido lido.** Não por descuido — a via
+> de leitura não existia, e "ruleset ativo" era o máximo que dava para afirmar. O
+> custo de um controle não verificável não é o risco de ele estar desligado; é
+> que ninguém descobre que ele protege menos do que se pensa.
 
 ---
 
