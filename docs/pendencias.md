@@ -39,7 +39,7 @@
 | **S2** — R1 cobre conteúdo, não inventário | 🔴 **novo em 2026-08-21** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
 | **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
-| **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável em 3 cliques** | o check `verificar` existe e já reporta verde. Falta marcá-lo no ruleset **`protect-main` que já existe** — não criar um novo. Escrita por API é barrada pelo proxy: é clique, por desenho |
+| **H1-bis** — `main` exige PR, mas zero aprovação | ✅ **fechado em 2026-08-21** | `verificar` exigido no `protect-main`, fixado no app do Actions, sem bypass. PR quebrado não entra mais — é plataforma, não boa vontade. O merge sem revisor segue doutrina |
 | **H4** — secret scanning e push protection | ✅ **fechado** | ambos **ativos**, conferidos na UI em 2026-08-21 com evidência visual. GHAS é flag distinto e segue desligado — não era ele que importava |
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em plano nem em ação. Nos privados o recurso passou a existir com o Pro (2026-08-21) — mas comprar a ferramenta não cria o segundo revisor |
 | **H7** — branches principais dos privados desprotegidas | 🟡 **destravado, falta configurar** | era limite de plano e não é mais. Com o Pro ativo, é clique humano na UI, um repositório por vez — e é o item de maior retorno da lista |
@@ -140,9 +140,9 @@ nada esperando merge aqui.
 
 **3. O que ganhou existência em 21/08, e muda o que você pode assumir:**
 
-- `verificacao.yml` roda a cada PR e é o **candidato a check obrigatório**. Ele
-  ainda **não** está marcado como tal no ruleset — isso é o **H1-bis**, e é
-  clique de uma pessoa na UI.
+- `verificacao.yml` roda a cada PR e **é check obrigatório desde 21/08**, fixado
+  no app do GitHub Actions. Um PR com o repositório quebrado não entra: a
+  plataforma recusa. Não confunda com o merge sem revisor, que segue doutrina.
 - O guardrail de push teve um defeito corrigido e ganhou **suíte hermética**. A
   suíte passou a rodar num repositório descartável porque, rodando aqui, o
   fallback da branch atual (`claude/*`) transformava defeito real em teste verde.
@@ -1307,8 +1307,45 @@ partir de um bundle**: backup sem restauração testada é intenção, não cont
 
 ---
 
-### H1-bis — O gate humano de `main` é doutrina, não controle
-**Severidade: alta · Executor: 👤 Humano · ABERTO**
+### H1-bis — O gate humano de `main` deixou de ser só doutrina
+**Severidade: alta · ✅ FECHADO em 2026-08-21 · Aplicado por: 👤 Humano, na UI · Verificado por: ☁️ Nuvem, via API**
+
+**Fechado no fim do dia em que foi aberto.** O check `verificar` passou a ser
+exigido pelo ruleset `protect-main`, e a leitura da API confirma:
+
+| Campo | Valor lido |
+|---|---|
+| Check exigido | **`verificar`** |
+| `integration_id` | **15368** — fixado no app do GitHub Actions |
+| `strict_required_status_checks_policy` | **`false`**, como recomendado |
+| Aprovações exigidas | 0 — intacto, e é o certo |
+| Atores com bypass | **nenhum** |
+
+**O `integration_id` fixado é a metade que quase se perde.** Sem ele, qualquer
+app que publicasse um check chamado `verificar` satisfaria a regra — e "qualquer
+app" inclui um instalado depois, por outro motivo, sem ninguém ligar uma coisa à
+outra. Com ele, só o GitHub Actions deste repositório serve.
+
+**O que isso muda, exatamente.** Um PR com o repositório quebrado **não entra
+mais** — a plataforma recusa, não a boa vontade do agente. O que **não** mudou:
+uma identidade com acesso de escrita ainda pode abrir um PR e mesclá-lo sozinha.
+Isso não tem solução por aprovação enquanto houver um único colaborador, e o
+resto continua sendo doutrina — declarada como tal.
+
+**Duas tentativas até pegar, e a primeira "feito" não era.** O relato de conclusão
+veio antes de a mudança existir: a API mostrava o ruleset inalterado, com um único
+ruleset no repositório e nenhuma regra de check. **A verificação custou uma
+requisição e desfez um fechamento falso** — o mesmo padrão que já tinha custado
+três diagnósticos errados no **L1**, hoje de manhã, noutro repositório.
+
+> Vale reter a regra que sai daí, porque ela é barata: **relato de configuração
+> aplicada é hipótese até a leitura confirmar.** Não é desconfiança de quem
+> relata — é que telas longas de formulário salvam parcialmente, e ninguém
+> percebe olhando a própria tela.
+
+---
+
+**Registro do estado anterior, para a próxima sessão entender de onde veio:**
 
 Em 2026-08-21 o dono reconectou a autorização do GitHub, e os caminhos que
 respondiam 403 por essa causa passaram a responder. Pela primeira vez foi
@@ -1364,37 +1401,33 @@ corte é limpo e vale registrar como desenho, não como falha: **a nuvem lê
 configuração e não a aplica.** Não há rota alternativa a procurar, e procurar uma
 seria o comportamento que o guardrail existe para impedir.
 
-**O clique, com a precisão que evita o erro provável.** A tela de *New branch
-ruleset* é a errada: **já existe** um ruleset `protect-main` ativo sobre a branch
-default, e criar um segundo empilha duas regras sobre o mesmo alvo — mais difícil
-de auditar, e a próxima sessão que ler *"o ruleset"* vai ler o errado. O caminho
-é **editar o que existe**:
+**O caminho que foi seguido**, registrado porque ele se repete nos dezessete
+privados (**H7**): a tela de *New branch ruleset* é a **errada** — já existia um
+`protect-main` ativo sobre a branch default, e criar um segundo empilharia duas
+regras sobre o mesmo alvo, com a próxima sessão que lesse *"o ruleset"* lendo o
+errado. Editar o que existe:
 
 *Settings → Rules → Rulesets → `protect-main` → Require status checks to pass →
-Add checks → `verificar` (fonte: GitHub Actions) → Save.*
+Add checks → `verificar` → Save.*
 
-**Deixe "Require branches to be up to date before merging" DESMARCADO.** Marcá-la
-obriga cada PR a incorporar `main` antes de mesclar, e cada incorporação dispara
-a CI de novo. Com um único colaborador isso é atrito sem ganho — e cada
-re-execução custa minuto, que é o **C1**. A opção existe para times com merges
-concorrentes; aqui não há concorrência.
+**"Require branches to be up to date before merging" ficou desmarcado**, de
+propósito: marcá-la obriga cada PR a incorporar `main` antes de mesclar, e cada
+incorporação redispara a CI. Com um único colaborador é atrito sem ganho, e cada
+re-execução custa minuto — o **C1**.
 
-**O check já provou que reporta:** `verificar` aparece verde no head do PR #13,
-publicado pelo app do GitHub Actions. Isso importa porque exigir um check que
-nunca reportou bloqueia todo merge — é a mesma armadilha que o cabeçalho do
-workflow documenta sobre filtro de `paths`.
+**A ordem importava, e era contraintuitiva:** o workflow tinha de existir e ter
+rodado **antes** de ser exigido. Exigir um check que nunca rodou bloqueia todo
+merge, inclusive o PR que traria o check. Por isso o workflow veio primeiro e a
+marcação depois — e `verificar` já estava verde no head do PR #13 quando foi
+exigido.
 
-**A ordem importa, e é contraintuitiva:** o workflow tem de existir e ter rodado
-ao menos uma vez **antes** de ser exigido. Exigir um check que nunca rodou
-bloqueia todo merge, inclusive o PR que traria o check. Por isso o workflow foi
-criado primeiro e a marcação no ruleset é o passo seguinte.
+**As opções 2 e 3 se somam, e a 2 continua valendo:** mesmo com o check
+obrigatório, *"nenhum agente mescla em `main`"* segue sendo **doutrina**, e o
+texto do ecossistema deve chamá-la assim em vez de "gate".
 
-As opções 2 e 3 se somam: mesmo com o check obrigatório, "nenhum agente mescla
-em `main`" continua sendo doutrina, e o texto do ecossistema deve chamá-la
-assim.
-
-**Verificação:** o texto do ecossistema descreve o controle pelo que ele faz. Se
-a opção 1 for adotada, a contagem de aprovações deixa de ser zero.
+**Verificação — cumprida:** a leitura da API mostra `required_status_checks` com
+`verificar` fixado no app do Actions, `strict` em `false`, aprovações em zero e
+nenhum ator de bypass.
 
 > Vale registrar como o achado apareceu, porque é o argumento a favor de
 > reconectar autorização em vez de conviver com o 403: **este item ficou seis
@@ -1966,7 +1999,7 @@ que a linha reservada para ele.
 | ~~Qui~~ | ~~**H1 + H4** — conferir na UI e datar a conferência~~ | 👤 | **feito em 21/08.** H4 fechou com evidência visual; H1 virou **H1-bis** |
 | ~~Sex~~ | ~~**P2** — trocar o prompt das rotinas pelo ponteiro~~ | ☁️ | **metade**; a de control-plane espera a decisão de onde a skill mora |
 | ~~Sex~~ | ~~**L2** — decidir se os nomes de setor podem ser publicados~~ | 👤 | **não decidido, e agravado** — ver o achado no item |
-| **Hoje (sex)** | **H1-bis** — marcar `verificar` como check obrigatório no ruleset | 👤 | 2 min, e é o que converte o gate deste repositório em controle |
+| ~~Sex~~ | ~~**H1-bis** — marcar `verificar` como obrigatório~~ | 👤 | **feito e verificado na API em 21/08.** Precisou de duas tentativas: a primeira salvou sem o campo |
 | **Hoje (sex)** | **C1** — travar o orçamento de $0 do Actions, ou aceitar por escrito | 👤 | 5 min |
 | **Sáb/dom** | **H7** — proteger a branch default dos privados, um a um | 👤 | destravado hoje pelo Pro |
 | **Sáb/dom** | **P16** — coletar as duas métricas que a CI espera | 👤 | fecha o penúltimo repositório do ciclo |

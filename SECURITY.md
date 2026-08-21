@@ -205,6 +205,15 @@ avaliar um risco; não pode assumi-lo em nome de alguém.
 Some-se a essas o gate que este repositório mantém por ser o único público:
 **merge em `main` e commit direto aqui continuam humanos**, e é caso da classe 2.
 
+Desde 2026-08-21 esse gate tem **duas naturezas, e confundi-las custa caro**. A
+plataforma recusa: push direto em `main`, force push, deleção da branch e PR cujo
+check de verificação não esteja verde — isso é ruleset, e vale para todo mundo,
+sem ator de bypass. O resto é **doutrina**: que nenhum agente mescle o próprio PR
+não é impedido por nada além da regra estar escrita. Com um único colaborador não
+há como exigir aprovação sem trancar o dono fora do repositório, então a doutrina
+é o controle — e chamá-la de "gate" faz parecer que a plataforma segura o que ela
+não segura.
+
 **Fora disso, aja e relate o que fez.** "Relate" não é pedir permissão depois: é
 deixar rastro do que foi decidido e por quê, para a próxima sessão não
 redescobrir.
