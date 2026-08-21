@@ -933,32 +933,69 @@ entrada malformada e as quatro liberações.
 > ele reprova o código correto e, invertido, aprova o errado.
 
 ### L4 — Cobertura recorrente: a maioria dos 18 segue fora de rotina
-**Severidade: média · Executor: 👤 Humano · ABERTO**
+**Severidade: média · Executor: 👤 Humano (escolher) depois ☁️ Nuvem (executar) · PROPOSTA PRONTA**
 
 O ecossistema tem **18 repositórios** (17 privados + o público). A rodada de
-auditorias de 2026-08-20 dá **cobertura pontual a todos** — o que é a primeira
-vez que isso acontece, e não deve ser confundido com o que este item pede.
+2026-08-20 deu **cobertura pontual a todos** — primeira vez que isso acontece, e
+não é o que este item pede. Auditoria pontual mede o passado; **rotina agendada é
+o que cobre o futuro**. Segredo, PII ou divergência de doutrina introduzidos
+amanhã hoje não são vistos por ninguém até alguém lembrar de olhar.
 
-O que segue aberto é **cobertura recorrente**: a maioria dos repositórios não é
-varrida por nenhuma rotina agendada, então segredo, PII ou divergência de
-doutrina introduzidos amanhã não são vistos por ninguém até a próxima auditoria
-manual. Auditoria pontual mede o passado; rotina agendada é o que cobre o futuro.
+#### As três formas, e o que decide entre elas
 
-**A decisão continua humana e continua pendente:** uma rotina com muitas fontes
-ou várias rotinas menores. Uma rotina única com 18 repositórios anexados aumenta
-o raio de qualquer erro dela e reencontra o problema de **P0** numa escala maior
-— e P0 acabou de custar três semanas para ser corrigido com um punhado de
-repositórios no escopo. Rotinas menores multiplicam a manutenção e a chance de
-uma delas regredir sem ninguém notar; a skill N2 tem um passo justamente para
-detectar regressão de governança em rotina, o que favorece esse lado.
+| | Desenho | Rotinas | Raio de um erro | Custo por rodada |
+|---|---|---|---|---|
+| **A** | uma rotina, todos os privados como fontes | 2 (privados + público) | **todos de uma vez** | uma sessão enorme |
+| **B** | uma rotina por repositório | 18 | um repositório | 18 sessões pequenas |
+| **C** | **uma rotina por setor** | ~6 | um setor | uma sessão média por setor |
 
-**Ação (👤):** decidir a topologia e anexar as fontes na configuração das
-rotinas.
+Quatro restrições decidem, e três delas já estão estabelecidas neste repositório:
+
+1. **R1 é inegociável** — privado e público nunca na mesma rotina. Isso já
+   elimina qualquer desenho com uma rotina só, e é por isso que a coluna
+   "rotinas" nunca é 1.
+2. **O corolário de R1, que ainda não estava escrito:** *sessão não deveria
+   montar repositórios cujos dados pertencem a donos diferentes.* R1 trata do
+   caso extremo — privado × público —, mas a mesma lógica vale um degrau abaixo.
+   Uma sessão com repositório de empregador, de negócio próprio e pessoal
+   montados juntos não viola regra nenhuma e mesmo assim é a mesma classe de
+   risco, em escala menor. **O desenho A falha nesse teste; o C passa por
+   construção.**
+3. **Cota de execuções.** O blueprint registra que Routines é research preview
+   com teto diário de execuções por conta. O desenho B com todas disparando na
+   segunda encosta nesse teto; qualquer desenho precisa **espalhar os disparos
+   pela semana**, o que também evita que uma mudança ruim de prompt atinja tudo
+   no mesmo dia.
+4. **Raio de erro.** **P0 levou três semanas para ser corrigido** com um punhado
+   de repositórios no escopo. O desenho A reencontra esse problema com 17.
+
+**Recomendação: C, por setor.** O argumento decisivo não é o custo nem o número
+de rotinas — é que **a fronteira de isolamento passa a ser a mesma que já governa
+a titularidade do dado**. É o mesmo corte que decide o destino do backup (**D1**)
+e o mesmo que o índice do `AGENTS.md` usa. Uma fronteira que serve a três
+propósitos é mantida; uma que serve só a um é esquecida.
+
+#### O que a rotina recorrente faz — e não faz
+
+**Não é a auditoria integral.** Rodar as oito frentes toda semana em 18
+repositórios é caro e desnecessário: a maior parte não muda. A rotina recorrente é
+a passada leve — *o que mudou desde a última vez, e isso introduziu segredo, PII
+ou divergência de doutrina?* — no degrau de modelo abaixo do topo, conforme o
+procedimento de [`auditoria-integral.md`](../.claude/prompts/auditoria-integral.md).
+
+A auditoria integral fica **sob demanda**: repositório novo, mudança estrutural,
+ou achado que peça varredura completa.
+
+**Ação (👤):** escolher entre A, B e C — e, escolhendo C, confirmar o corte por
+setor, que é a mesma informação que **L2** já espera.
+
+**Ação (☁️, depois):** criar as rotinas conforme
+[`control-plane.md`](control-plane.md), com disparos espalhados pela semana, e
+rodar cada uma uma vez à mão antes de confiar no agendamento. Rotina cuja
+primeira execução ninguém conferiu é intenção, não controle.
 
 **Verificação:** todo repositório do ecossistema aparece no escopo de exatamente
-uma rotina, e nenhuma rotina mistura público com privado.
-
----
+uma rotina recorrente, e nenhuma rotina mistura setores.
 
 ## Plano de execução — semana de 2026-08-17 a 2026-08-23
 
