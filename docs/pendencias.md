@@ -1069,11 +1069,40 @@ que um número agregado:
 | Causa da retenção | O que ela realmente diz |
 |---|---|
 | Autorização julgada não humana | A sessão recebeu a instrução de merge por um campo de configuração, não por uma pessoa, e **se recusou**. Ver o comentário abaixo. |
-| Clone raso sem ferramenta | A sessão concluiu "não tenho ferramenta" sem tentar chamá-la. Redespachada com o comando de `--unshallow` no enunciado. |
+| **Guardrail do próprio repositório** | Três tentativas, três diagnósticos, e só o terceiro é o certo. Ver abaixo. |
 | Classificador de permissão | Merge barrado por classificador, não por regra do repositório. Destrava na UI, não por outra rota. **E o bloqueio saiu barato:** o mesmo repositório teve dado pessoal confirmado horas depois, e o PR seguiria adiante sem essa trava. |
 | CI vermelha por dado ausente | A CI não está quebrada: ela está **certa**, e reprova porque faltam métricas que só uma pessoa coleta. Verde aqui exigiria burlar o gate. |
 | Pergunta aberta ao humano | A sessão parou para perguntar, e a pergunta é de conteúdo, não técnica. |
 | ~~Conflito semântico já mesclado~~ | **Resolvido no mesmo dia.** Os dois lados tinham mesclado sem conflito de texto e o resultado se contradizia — o caso em que `git` diz verde e o conteúdo diz vermelho. Fechou com 5 PRs mesclados e CI verde na default. |
+
+**O caso que precisou de três tentativas para ser diagnosticado.** Um dos
+repositórios não fechou, e a causa registrada mudou duas vezes antes de ficar
+certa:
+
+1. A primeira sessão declarou **clone raso sem ferramenta** — e estava errada
+   nas duas metades: o clone se resolve com um comando, e a ferramenta existia.
+   Ela concluiu "não tenho" sem tentar chamar.
+2. A segunda, redespachada com o comando no enunciado, avançou e travou noutro
+   ponto: uma **escrita no GitHub negada por classificador**. Reportou o
+   sintoma — um título de PR que continuou errado — e não o que aquilo
+   implicava.
+3. A terceira, somente leitura, respondeu a pergunta que importava: os
+   relatórios **estão nas branches de auditoria e não na branch default**. O
+   repositório não fechou, e o título errado era cosmético o tempo todo.
+
+**O que trava é um guardrail do próprio repositório**, que barra escrita de
+agente no GitHub. Ele está funcionando como foi desenhado. Uma quarta sessão não
+passaria por ele — passaria a tentar rotas alternativas, que é exatamente o
+comportamento que o guardrail existe para impedir. **Este item só fecha por
+decisão humana**, e não porque falta ferramenta: porque o repositório decidiu que
+merge ali não é ato de agente.
+
+> **Duas causas erradas antes da certa, e nenhuma foi mentira.** Cada sessão
+> relatou honestamente onde parou; o problema é que "onde parei" e "o que trava"
+> não são a mesma pergunta, e uma sessão que só responde a primeira produz um
+> diagnóstico que soa completo e não é. O que fechou o caso foi separar as duas:
+> a verificação não perguntou *por que você parou*, perguntou *o arquivo está na
+> branch default?*.
 
 > **A recusa é o achado, não o obstáculo.** Uma das sessões recebeu autorização
 > de merge por um campo de configuração e se recusou a agir sobre ela, por não
