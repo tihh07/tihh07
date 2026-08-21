@@ -9,15 +9,29 @@ name: Claude PR Watch
 # ---------------------------------------------------------------------------
 # O QUE ESTE WORKFLOW *NÃO* COBRE
 # ---------------------------------------------------------------------------
-# - ACORDOU, MAS NUNCA EXECUTOU. Em 2026-08-08 os comentários de review do PR #8
-#   dispararam cinco runs; todas terminaram skipped/cancelled na condição `if`
-#   abaixo, porque não continham "@claude". O job reporta steps=0: o Checkout e a
-#   action nunca rodaram, e a chave de API nunca foi consultada. Disparar não é
-#   executar — nenhuma execução real aconteceu até aqui, e ela segue dependendo
-#   de secrets.ANTHROPIC_API_KEY, que não existe no repositório (backlog H3).
+# - NUNCA EXECUTOU DE VERDADE — este workflow ainda não provou nada. Nenhuma
+#   execução chegou à action até hoje: zero sucesso e zero falha. O padrão se
+#   repete sempre igual — um evento de comentário ou review dispara o gatilho, a
+#   condição `if` abaixo filtra (o texto não contém "@claude"), e o job termina
+#   skipped/cancelled com steps=0: o Checkout e a action nunca rodaram, e a
+#   chave de API nunca chegou a ser consultada. Disparar não é executar, e
+#   automação que nunca rodou é decoração, não controle. Some-se a isso a
+#   dependência de secrets.ANTHROPIC_API_KEY, que segundo o backlog H3 não
+#   existe no repositório: mesmo que a condição passasse, não há execução.
 #   Enquanto o secret faltar, este arquivo é intenção declarada, não controle
-#   ativo. O que os cinco runs comprovam é o filtro de autor (R9/R2), que
-#   segurou eventos reais em vez de teoria.
+#   ativo. O que os disparos comprovam é o filtro de autor (R9/R2), que segurou
+#   eventos reais em vez de teoria.
+#   Limite desta afirmação: a ausência do secret é registro do backlog e decisão
+#   humana, não é verificável a partir de uma sessão de agente — os caminhos de
+#   configuração de repositório da API respondem 403 mesmo com token válido. E
+#   como nenhuma execução alcançou a action, não existe sequer uma falha por
+#   falta de chave para servir de evidência indireta.
+#   Não registre aqui um número de execuções: ele volta a ficar errado no
+#   disparo seguinte, que foi exatamente o defeito da versão anterior deste
+#   cabeçalho. A contagem viva está na aba Actions do repositório, workflow
+#   "Claude PR Watch" — essa é a fonte. Instantâneo datado de 2026-08-20, só
+#   como referência: 22 disparos, concentrados em 2026-08-08 e 2026-08-09,
+#   nenhum alcançando a action, e nenhum disparo novo desde então.
 # - Não verifica nada por conta própria. É reativo: sem menção a @claude por
 #   parte do dono do repo, e sem disparo manual, ele nunca acorda. Um PR pode
 #   ficar aberto indefinidamente sem que este workflow diga uma palavra — quem

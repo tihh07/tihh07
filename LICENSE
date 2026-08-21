@@ -5,10 +5,12 @@ cabeçalho de docs/orchestration-blueprint.md.
 TEXTO E DOCUMENTAÇÃO — CC BY 4.0
 ================================================================================
 
-Todo o conteúdo textual deste repositório (README.md, AGENTS.md, CLAUDE.md,
-docs/, .claude/prompts/, .claude/skills/, SECURITY.md e demais arquivos de
-documentação) está licenciado sob a Creative Commons Attribution 4.0
-International (CC BY 4.0).
+Todo o conteúdo textual deste repositório está licenciado sob a Creative
+Commons Attribution 4.0 International (CC BY 4.0). Isso inclui, sem se limitar
+a: README.md, AGENTS.md, CLAUDE.md, SECURITY.md, docs/, .claude/prompts/,
+.claude/skills/, os arquivos Markdown distribuídos em plugins/ (templates de
+executor, README do plugin e template de telemetria), reports/publicacao/ e
+demais arquivos de documentação.
 
 Você pode compartilhar e adaptar esse conteúdo, inclusive comercialmente, desde
 que dê o crédito apropriado, indique se foram feitas alterações e forneça um
@@ -28,6 +30,27 @@ Todo trecho de código deste repositório — incluindo os workflows em
 .github/workflows/, os scripts em plugins/, os snippets do Apêndice A do
 blueprint e qualquer bloco de código dentro da documentação — está licenciado
 sob a licença MIT, reproduzida integralmente abaixo.
+
+--------------------------------------------------------------------------------
+ONDE PASSA A FRONTEIRA (regra por arquivo, para não sobrar dúvida)
+--------------------------------------------------------------------------------
+
+- Arquivo .md é texto: CC BY 4.0. Vale inclusive para os templates em
+  plugins/fundacao/agents/, plugins/fundacao/README.md,
+  plugins/fundacao/templates/ e reports/publicacao/README.md.
+- Arquivo executável ou de configuração — .sh, .yml, .yaml, .json, incluindo os
+  manifestos .claude-plugin/plugin.json e .claude-plugin/marketplace.json — é
+  código: MIT.
+- Bloco de código dentro de um arquivo .md é código: MIT, mesmo quando a prosa
+  ao redor é CC BY. O mesmo vale para o frontmatter YAML dos templates de
+  executor.
+
+Os dois manifestos .claude-plugin/*.json declaram "license": "MIT" para o
+pacote inteiro. Essa declaração deve ser lida como referente ao código do
+pacote; os arquivos .md distribuídos dentro dele seguem CC BY 4.0 pela regra
+acima. Enquanto o campo dos manifestos não for ajustado para refletir os dois
+regimes, é este arquivo que prevalece — ele é a declaração de licença do
+repositório.
 
 MIT License
 

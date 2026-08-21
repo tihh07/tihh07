@@ -1,11 +1,13 @@
 # Política de segurança
 
 Este é o **único repositório público** do ecossistema, classificado **N2**. A
-autoridade sobre o desenho de segurança é a seção 8 do
+autoridade sobre o **desenho** de segurança é a seção 8 do
 [blueprint de orquestração](docs/orchestration-blueprint.md) — matriz de riscos
-R1–R11, gates humanos e checklist de sanitização. Este arquivo é a porta de
-entrada operacional: o que vale em toda sessão, e o que fazer quando algo dá
-errado.
+R1–R11, gates humanos e enquadramento. A autoridade **operacional** é este
+arquivo: o checklist de sanitização, o runbook de incidente e o kill-switch
+abaixo são as versões canônicas, e é delas que as rotinas versionadas em
+`.claude/skills/` executam. O blueprint aponta para cá em vez de repetir: nenhum
+desses controles deve existir em duas versões.
 
 ## Reportando uma vulnerabilidade
 
@@ -55,11 +57,14 @@ passa por:
 
 1. **Nomes** — nenhum cliente, empregador ou pessoa física sem consentimento.
 2. **Números reais** — nenhuma métrica comercial ou resultado de cliente. Número
-   publicado precisa estar rotulado como ilustrativo.
+   publicado precisa estar rotulado como ilustrativo, e custo só aparece como
+   cenário, nunca como fatura.
 3. **Dado pessoal** — zero, inclusive exemplo "fictício" que na origem é real.
 4. **Segredos** — zero, inclusive em screenshot, log colado e trecho de config.
 5. **Estrutura interna** — nenhum caminho de rede, hostname, nome de sistema
-   interno ou organograma real.
+   interno ou organograma real. Vale também para o que vem de dentro: nenhum
+   trecho literal de repositório privado, transcript de sessão privada ou
+   prompt que exponha processo proprietário (R1).
 6. **Material de terceiro** — citação curta e creditada; nada reproduzido
    integralmente.
 7. **Titularidade** — o conteúdo é publicável por quem publica? Material
@@ -71,18 +76,44 @@ carrega nome de cliente, número de faturamento ou estrutura interna
 reconhecível de um caso real. Sanitização deixa rastro. Exemplo publicado deve
 ser construído como exemplo, não derivado de um caso.
 
+## Backup: uma superfície que o checklist não cobria
+
+A cópia de segurança fora do GitHub cria duas exposições que não existiam, e
+nenhuma delas aparece no checklist acima, porque ele foi escrito para conteúdo
+publicado, não para conteúdo copiado:
+
+- **A credencial do destino** vive num secret do repositório. Quem consegue
+  adicionar um workflow consegue usá-la, então a proteção efetiva do backup é a
+  proteção da branch default — não a força da chave.
+- **O bundle é o repositório inteiro, com histórico.** Ele carrega o que já foi
+  removido do conteúdo atual: um segredo revogado, um dado sanitizado depois.
+  Copiá-lo para outra conta amplia o alcance de tudo isso de uma vez.
+
+Para este repositório, que é público, o bundle não revela nada que já não esteja
+publicado. **Essa conclusão não se transporta.** Num repositório privado, decidir
+o destino do backup é uma decisão de sanitização como qualquer outra, e passa
+pelos mesmos oito itens — em especial titularidade: material de cliente copiado
+para uma conta pessoal continua sendo material de cliente.
+
 ## Runbook de incidente
 
-Se algo que não deveria ser público já está público, a ordem importa:
+Se algo que não deveria ser público já está público, a ordem importa. Esta é a
+sequência canônica — o blueprint aponta para ela, não a repete:
 
-1. **Se for segredo: revogar e rotacionar na origem, primeiro.** Antes de
-   qualquer commit. Remover do arquivo sem revogar apenas esconde.
-2. **Remover do conteúdo.**
-3. **Avaliar reescrita de histórico** — sabendo que é mitigação parcial.
-4. **Tratar como comprometido, não como corrigido.** Conteúdo público pode já
+1. **Pausar as rotinas com escopo no conteúdo afetado.** Leva segundos e impede
+   que a próxima execução republique o que se está removendo. Não substitui
+   nenhum passo abaixo; só evita que eles corram atrás.
+2. **Se for segredo: revogar e rotacionar na origem.** Antes de qualquer
+   commit. Remover do arquivo sem revogar apenas esconde.
+3. **Remover do conteúdo.**
+4. **Auditar o alcance** — sessões, branches `claude/*` e PRs abertos que
+   carreguem o mesmo conteúdo. Remover de um arquivo e deixar o dado vivo num
+   PR aberto não é remoção.
+5. **Avaliar reescrita de histórico** — sabendo que é mitigação parcial.
+6. **Tratar como comprometido, não como corrigido.** Conteúdo público pode já
    ter sido indexado, clonado ou espelhado. A pergunta certa não é "consegui
    apagar?", é "quem já leu?".
-5. **Registrar o incidente sem reproduzir o dado** — arquivo, linha,
+7. **Registrar o incidente sem reproduzir o dado** — arquivo, linha,
    severidade, janela de exposição.
 
 ## Kill-switch
@@ -91,7 +122,7 @@ Três níveis, do mais rápido ao mais completo:
 
 1. **Pausar** a rotina afetada — segundos.
 2. **Deletar** a rotina — minutos.
-3. **Revogar** o GitHub App / desconectar a conta — corta tudo.
+3. **Revogar** o **Claude GitHub App** / desconectar a conta — corta tudo.
 
 Depois: auditar sessões e branches `claude/*`, rotacionar segredos, revisar o
 histórico do repositório público.

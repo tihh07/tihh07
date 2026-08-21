@@ -7,10 +7,33 @@ name: Watchdog
 # Canal de alerta: a falha do job. O GitHub notifica o dono por e-mail quando um
 # workflow agendado falha — sem integração, sem segredo, sem custo.
 #
-# PORTÁVEL POR CONSTRUÇÃO: os quatro checks pulam sozinhos quando não se aplicam
-# ao repositório. Copiar este arquivo para .github/workflows/ de outro
-# departamento basta; não há nada para ajustar. É por isso que não existe uma
-# segunda cópia "template" no plugin — duas cópias divergem, uma não.
+# PORTÁVEL ENTRE RUNNERS ubuntu-latest HOSPEDADOS PELO GITHUB: os quatro checks
+# pulam sozinhos quando não se aplicam ao repositório. Copiar este arquivo para
+# .github/workflows/ de outro departamento basta e não há nada para ajustar —
+# desde que o runner seja `ubuntu-latest` do GitHub. É por isso que não existe
+# uma segunda cópia "template" no plugin — duas cópias divergem, uma não.
+#
+# A promessa acima NÃO se estende a runner self-hosted enxuto nem a macOS/BSD.
+# Os steps dependem de três coisas que a imagem do GitHub já traz e que nenhum
+# outro ambiente garante: `gh` (GitHub CLI), `jq`, e o `date` do GNU coreutils
+# na sintaxe `date -u -d "<timestamp>"` — o `date` do BSD/macOS rejeita `-d` e o
+# job quebra na primeira conversão de data. Em runner assim, instale as três
+# dependências antes de usar. O job não foi reescrito para ser portável a elas
+# de propósito: o que estava errado era a promessa, não o código.
+#
+# CHECKOUT RASO E REFS REMOTAS: `actions/checkout` sem `fetch-depth` traz apenas
+# a ref do evento, então nenhuma `origin/claude/*` existe no clone e o check de
+# branch órfã lia uma lista sempre vazia — passava por não enxergar nada, não
+# por não haver nada. Verificado em 2026-08-20 reproduzindo o fetch do
+# checkout@v4: com duas branches `claude/*` no remoto, `git branch -r` devolveu
+# só `origin/main`. Corrigido com um fetch dirigido `--depth=1` das refs
+# `claude/*` dentro do próprio step. Escolhido por ser o mais barato que
+# funciona: mantém o clone raso, traz só a ponta de cada branch `claude/*` e
+# preserva o `git log -1 origin/<branch>` que o step usa para medir idade. As
+# alternativas custam mais — `fetch-depth: 0` clona todo o histórico a cada
+# execução diária, e consultar o remoto via `gh api` exigiria uma chamada extra
+# por branch para obter a data do commit. Custo do caminho escolhido: uma
+# chamada de rede a mais por execução.
 #
 # ---------------------------------------------------------------------------
 # O QUE ESTE WORKFLOW *NÃO* COBRE — leia antes de tratar o verde como garantia
@@ -80,6 +103,16 @@ jobs:
 
           gh pr list --repo "$GITHUB_REPOSITORY" --state open \
             --json headRefName --limit 100 | jq -r '.[].headRefName' | sort -u > com_pr.txt
+
+          # Sem este fetch a lista abaixo sai sempre vazia: o Checkout é raso e
+          # traz só a ref do evento, então não há nenhuma origin/claude/* no
+          # clone. --depth=1 traz apenas a ponta de cada branch, que é tudo que
+          # o `git log -1` adiante precisa. O `|| true` é obrigatório: quando
+          # não existe nenhuma branch claude/* no remoto o fetch sai com código
+          # 1 e, sob `set -e`, derrubaria o job — como a falha do job É o canal
+          # de alerta, isso viraria alarme falso diário.
+          git fetch --no-tags --depth=1 origin \
+            '+refs/heads/claude/*:refs/remotes/origin/claude/*' || true
 
           git branch -r --format='%(refname:short)' \
             | sed 's|^origin/||' | grep '^claude/' | sort -u > todas.txt || true

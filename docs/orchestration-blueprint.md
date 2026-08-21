@@ -37,7 +37,7 @@ validação, aumentar a capacidade de execução.
 |---|---|
 | Este blueprint (Fase 0) | ✅ publicado |
 | Orquestrador + executores no piloto (Fase 1) | 🔜 |
-| Rotina semanal em produção (Fase 2) | 🔜 |
+| Rotina semanal em produção (Fase 2) | ✅ fora do piloto / 🔜 no piloto (seção 6) |
 | Telemetria OTEL + hooks avançados (Fase 3) | 🔜 |
 | Escala multi-departamento / Agent SDK (Fase 4) | 🔜 |
 
@@ -61,9 +61,13 @@ that works"). Por isso este ecossistema **começa pequeno**: 1 departamento-pilo
 e uma política explícita de quando o orquestrador NÃO delega (seção 5).
 
 **Regra de honestidade.** Toda seção deste documento marca o que é ✅ real hoje e o que é 🔜
-roadmap. Na versão 0.1, o sistema descrito ainda não roda — este doc é o projeto executivo, revisado
-por 6 pareceres independentes (arquitetura, segurança, negócio, red team adversarial, jurídico/LGPD,
-plataforma de dados) antes da publicação.
+roadmap. Duas afirmações diferentes, ambas verdadeiras em partes distintas: **o desenho completo
+ainda não foi exercitado** — orquestrador dirigindo executores num departamento, com memória e
+telemetria, nunca rodou de ponta a ponta — e, ao mesmo tempo, **partes soltas dele já estão em
+produção**: duas rotinas semanais de governança e o watchdog diário, todas neste repositório
+público, todas fora do departamento-piloto (seções 6 e 10). O que este doc é: o projeto executivo,
+revisado por 6 pareceres independentes (arquitetura, segurança, negócio, red team adversarial,
+jurídico/LGPD, plataforma de dados) antes da publicação.
 
 ---
 
@@ -102,7 +106,7 @@ rotina); triggers GitHub exigem o Claude GitHub App; runs agem com a identidade 
 ```mermaid
 flowchart TD
     CEO["🧠 Orquestrador Fable 5<br/>(agente da sessão principal)"]
-    CEO --> FUND["🏛️ Fundação / Arquitetura<br/><i>AI-Operating-System</i><br/>✅ piloto Fase 1"]
+    CEO --> FUND["🏛️ Fundação / Arquitetura<br/><i>AI-Operating-System</i><br/>🔜 piloto Fase 1"]
     CEO --> BRAIN["📚 Segundo Cérebro<br/><i>ia-fonte-de-conhecimento</i><br/>🔜"]
     CEO --> IC["📈 Inteligência Comercial & Mercado<br/><i>gtm-ciclo-do-pedido</i><br/>🔜"]
     CEO --> AG["🤝 Operação de Cliente<br/><i>bena-agencia</i><br/>🔜"]
@@ -126,7 +130,11 @@ só se provar necessidade) criar a rotina semanal do departamento.
 
 ---
 
-## 4. O orquestrador Fable 5 ("o cabeça") 🔜
+## 4. O orquestrador Fable 5 ("o cabeça") 🔜 (não exercitado)
+
+O 🔜 aqui significa **não exercitado**, não inexistente: o template do orquestrador está
+versionado em [`plugins/fundacao/agents/orquestrador.md`](../plugins/fundacao/agents/orquestrador.md)
+e é instalável hoje. Nenhum departamento o ativou ainda.
 
 **Decisão arquitetural (corrigida em cross-validation):** o orquestrador NÃO é um subagent. Subagents
 não spawnam subagents por padrão — um "chefe" definido como subagent não conseguiria dirigir os
@@ -136,8 +144,11 @@ executores. O orquestrador é o **agente da sessão principal**, ativado por uma
 2. setting `"agent": "orquestrador"` no `.claude/settings.json` do repo (toda sessão do repo já abre com o chefe);
 3. em Routines: o prompt da rotina assume o papel de orquestrador, com o modelo da rotina.
 
-O quadro de executores que ele pode acionar é uma **allowlist explícita** no frontmatter:
-`tools: Agent(validador, depurador, auditor-seguranca, documentador)`.
+O quadro de executores que ele pode acionar é uma **allowlist explícita** no frontmatter
+(`tools: Agent(...)`). A allowlist canônica é a do template instalável —
+[`plugins/fundacao/agents/orquestrador.md`](../plugins/fundacao/agents/orquestrador.md) —, que hoje
+libera os sete executores da seção 5. Este documento não repete a lista: template e blueprint já
+divergiram uma vez, e quem instala recebe o template.
 
 **O que o orquestrador faz:** entende a demanda, decide se delega (routing), despacha executores em
 paralelo quando as tarefas são independentes, sintetiza os resultados, escreve o relatório executivo
@@ -153,10 +164,13 @@ com valor que justifique o multiplicador de custo (~4–15×). "Simplest solutio
 
 ---
 
-## 5. O quadro de executores 🔜
+## 5. O quadro de executores 🔜 (não exercitado)
 
-Catálogo de subagents (`.claude/agents/*.md`), todos com `tools` mínimos por papel e
-`memory: project` (memória versionada por departamento):
+Catálogo de subagents, todos com `tools` mínimos por papel e `memory: project` (memória versionada
+por departamento). Os oito templates — os sete abaixo mais o orquestrador — existem versionados em
+[`plugins/fundacao/agents/`](../plugins/fundacao/agents/), que é a **cópia canônica**;
+`.claude/agents/*.md` é onde eles passam a morar depois de instalados no departamento. O 🔜 marca
+que nenhum foi exercitado em produção, não que faltem escrever:
 
 | Executor | Papel | Modelo sugerido | Tools (princípio do mínimo) |
 |---|---|---|---|
@@ -195,18 +209,29 @@ pessoais — aplica com rigor máximo a regra R1 (seção 8) e as condições LG
 
 ---
 
-## 6. Rotinas: começando por UMA 🔜
+## 6. Rotinas: começando por UMA — 🔜 no piloto / ✅ fora dele
 
-**Decisão de dimensionamento:** o ecossistema é pequeno — a Fase 2 começa com **uma única rotina
-semanal** no departamento-piloto (`AI-Operating-System`), consolidando num só run: validação +
-diagnóstico + auditoria de segurança + relatório executivo. Isso cabe folgado no cap de runs
+**Decisão de dimensionamento (o plano):** o ecossistema é pequeno — a Fase 2 previa **uma única
+rotina semanal** no departamento-piloto (`AI-Operating-System`), consolidando num só run: validação
++ diagnóstico + auditoria de segurança + relatório executivo. Isso cabe folgado no cap de runs
 (~4–5/mês vs. teto de ~15/dia), gera ~1 PR/semana para revisão (≤30–60 min de atenção humana) e
 respeita "validar antes de escalar".
 
-**Padrão prompt-ponteiro → skill versionada** (anti-drift): o prompt na UI da Routine é apenas
-"Execute a skill `/rotina-semanal` conforme `.claude/skills/rotina-semanal/SKILL.md` e registre
-telemetria conforme `telemetry/README.md`". Todo o conteúdo real vive na skill, commitada,
-revisável por PR; o hash do SKILL.md (`prompt_version`) é registrado em cada run.
+**A produção divergiu do plano ✅ — e registrar a divergência vale mais que reescrever o plano.**
+As rotinas semanais que existem hoje são **duas**, e **nenhuma delas é no piloto**: ambas rodam
+neste repositório público, com escopo de governança — conformidade de publicação N2 e poda de
+documentação — e conteúdo versionado em `.claude/skills/`. O departamento-piloto segue sem rotina, e
+por isso o critério de saída da Fase 2 (seção 11: ≥4 runs consecutivas com valor aceito **no
+piloto**) continua 🔜: nada do que roda hoje o cumpre. O caminho real foi automatizar primeiro o
+repositório onde o erro é mais barato de descobrir, porque é o único público — decisão defensável,
+mas que não foi a decisão escrita aqui.
+
+**Padrão prompt-ponteiro → skill versionada** (anti-drift) ✅: o prompt na UI da Routine é apenas
+"Execute a skill `/governanca-n2` conforme `.claude/skills/governanca-n2/SKILL.md`" — é assim que as
+duas rotinas em produção são chamadas. Todo o conteúdo real vive na skill, commitada, revisável por
+PR. O acréscimo "e registre telemetria conforme `telemetry/README.md`" faz parte do padrão-alvo e
+segue 🔜: nenhuma rotina registra `runs.jsonl` hoje, logo o hash do SKILL.md (`prompt_version`)
+ainda não é gravado em run nenhuma.
 
 **Template de rotina** (campos obrigatórios — limite de blast radius):
 
@@ -277,7 +302,19 @@ plugin passa pela mesma checklist de sanitização da seção 8.
 
 ---
 
-## 8. Governabilidade 🔜 (desenho) / ✅ (aplicada a este documento)
+## 8. Governabilidade — ✅ (o que já é controle) / 🔜 (o que ainda é desenho)
+
+**Já aplicado, hoje, neste repositório ✅:** `CODEOWNERS` versionado cobrindo `.claude/**`,
+`.github/**`, `docs/`, `plugins/` e `.claude-plugin/` (R5); proteção de `main` ativa, com PR
+obrigatório e sem commit direto (R1, gates); hook de guardrail implementado e versionado em
+[`plugins/fundacao/hooks/guard-push.sh`](../plugins/fundacao/hooks/guard-push.sh), bloqueando push
+fora de `claude/*`, force push e deleção de branch remota; watchdog diário em produção (seção 10);
+e a checklist de sanitização executada semanalmente por rotina (seção 6).
+
+**Ainda desenho 🔜:** a instalação do hook no `settings.json` de cada departamento (o arquivo existe,
+nenhum departamento o carrega); o `PostToolUse` de log versionado; rulesets e secret scanning nos
+repositórios privados (R3/R6 — ver a coluna de mitigação, marcada parcial); e todo o regime cloud
+descrito abaixo para rotinas de departamento, que ainda não existem.
 
 A governança tem dois regimes distintos — confundi-los foi um dos erros corrigidos em validação:
 
@@ -295,10 +332,10 @@ como gate universal de saída.
 |---|---|---|
 | R1 | Vazamento privado→público | **Nenhuma sessão mistura repos privados e o público**; publicação sempre via PR + checklist de sanitização + revisão humana |
 | R2 | Prompt injection via issues/PRs/webhooks (ataques reais documentados: [GitLost](https://noma.security/blog/gitlost-how-we-tricked-githubs-ai-agent-into-leaking-private-repos/), [PromptPwnd](https://www.aikido.dev/blog/promptpwnd-github-actions-ai-agents)) | Conteúdo de terceiros = dado, nunca instrução; filtros de trigger por autor/label; preferir schedule a evento no repo público |
-| R3 | Sessão cloud acessa qualquer repo visível à conta (limitação documentada) | Assumida; push restrito `claude/*` + rulesets em `main` dos 5 repos |
+| R3 | Sessão cloud acessa qualquer repo visível à conta (limitação documentada) | Assumida; push restrito `claude/*` + rulesets em `main`. **Parcial:** a verificação alcançou só o repositório público — os 4 privados seguem não verificados, e por R1 nenhuma sessão daqui pode checá-los |
 | R4 | Excessive agency das Routines (autônomas, conectores default-on) | Conectores ZERO por rotina; executores read-only onde couber |
 | R5 | Supply chain do control-plane (`.claude/`, `.mcp.json` auto-carregados) | CODEOWNERS em `.claude/**`, `.mcp.json`, `.github/**`; PR obrigatório sem bypass de admin |
-| R6 | Segredos (sem secrets store em ambientes cloud) | Nenhuma credencial de terceiros em rotinas; secret scanning + push protection nos 5 repos |
+| R6 | Segredos (sem secrets store em ambientes cloud) | Nenhuma credencial de terceiros em rotinas; secret scanning + push protection. **Parcial:** mesmo limite de R3 — confirmado apenas no repositório público; falta confirmar nos 4 privados, um a um, na sessão de cada um |
 | R7 | Auditabilidade (agente age com a identidade do titular) | Footer de atribuição + `Co-Authored-By` em todo commit; branches `claude/*`; revisão semanal de transcripts |
 | R8 | Cadeia orquestrador→executor (routing por description é injetável) | Orquestrador não escreve, só delega; tools mínimos; um repo = um contexto |
 | R9 | Consumo disparado por terceiros (triggers no repo público) | Filtros de autor; schedule em vez de evento |
@@ -317,18 +354,19 @@ como gate universal de saída.
 
 ### Checklist de sanitização (aplicada a todo conteúdo destinado ao público — inclusive este doc ✅)
 
-Sem nomes de clientes/empregador · sem dados pessoais de qualquer titular · sem métricas comerciais
-reais · sem paths/URLs internos · sem trechos literais de repos privados · sem prompts que revelem
-processo proprietário · sem transcripts de sessões privadas · custos apenas como cenários.
+**A lista canônica é a do [`SECURITY.md`](../SECURITY.md) — oito itens**, e é a que as rotinas
+versionadas de fato executam. Este documento não a repete: duas listas de sanitização com itens
+diferentes é como se descobre, tarde, que o controle nunca foi um só.
 
 ### Kill-switch (3 níveis) e runbook
 
 1. **Pausar** a rotina (toggle) — segundos;
 2. **Deletar** a rotina — minutos;
-3. **Revogar** o Claude GitHub App / desconectar a conta — corta tudo.
+3. **Revogar** o **Claude GitHub App** / desconectar a conta — corta tudo.
 
-Runbook de incidente: pausar rotinas → revogar App/tokens → auditar sessions e branches `claude/*` →
-rotacionar segredos → revisar histórico do repo público (incl. reescrita se algo vazou).
+**O runbook de incidente canônico é o do [`SECURITY.md`](../SECURITY.md)** — inclusive a ordem dos
+passos, que é a parte que importa quando o incidente é real. Uma versão anterior desta seção
+publicava a mesma sequência em outra ordem; num incidente, duas ordens é o mesmo que nenhuma.
 
 ### Condições jurídicas (LGPD, proporcional a agente de pequeno porte)
 
@@ -356,7 +394,8 @@ rotina/dia consumindo a **mesma cota** do uso interativo; acima disso, bloqueio 
 overage cobrado à parte. **Usage credits ficam desligados** — o sistema parar é o kill-switch
 financeiro natural; gastar sem teto não é.
 
-Referência de API (regime alternativo, por 1M tokens — preços oficiais 2026): Fable 5 $10/$50 ·
+Referência de API (regime alternativo, por 1M tokens — **preços de tabela conferidos em
+2026-07**; confira antes de usar, número publicado sem data envelhece calado): Fable 5 $10/$50 ·
 Opus 4.8 $5/$25 · Sonnet 5 $3/$15 · Haiku 4.5 $1/$5; Batch −50%; cache read ≈0,1× do input. Cenário
 de referência: com roteamento por modelo e cadência semanal, a ordem de grandeza via API ficaria em
 dezenas de dólares/mês; tudo-Fable em cadência diária passaria de mil — é por isso que roteamento e
@@ -375,10 +414,11 @@ P3 pausa primeiro.
 
 ---
 
-## 10. Telemetria: só o que é capturável de verdade 🔜
+## 10. Telemetria: só o que é capturável de verdade 🔜 (item 4 ✅)
 
 O que o regime de assinatura **não** oferece: custo em dólares por run, API de uso programática.
-O pipeline abaixo usa apenas o que existe:
+O pipeline abaixo usa apenas o que existe. Dos cinco itens, só o watchdog saiu do papel — e é
+justamente o que não depende de nada do resto:
 
 1. **Nascimento do dado:** toda rotina termina anexando 1 linha a `telemetry/runs.jsonl`:
    `{ts, routine_id, session_id, repo, model, prompt_version, outcome: success|partial|fail
@@ -389,10 +429,12 @@ O pipeline abaixo usa apenas o que existe:
    (~2 min). É o único número "de verdade" no regime de assinatura.
 3. **Dashboard:** GitHub Actions (cron) gera `telemetry/dashboard.html` commitado — a vitrine de BI
    do próprio sistema.
-4. **Watchdog independente** (GitHub Actions, deliberadamente fora do ecossistema Claude — não
-   compartilha modo de falha): detecta rotina morta (>26h sem registro), PR `claude/*` parado >7
-   dias, MEMORY.md acima do limite → e-mail nativo do GitHub. ~30 linhas de YAML; item obrigatório
-   da Fase 1.
+4. **Watchdog independente ✅ — em produção** (GitHub Actions, deliberadamente fora do ecossistema
+   Claude — não compartilha modo de falha): detecta rotina morta (>26h sem registro), PR `claude/*`
+   parado >7 dias, MEMORY.md acima do limite → e-mail nativo do GitHub. Roda diariamente neste
+   repositório desde 2026-08-04, com 17 execuções e nenhuma falha até 2026-08-20. Ressalva que o
+   próprio workflow declara: o check de rotina morta **pula** onde não há `telemetry/runs.jsonl` —
+   e, como o item 1 ainda é 🔜, hoje ele pula. Verde aqui é ausência de sinal, não cobertura.
 5. **Fase 3:** OpenTelemetry do Claude Code (`claude_code.token.usage`, `claude_code.cost.usage`)
    com collector próprio — aí sim custo real por request.
 
@@ -448,9 +490,14 @@ corte: rotina que consome mais tempo de revisão do que economiza, por 3 semanas
 
 ## Apêndice A — Snippets de referência (🔜 não executados; ilustrativos)
 
-Para os formatos de telemetria, a cópia operacional canônica é o template em
-[`plugins/fundacao/templates/telemetry/README.md`](../plugins/fundacao/templates/telemetry/README.md)
-— os snippets abaixo são ilustração congelada na versão deste RFC.
+**A cópia operacional canônica de tudo que este apêndice ilustra vive em
+[`plugins/fundacao/`](../plugins/fundacao/)** — os executores em
+[`agents/`](../plugins/fundacao/agents/), o guardrail em
+[`hooks/guard-push.sh`](../plugins/fundacao/hooks/guard-push.sh), os formatos de telemetria em
+[`templates/telemetry/README.md`](../plugins/fundacao/templates/telemetry/README.md). É o que se
+instala, é o que se corrige. Os snippets abaixo são ilustração congelada na versão deste RFC e já
+divergiram dos templates em pelo menos três pontos (allowlist do orquestrador, corpo do
+`auditor-seguranca`, robustez do hook). **Ilustração se lê; template se instala.**
 
 **Executor com memória e tools mínimos** (`.claude/agents/auditor-seguranca.md`):
 
@@ -484,7 +531,12 @@ tools: Read, Grep, Glob, Agent(validador, depurador, auditor-seguranca, document
 { "agent": "orquestrador" }
 ```
 
-**Hook de guardrail — bloqueia push fora de claude/*** (`.claude/settings.json`):
+**Hook de guardrail — bloqueia push fora de claude/*** (`.claude/settings.json`).
+⚠️ **Não instale o script abaixo.** Ele é a versão de 2026-07, com dois defeitos já corrigidos no
+arquivo canônico: depende duro de `jq` (sem ele, bloqueia até o que deveria liberar) e libera
+qualquer comando que contenha a string `claude/`, o que inclui um push para `main` numa linha que
+apenas mencione a branch. A versão a instalar é
+[`plugins/fundacao/hooks/guard-push.sh`](../plugins/fundacao/hooks/guard-push.sh).
 
 ```json
 {
@@ -510,7 +562,7 @@ exit 0
 **Linha de telemetria** (`telemetry/runs.jsonl`):
 
 ```json
-{"ts":"2026-08-01T09:00:00Z","routine_id":"rotina-semanal-fundacao","session_id":"<CLAUDE_CODE_REMOTE_SESSION_ID>","repo":"AI-Operating-System","model":"fable","prompt_version":"a1b2c3d","outcome":"success","duration_s":540,"pr_url":"…","files_changed":3,"tokens":null}
+{"ts":"2026-08-01T09:00:00Z","routine_id":"rotina-semanal-fundacao","session_id":"<CLAUDE_CODE_REMOTE_SESSION_ID>","repo":"AI-Operating-System","model":"fable","prompt_version":"a1b2c3d","outcome":"success","duration_s":540,"pr_url":null,"files_changed":3,"tokens":null}
 ```
 
 **Entrada de aprendizado** (`AGENTLOG.jsonl`):
