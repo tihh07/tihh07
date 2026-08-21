@@ -37,10 +37,10 @@
 | **S1** — dado pessoal versionado em repositórios privados | 🔴 **aberto, a mais alta** | **verificado em 2026-08-21**: 1 dos 3 limpo, 2 confirmados. Detalhe fica fora deste arquivo, que é público. Trava no dever de notificar, que vem antes de apagar |
 | **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
-| **H1-bis** — `main` exige PR, mas zero aprovação | ❌ **aberto, severidade alta** | descoberto ao reconectar a autorização |
+| **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável agora** | o check obrigatório passou a existir; falta marcar no ruleset. Exigir aprovação está descartado: um único colaborador se trancaria fora |
 | **H4** — secret scanning e push protection | 🟡 parcial | campo ausente na resposta da API; só a UI responde |
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação |
-| **H3** — segredo de Actions para o PR Watch | ❌ aberto | proibido a agente por regra de conduta, não por ferramenta |
+| **H3** — segredo de Actions para o PR Watch | ❌ aberto | proibido a agente por regra de conduta, não por ferramenta. Duas saídas: criar `ANTHROPIC_API_KEY`, ou remover o workflow em vez de deixá-lo parecendo cobertura |
 | **H5 · L2 · L4** | ❌ aberto | decisão humana |
 | **L1** — consolidação dos handoffs | 🟡 em voo | rodada de fechamento em 2026-08-21: **13 fechados, 4 em aberto**. As 4 causas restantes são todas decisão humana, nenhuma é trabalho de agente. Cada retenção tem causa distinta — nenhuma é falha de auditoria |
 | **L3** — executores e hook não exercitados | ❌ aberto | depende do retorno de L1 |
@@ -528,7 +528,23 @@ executável (**N6**) saia do papel.
 entre os bloqueados pelo proxy (**V1**), então esta sessão não pode nem confirmar
 nem negar que o segredo exista.
 
-**Ação (👤):** criar o segredo **no terminal ou na UI do dono**.
+**Ação (👤):** criar o segredo **no terminal ou na UI do dono** —
+*Settings → Secrets and variables → Actions → New repository secret*, com o nome
+exato `ANTHROPIC_API_KEY`, que é o que
+`.github/workflows/claude-pr-watch.yml` referencia. Nome errado falha em
+silêncio: a action recebe string vazia e o job quebra sem dizer por quê.
+
+**A alternativa é igualmente válida, e precisa ser dita:** se o PR Watch não for
+usado, **remova o workflow** em vez de deixá-lo parado. Um workflow que dispara
+e nunca executa aparece na aba Actions como se fosse cobertura, e o item **N6**
+existe exatamente porque ele nunca provou nada. Automação que nunca rodou é
+decoração, não controle — e decoração num repositório N2 induz a falsa
+segurança de que algo está vigiando o PR.
+
+**Isto não se confunde com o check de verificação.**
+`.github/workflows/verificacao.yml` não usa chave nenhuma e roda hoje. O PR
+Watch é outra coisa: reativo, dirigido por menção a `@claude`, e é dele que
+depende H3 e N6.
 
 **Este item nunca será fechado por agente, e não é limitação de ferramenta.**
 Manipular chave de API é proibido por regra de conduta, independentemente de quem
@@ -890,17 +906,35 @@ Isso também explica **H2** sem mistério: o `CODEOWNERS` é inerte porque a reg
 não pede revisão de code owner. Não é só a opção "Require review from Code
 Owners" que falta — é a contagem de aprovações em zero.
 
-**Ação (👤):** decidir entre duas posturas, e as duas são defensáveis:
+**A pré-condição foi verificada em 2026-08-21, e é dura:** o repositório tem
+**um único colaborador**, com papel de admin. O ruleset não tem ator de bypass.
+Exigir aprovação, nessas condições, não é rigor — é se trancar fora do próprio
+repositório, porque o GitHub não deixa ninguém aprovar o próprio PR. O mesmo
+raciocínio que barrou exigir PR na branch principal do dossiê pessoal vale aqui.
 
-1. **Exigir aprovação.** Fecha o buraco, e trava: com um único dono, ninguém
-   aprova o próprio PR. Vira gargalo real, não teórico.
+**Ação (👤):** três posturas, e a terceira só passou a existir em 2026-08-21:
+
+1. **Exigir aprovação.** Fecha o buraco e trava tudo, pelo motivo acima.
+   Descartada enquanto houver um só colaborador.
 2. **Assumir a doutrina como o controle**, declarando-a como tal em vez de
-   chamá-la de gate. Honesto, e não bloqueia — mas exige que todo prompt de
-   agente continue carregando a regra, para sempre.
+   chamá-la de gate. Honesto e não bloqueia — mas exige que todo prompt de
+   agente continue carregando a regra, para sempre, e falha em silêncio no dia
+   em que um não carregar.
+3. **Exigir um check obrigatório.** ⭐ Recomendada. `.github/workflows/verificacao.yml`
+   passou a existir e roda a cada PR para `main`. Marcar *"Require status checks
+   to pass"* apontando para ele converte parte do gate em trava de plataforma —
+   **sem depender de um segundo revisor que não existe**. Não impede um agente
+   de mesclar o próprio PR; impede que qualquer PR entre com o repositório
+   quebrado, que é o dano concreto que a doutrina sozinha não previne.
 
-A escolha depende de haver um segundo revisor, que é a mesma pré-condição que já
-trava **H2**. Enquanto não houver, a opção 2 é a única executável — e o mínimo é
-o texto parar de chamar de gate o que é doutrina.
+**A ordem importa, e é contraintuitiva:** o workflow tem de existir e ter rodado
+ao menos uma vez **antes** de ser exigido. Exigir um check que nunca rodou
+bloqueia todo merge, inclusive o PR que traria o check. Por isso o workflow foi
+criado primeiro e a marcação no ruleset é o passo seguinte.
+
+As opções 2 e 3 se somam: mesmo com o check obrigatório, "nenhum agente mescla
+em `main`" continua sendo doutrina, e o texto do ecossistema deve chamá-la
+assim.
 
 **Verificação:** o texto do ecossistema descreve o controle pelo que ele faz. Se
 a opção 1 for adotada, a contagem de aprovações deixa de ser zero.

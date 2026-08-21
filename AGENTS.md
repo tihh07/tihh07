@@ -131,7 +131,7 @@ em dois lugares é a divergência que este repositório existe para evitar.
 | `.claude/skills/` | Conteúdo versionado das rotinas (padrão prompt-ponteiro) |
 | `.claude-plugin/marketplace.json` | Manifesto do marketplace que distribui o plugin-fundação |
 | `plugins/fundacao/` | Templates distribuíveis: executores, hook e sua suíte, telemetria, backup |
-| `.github/workflows/` | PR Watch, watchdog e backup para o Drive |
+| `.github/workflows/` | Verificação (a cada PR), PR Watch, watchdog e backup |
 | `.github/CODEOWNERS` | Donos por caminho — inerte até "Require review from Code Owners" |
 | `.gitignore` · `LICENSE` | Barra segredo e dado; CC BY 4.0 no texto, MIT nos snippets |
 | `reports/publicacao/` | Saída semanal da rotina N2, quando há achado |
@@ -143,7 +143,17 @@ introduzir um sem que isso seja o pedido explícito. O repositório é Markdown,
 YAML, três manifestos JSON e dois shell scripts — um guardrail e a suíte que o
 verifica.
 
-A verificação equivalente aqui, antes de qualquer PR:
+**Desde 2026-08-21 essa verificação roda sozinha** em
+`.github/workflows/verificacao.yml`, a cada PR para `main`. Rodá-la à mão antes
+de abrir o PR continua sendo o certo — o workflow é rede, não substituto, e
+descobrir a falha depois do push custa um ciclo. O que ele checa é exatamente a
+lista abaixo, menos a primeira linha, que nenhuma máquina confere.
+
+O workflow **não** verifica sanitização N2, link quebrado nem coerência de
+doutrina, e o cabeçalho dele diz isso. Verde ali significa que os checks
+mecânicos passaram, não que o PR é publicável.
+
+A verificação, antes de qualquer PR:
 
 - o `README.md` renderiza corretamente no perfil do GitHub;
 - os workflows em `.github/workflows/` têm YAML válido, e cada um declara no
