@@ -66,15 +66,31 @@ coisas diferentes** — não colapse uma na outra.
 
 Se o arquivo existir, examine cada regra de `permissions`.
 
-**O defeito procurado:** regra escrita com **caminho absoluto** (`/home/...`,
-`/Users/...`, `/workspaces/...`) em vez de `$CLAUDE_PROJECT_DIR`. Regra de
-permissão casa por caminho: num ambiente com diretório de projeto diferente ela
+**O defeito procurado:** regra escrita com **caminho absoluto de máquina** —
+prefixo `//`, como `Read(//home/algo/**)` ou `Read(//Users/algo/**)`. Regra de
+permissão casa por caminho: num ambiente cujo diretório de projeto seja outro ela
 **não casa e portanto não nega**. Uma `deny` que não nega falha **aberta**, sem
 erro e sem log — e as `deny` costumam ser justamente as que protegem `.env`,
 `*.pem`, `*.key`, `credentials.json` e `secrets.json`.
 
-Sinal forte: o mesmo arquivo usando `$CLAUDE_PROJECT_DIR` no `hooks` e caminho
-fixo nas `permissions`.
+**A sintaxe correta, e ela é contraintuitiva** — confira contra a documentação
+antes de julgar, porque a primeira versão deste prompt recomendava o conserto
+errado:
+
+| Padrão | Resolve para |
+|---|---|
+| `//caminho` | absoluto, a partir da raiz do sistema de arquivos |
+| `/caminho` | **relativo à origem do settings** — em `.claude/settings.json`, a raiz do projeto |
+| `caminho` ou `./caminho` | relativo ao diretório atual |
+
+**Variável de ambiente não é expandida em regra de permissão.**
+`$CLAUDE_PROJECT_DIR` funciona em `hooks` e **não** em `permissions` — e é
+exatamente essa vizinhança, no mesmo arquivo, que induz ao erro. O conserto certo
+é a **âncora de barra simples**: `Read(/**)` no `allow`, `Read(/**/.env)` e
+companhia no `deny`.
+
+Sinal forte do defeito: o mesmo arquivo usando `$CLAUDE_PROJECT_DIR` em `hooks` e
+prefixo `//` com caminho de máquina em `permissions`.
 
 Responda `SEM-ARQUIVO`, `OK` (nenhum caminho absoluto), ou `FIXO` com
 `arquivo:linha` de cada regra afetada e **quantas delas são `deny`**.
