@@ -858,6 +858,31 @@ o que continua faltando fazer:
 | Teto de 3.000 minutos | **medir o consumo.** O teto subiu 50% sobre um número que ninguém tinha |
 | — | Push protection em privado **continua fora do alcance** — exige Enterprise |
 
+**Ferramenta de medição entregue em 2026-08-21**, em
+[`plugins/fundacao/templates/actions/`](../plugins/fundacao/templates/actions/README.md):
+minutos faturáveis **por workflow e por repositório**, ordenados, somente
+leitura. Ela não opina sobre causa — entrega números.
+
+Existe por causa deste item, e o cabeçalho dela diz isso sem suavizar: o C1
+passou o dia com o culpado errado **duas vezes**, e o padrão dos dois erros é
+idêntico — *mecanismo plausível afirmado sem medir*. A ferramenta encerra a
+categoria.
+
+**E ela roda do celular**, o que era o bloqueio prático: um **Codespace** dá bash,
+curl e python3 num Linux de verdade aberto no navegador, com o `GITHUB_TOKEN` já
+injetado — para esta leitura normalmente não é preciso criar token nenhum. O
+plano Pro, já assinado, inclui 180 core-hours por mês; a medição custa minutos.
+
+Duas coisas na saída merecem leitura atenta, e estão no README: os sistemas
+operacionais vêm **separados**, porque Windows e macOS custam mais por minuto e
+somá-los esconde o que encarece; e **se o total lido for muito menor que a cota
+da conta, a diferença é o achado** — está em repositório que o script não leu.
+
+> Verificado no repositório público antes de entregar: três workflows, três
+> respostas `200`, **zero minutos faturáveis**. Zero ali é o resultado *correto* —
+> Actions é gratuito em público —, e a distinção está escrita no código para
+> ninguém ler zero como defeito.
+
 **A medição começou, e o primeiro número não é fato ainda.** Uma sessão escopada
 num privado está contando consumo por workflow em 2026-08-21. O primeiro retorno
 dela aponta uma linha de base da ordem de **doze minutos por commit**. Isso é
