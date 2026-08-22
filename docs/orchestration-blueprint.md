@@ -1,7 +1,7 @@
 # Blueprint: Ecossistema de Agentes de Orquestração Multi-Repo
 
 > **RFC / Design Doc** — versão 0.1 (Fase 0) · 2026-07-24 · status revisado em 2026-08-08
-> Status: este documento É a Fase 0. Duas rotinas semanais de governança e o watchdog diário já
+> Status: este documento É a Fase 0. Duas rotinas semanais de governança e o watchdog semanal já
 > rodam em produção ([estado vivo](pendencias.md)); a rotina da Fase 2 (piloto) segue 🔜.
 > Licença: texto [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) · snippets de código [MIT](https://opensource.org/licenses/MIT)
 >
@@ -64,7 +64,7 @@ e uma política explícita de quando o orquestrador NÃO delega (seção 5).
 roadmap. Duas afirmações diferentes, ambas verdadeiras em partes distintas: **o desenho completo
 ainda não foi exercitado** — orquestrador dirigindo executores num departamento, com memória e
 telemetria, nunca rodou de ponta a ponta — e, ao mesmo tempo, **partes soltas dele já estão em
-produção**: duas rotinas semanais de governança e o watchdog diário, todas neste repositório
+produção**: duas rotinas semanais de governança e o watchdog semanal, todos neste repositório
 público, todas fora do departamento-piloto (seções 6 e 10). O que este doc é: o projeto executivo,
 revisado por 6 pareceres independentes (arquitetura, segurança, negócio, red team adversarial,
 jurídico/LGPD, plataforma de dados) antes da publicação.
@@ -328,7 +328,7 @@ plugin passa pela mesma checklist de sanitização da seção 8.
 `.github/**`, `docs/`, `plugins/` e `.claude-plugin/` (R5); proteção de `main` ativa, com PR
 obrigatório e sem commit direto (R1, gates); hook de guardrail implementado e versionado em
 [`plugins/fundacao/hooks/guard-push.sh`](../plugins/fundacao/hooks/guard-push.sh), bloqueando push
-fora de `claude/*`, force push e deleção de branch remota; watchdog diário em produção (seção 10);
+fora de `claude/*`, force push e deleção de branch remota; watchdog semanal em produção (seção 10);
 e a checklist de sanitização executada semanalmente por rotina (seção 6).
 
 **Ainda desenho 🔜:** a instalação do hook no `settings.json` de cada departamento (o arquivo existe,

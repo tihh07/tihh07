@@ -65,8 +65,8 @@ O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 
 | Repo | Departamento | Estado do ciclo | Última auditoria |
 |---|---|---|---|
-| `P01` | Fundação / Arquitetura | em aberto — 1 PR restante | 2026-08-20 |
-| `P02` | Segundo Cérebro | merge relatado pela sessão às 18:12Z, **não reverificado daqui** (R1) | 2026-08-20 |
+| `P01` | Fundação / Arquitetura | fechado | 2026-08-20 |
+| `P02` | Segundo Cérebro | fechado — relato tardio, após três diagnósticos errados | 2026-08-20 |
 | `P03` | Inteligência Comercial & Mercado | fechado | 2026-08-20 |
 | `P04` | Operação de Cliente / Agência | fechado | 2026-08-20 |
 | `P05` | não declarado | fechado | 2026-08-20 |
@@ -99,6 +99,11 @@ O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 > onde o trabalho **está**, não que ele foi feito. Nenhuma célula aqui registra achado
 > de conteúdo — dado sensível por repositório é justamente o que um índice público não
 > pode mapear.
+>
+> **E "fechado" aqui é sempre relato.** Cada célula vem de uma sessão escopada naquele
+> repositório ou da confirmação do dono. **R1** impede que este repositório reverifique
+> qualquer uma — não há como. Ler a coluna como estado conferido é o erro que ela
+> convida e que este parágrafo existe para impedir.
 
 Achados que não cabem na tabela vivem em
 [`docs/pendencias.md`](docs/pendencias.md), com evidência, executor e critério de
@@ -134,7 +139,7 @@ em dois lugares é a divergência que este repositório existe para evitar.
 | `.claude/skills/` | Conteúdo versionado das rotinas (padrão prompt-ponteiro) |
 | `.claude-plugin/marketplace.json` | Manifesto do marketplace que distribui o plugin-fundação |
 | `plugins/fundacao/` | Templates distribuíveis: executores, hook e sua suíte, telemetria, backup |
-| `.github/workflows/` | Verificação (a cada PR), PR Watch, watchdog e backup |
+| `.github/workflows/` | Verificação (a cada PR, check obrigatório), watchdog semanal e backup |
 | `.github/CODEOWNERS` | Donos por caminho — inerte até "Require review from Code Owners" |
 | `.gitignore` · `LICENSE` | Barra segredo e dado; CC BY 4.0 no texto, MIT nos snippets |
 | `reports/publicacao/` | Saída semanal da rotina N2, quando há achado |

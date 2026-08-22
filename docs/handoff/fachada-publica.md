@@ -10,7 +10,7 @@
 | **Missão** | Publicar o perfil e o desenho do ecossistema, e distribuir o control-plane que os demais instalam |
 | **Nível de exposição** | N2 — público, rigor máximo |
 | **Estado** | auditado |
-| **Última auditoria** | 2026-08-20, reverificada em 2026-08-21 |
+| **Última auditoria** | 2026-08-20 · reverificada em 2026-08-21 · poda em 2026-08-22 |
 | **Adendo local** | dispensado — não há sinal de território fora do git |
 | **Sensibilidade** | **baixa** — documentação e configuração genéricas; nenhum dado de terceiro, nenhum número real de negócio |
 
@@ -28,12 +28,20 @@
 
 ## Pendência principal
 
-**H1-bis — o gate humano de `main` é doutrina, não controle.** 👤 humano.
+**L2 — a coluna de departamento publica 4 dos 17 e omite 13.** 👤 humano.
 
-O ruleset exige PR e **zero aprovação**, então qualquer identidade com escrita
-pode abrir e mesclar sozinha. A regra "nenhum agente mescla" vale porque está nos
-prompts, não porque a plataforma recusa. Destravar exige um segundo revisor — a
-mesma pré-condição que trava **H2**.
+É a mesma forma que a regra de apelidos rejeitou uma coluna à esquerda:
+**esconder seletivamente aponta para o que está escondido**, e treze omitidos não
+descrevem treze desconhecidos — descrevem treze marcados como não-publicáveis. E
+é decisão não tomada, executada pela metade: publicar a taxonomia depende do
+dono, e quatro nomes saíram antes disso. Três saídas, todas humanas: publicar os
+dezoito, apelidar todos, ou retirar a coluna.
+
+> **O que estava aqui antes, e fechou.** Esta ficha apontava o **H1-bis** — o
+> gate de `main` sendo doutrina e não controle. Em 2026-08-21 o check
+> `verificar` passou a ser exigido pelo ruleset, fixado no app do Actions, e um
+> PR quebrado deixou de entrar. Sobra doutrina apenas para o merge sem revisor,
+> que com um único colaborador não tem solução por aprovação.
 
 ## Depende de / é esperado por
 
@@ -54,9 +62,11 @@ backup), o padrão de handoff, e os três prompts de auditoria.
 
 ## Limites desta ficha
 
-- **Secret scanning e push protection não foram verificados** — a API os nega por
-  allowlist de proxy, e o campo não veio na resposta do repositório. Só a interface
-  responde. Proteção de branch e ruleset, esses sim, foram lidos em 2026-08-21.
+- **Secret scanning e push protection: verificados e ativos**, conferidos na
+  interface em 2026-08-21. A API continua sem responder por eles — allowlist de
+  proxy —, então a via de leitura segue sendo humana, mas o estado deixou de ser
+  desconhecido. Proteção de branch e ruleset são lidos pela API, e o ruleset foi
+  lido por inteiro em 2026-08-21.
 - **Disco local não observado.** Nenhuma sessão de nuvem enxerga commit não
   enviado, stash ou arquivo fora do git. Não houve sinal de que exista algo lá,
   mas ausência de sinal não é verificação.

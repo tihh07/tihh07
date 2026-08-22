@@ -10,7 +10,7 @@
 > que uma classe inteira de itens não é reverificável a partir da nuvem, e isso
 > ganhou [seção própria](#o-que-a-nuvem-não-alcança--e-por-quê).
 
-## Placar em 2026-08-20
+## Placar — rodada de 2026-08-20, atualizado em 2026-08-21
 
 **Fechados nesta rodada**
 
@@ -24,7 +24,7 @@
 
 | Item | Antes | Agora |
 |---|---|---|
-| **H1** — proteção de `main` | "fechado, ruleset ativo, bypass nunca" | 🔴 **verificado em 2026-08-21, e é mais fraco do que se afirmava.** O ruleset existe, está ativo e não tem bypass — isso era verdade. Mas ele exige **PR sem exigir aprovação nenhuma**, e não exige revisão de code owner. Ver **H1-bis**. |
+| **H1** — proteção de `main` | "fechado, ruleset ativo, bypass nunca" | ✅ **lido inteiro em 2026-08-21, e confere.** Enforcement ativo, zero bypass, deleção e force push bloqueados. Mas exige **PR sem exigir aprovação nenhuma** — isso não é regressão, é a configuração original, e virou **H1-bis**. |
 | **H4** — secret scanning e push protection | "fechado, ambos `enabled`" | 🟡 **não verificável pela nuvem**. O que se provou hoje é que o GitHub Advanced Security está **desligado** — o que é um flag distinto do secret scanning gratuito de repositório público. Push protection não foi verificado por via nenhuma. |
 | **L1** — quatro departamentos nunca auditados | "bloqueado por R1" | 🟢 **em voo**. Em 2026-08-20 foram despachadas **17 sessões de nuvem, uma por repositório privado**, cada uma escopada num único repositório. O que falta deixou de ser a auditoria e passou a ser o **transporte** do handoff. |
 | **L4** — ~14 repositórios fora de rotina | "~18 no ecossistema, 4 cobertos" | 🔴 **cobertura recorrente**, não cobertura pontual. São **18 repositórios** (17 privados + o público); a rodada de hoje dá cobertura pontual a todos, e a maioria segue fora de qualquer rotina agendada. |
@@ -34,18 +34,21 @@
 
 | Item | Estado | Por quê |
 |---|---|---|
-| **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21). Reabre se algum deixar de ser privado, ganhar colaborador, ou surgir titular externo |
-| **C1** — minutos de Actions a 90% | 🔴 **aberto, agora bloqueando** | cota estourou e já barra trabalho real num privado. **Não é este repo** (público não consome) e **não é o plugin** — ele distribui só o backup, que é semanal. A origem está nos privados e R1 impede olhar |
-| **V1** — configuração não é reverificável pela nuvem | ❌ aberto | política de egresso, não falta de credencial — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
+| **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
+| **C1** — minutos de Actions a 90% | 🟡 **Pro assinado; medição em voo** | teto foi a 3.000 e uma sessão escopada num privado está medindo o consumo por workflow. **Não é este repo** (público não consome) e **não é o plugin**. Assinar não fecha o item: teto maior sobre consumo não medido é adiamento |
+| **S2** — R1 cobre conteúdo, não inventário | 🔴 **novo em 2026-08-21** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
+| **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
-| **H1-bis** — `main` exige PR, mas zero aprovação | 🟡 **destravável agora** | o check obrigatório passou a existir; falta marcar no ruleset. Exigir aprovação está descartado: um único colaborador se trancaria fora |
+| **H1-bis** — `main` exige PR, mas zero aprovação | ✅ **fechado em 2026-08-21** | `verificar` exigido no `protect-main`, fixado no app do Actions, sem bypass. PR quebrado não entra mais — é plataforma, não boa vontade. O merge sem revisor segue doutrina |
 | **H4** — secret scanning e push protection | ✅ **fechado** | ambos **ativos**, conferidos na UI em 2026-08-21 com evidência visual. GHAS é flag distinto e segue desligado — não era ele que importava |
-| **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em ação. Em privado, *code owners* exige plano Pro — confirmado na documentação |
+| **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em plano nem em ação. Nos privados o recurso passou a existir com o Pro (2026-08-21) — mas comprar a ferramenta não cria o segundo revisor |
+| **H7** — branches principais dos privados desprotegidas | 🟡 **destravado, falta configurar** | era limite de plano e não é mais. Com o Pro ativo, é clique humano na UI, um repositório por vez — e é o item de maior retorno da lista |
 | **H3 · N6** — PR Watch | ✅ **fechado por remoção** | 22 disparos, **zero execuções** — nunca alcançou a action. Removido em 2026-08-21 a pedido do dono. Deixá-lo parado era cobertura aparente |
-| **H5 · L2** | ❌ aberto | decisão humana |
+| **H5** | ❌ aberto | decisão humana, sem dono declarado, aberto desde 2026-08-02 |
+| **L2** | 🔴 **aberto, e agravado** | a coluna de departamento publica 4 de 17 e omite 13 — a mesma forma que **L7** rejeitou na coluna ao lado. Decisão não tomada, executada pela metade |
 | **L4** — cobertura recorrente | 🟡 **decidido** | desenho C (uma rotina por setor). Criar a rotina é na UI: daqui herdaria o ambiente público e repetiria o defeito do P0 |
 | **A1** — orquestrador no prédio errado | 🟡 **decidido, plano escrito** | vai para o departamento de Fundação; visibilidade deste repo **não muda**. Ordem: criar no privado, conferir, só então podar aqui. Executa uma sessão escopada no privado — daqui violaria R1 |
-| **L1** — consolidação dos handoffs | 🟡 em voo | rodada de fechamento em 2026-08-21: **13 fechados, 4 em aberto**. As 4 causas restantes são todas decisão humana, nenhuma é trabalho de agente. Cada retenção tem causa distinta — nenhuma é falha de auditoria |
+| **L1** — consolidação dos handoffs | 🟡 quase fechado | fim de 2026-08-21: **15 relatados fechados, 2 em aberto** (`P16`, `P17`). "Relatado" porque R1 impede reverificar daqui — ver o item. As duas retenções são dado humano e correção na origem, nenhuma é falha de auditoria |
 | **L3** — executores e hook não exercitados | ❌ aberto | depende do retorno de L1 |
 | **L7** — nomes dos privados no índice público | ✅ **fechado** | apelidos `P01`–`P17` em 2026-08-21; regra no `SECURITY.md`; varredura confirma nenhum nome real em arquivo versionado |
 
@@ -63,79 +66,101 @@ ninguém, daqui, pode afirmar que estão ligados.
 ## O que a nuvem não alcança — e por quê
 
 Esta seção existe porque metade do backlog dependia da frase *"uma sessão futura
-reverifica"*, e essa sessão futura não consegue.
+reverifica"*, e essa sessão futura não conseguia. **Remedida em 2026-08-21, e o
+mapa mudou:** parte do que esta seção declarava inalcançável passou a responder.
 
-Verificado em 2026-08-20, a partir de uma sessão de nuvem:
+**A medição de 2026-08-21, endpoint a endpoint, com token válido:**
+
+| Caminho | Código | Mensagem literal | Causa |
+|---|---|---|---|
+| dados do repositório | **200** | — | **abriu** desde 20/08 |
+| `/rulesets` (leitura) | **200** | — | **abriu** desde 20/08 |
+| `/rulesets` (escrita) | 403 | *"Write access to this GitHub API path is not permitted through this proxy"* | allowlist do proxy |
+| `/branches/*/protection` | 403 | *"Resource not accessible by integration"* | escopo do app, **não** o proxy |
+| `/secret-scanning/alerts` · `/collaborators` | 403 | *"Access to this GitHub API path is not permitted through this proxy"* | allowlist do proxy |
+| `/actions/secrets` · `/actions/permissions` | 403 | *"Access to this GitHub Actions path is not permitted through this proxy"* | allowlist do proxy |
+
+**O que isso derruba.** Em 20/08 os dois primeiros caminhos devolviam *"GitHub
+access is not enabled for this session"* — autorização do GitHub App —, e a
+seção registrava que **H1** só voltaria a ser verificável se alguém reconectasse
+essa autorização. Alguém reconectou, ou ela se resolveu sozinha; ninguém
+percebeu, porque **ninguém tentou de novo**. O item ficou marcado como
+inalcançável por um dia inteiro depois de deixar de ser.
+
+> A lição não é sobre o GitHub. Um bloqueio medido uma vez virou propriedade
+> permanente do arquivo, e a frase que o registrava — *"é a rede"* — era enfática
+> demais para convidar nova medição. **Bloqueio tem data de validade, e este
+> arquivo não escrevia nenhuma.** Toda linha de "não dá" daqui em diante carrega
+> a data em que foi medida, e essa data é o convite para remedir.
+
+**O que continua fora de alcance, agora com a distinção certa:** toda **escrita**
+de configuração, e as leituras de secret scanning, segredos de Actions,
+colaboradores e proteção de branch clássica. A escrita é o corte mais importante,
+e ele é limpo: **a nuvem lê configuração, e não a aplica.** Aplicar continua sendo
+clique humano.
 
 - O binário `gh` **não existe** neste ambiente (`command -v gh` devolve vazio).
-  Todo comando do apêndice antigo era inexecutável aqui.
-- Os caminhos de configuração de repositório da API do GitHub devolvem **HTTP
-  403, mesmo com token válido** (o mesmo token responde `200` em identidade).
-  **Mas não pela mesma causa** — e a rodada de 2026-08-20 tratou as duas como
-  uma só, o que era impreciso:
-
-  | Caminho | Mensagem literal | Causa | Tem conserto? |
-  |---|---|---|---|
-  | dados do repositório, rulesets, proteção de branch | *"GitHub access is not enabled for this session. An org admin must connect the Claude GitHub App"* | autorização do GitHub App | **sim, humano** |
-  | alertas de secret scanning, segredos de Actions | *"Access to this GitHub API path is not permitted through this proxy"* | allowlist do proxy | não |
-
-  A primeira linha muda de estado se a autorização do GitHub for reconectada —
-  e aí **H1 volta a ser verificável**. A segunda não muda. Escopo de token não é
-  o problema em nenhuma das duas: pedir permissão maior não destrava nada e só
-  amplia agência à toa.
-- Nenhuma ferramenta MCP disponível expõe ruleset ou proteção de branch.
+- Nenhuma ferramenta MCP disponível expõe ruleset ou proteção de branch — nem
+  leitura nem escrita. O que abriu foi a API REST, não o MCP.
 - A ferramenta de secret scanning recusa com *"Repository does not have GitHub
   Advanced Security enabled"* — o que prova o estado do GHAS e nada além dele.
 
-**Consequência:** ruleset, proteção de branch, secret scanning, push protection e
-existência de segredo de Actions não são alcançáveis por agente algum a partir da
-nuvem. Não é uma limitação desta sessão nem uma regra de conduta que se possa
-argumentar: é a rede.
+**A regra do arquivo muda de forma, e fica mais exigente, não menos:**
 
-Todo item que dependia de reverificação por sessão de nuvem precisa de um
-substituto. Há dois realistas, e eles não são excludentes:
+- Item de configuração cuja **leitura** responde hoje pode ser verificado por
+  sessão de nuvem, e deve ser — com a data e o código HTTP no registro. **H1
+  entra nessa classe** e foi verificado em 21/08.
+- Item cuja leitura **não** responde continua valendo a regra antiga: nenhuma
+  sessão de nuvem escreve "fechado"; escreve "não verificável daqui em <data>,
+  conferir na UI".
+- **Nenhuma sessão de nuvem aplica configuração**, e isso não é limite de rede —
+  a rede só confirma. É o gate.
 
-1. **Conferência humana na UI** — cinco minutos, responde tudo, não escala e
-   depende de alguém lembrar.
-2. **Um workflow do Actions** rodando dentro do próprio repositório, com o token
-   nativo da execução, que **não passa pelo proxy**. Publicaria o estado da
-   configuração como saída de job, e a partir daí a nuvem lê o que sempre pôde
-   ler: o resultado de um workflow. É o item **V1**.
-
-Enquanto nenhum dos dois existir, a regra deste arquivo passa a ser: **nenhuma
-sessão de nuvem escreve "fechado" em item de configuração**. Escreve, no máximo,
-"não verificável daqui, conferir na UI".
+O substituto continua desejável para o que não responde: **V1**, um workflow do
+Actions rodando dentro do repositório com o token nativo da execução, que não
+passa pelo proxy. Ele encolheu de escopo — não precisa mais cobrir ruleset — e
+por isso ficou mais barato.
 
 ## Retomada — por onde a próxima sessão começa
 
-Escrito no fim de 2026-08-20 para que a sessão seguinte não precise reconstruir
-contexto nenhum.
+Reescrita em **2026-08-21**. A versão anterior era de 20/08 e envelheceu inteira
+em um dia: o que ela chamava de "em voo" já pousou, e o que ela dava como estado
+do repositório descrevia dez PRs mesclados, que hoje são doze.
 
-**1. Não tente reverificar configuração. Você não consegue.** Leia a seção acima
-antes de gastar uma hora descobrindo o 403 de novo. Se o estado de `main`, do
+**1. Não tente reverificar configuração. Você não consegue.** Leia a
+[seção sobre o que a nuvem não alcança](#o-que-a-nuvem-não-alcança--e-por-quê)
+antes de gastar uma hora redescobrindo o mesmo 403. Se o estado de `main`, do
 secret scanning ou dos segredos importar para a sua tarefa, o caminho é pedir a
-conferência ao humano ou implementar **V1** — não insistir na API.
+conferência a uma pessoa ou implementar **V1** — não insistir na API.
 
-**2. O que mudou desde a rodada anterior, e é bom:** P0 e P1 fecharam. A rotina
-de control-plane foi corrigida na UI em 2026-08-10 e hoje não toca o repositório
-público nem carrega conectores. O item de risco alto com prazo imposto de fora,
-que dominou três semanas deste backlog, não existe mais.
+**2. O estado do repositório, conferido nesta data:** **zero PRs abertos**, duas
+branches remotas (`main`, protegida, e a branch de trabalho deste ciclo, já
+mesclada). Todo o trabalho de 20 e 21 de agosto está na branch default — não há
+nada esperando merge aqui.
 
-**3. O estado do repositório está limpo, verificado hoje:** uma única branch
-remota (`main`), zero resíduo — todas as `claude/*` foram apagadas no merge.
-Zero PRs abertos; os dez PRs existentes (#1–#10) estão todos mesclados. O item
-"um PR pode estar esperando merge", que abria a retomada anterior, saiu por ter
-sido cumprido.
+**3. O que ganhou existência em 21/08, e muda o que você pode assumir:**
 
-**4. Há 17 auditorias em voo, e o gargalo é o transporte.** Cada sessão grava o
-relatório no repositório que auditou e abre PR draft lá. **Nenhuma escreve
-aqui** — R1 continua valendo, e é por isso que o bloco de handoff sanitizado
-precisa ser trazido por um humano. Enquanto não for, o índice do `AGENTS.md`
-continua em *não verificado* apesar de o trabalho já ter sido feito.
+- `verificacao.yml` roda a cada PR e **é check obrigatório desde 21/08**, fixado
+  no app do GitHub Actions. Um PR com o repositório quebrado não entra: a
+  plataforma recusa. Não confunda com o merge sem revisor, que segue doutrina.
+- O guardrail de push teve um defeito corrigido e ganhou **suíte hermética**. A
+  suíte passou a rodar num repositório descartável porque, rodando aqui, o
+  fallback da branch atual (`claude/*`) transformava defeito real em teste verde.
+  Se você editar o hook, rode `bash plugins/fundacao/hooks/test-guard-push.sh`.
+- Os dezessete privados são citados por **apelido** (`P01`–`P17`) em todo arquivo
+  versionado. O mapeamento não mora aqui e não deve passar a morar — a regra está
+  no [`SECURITY.md`](../SECURITY.md).
+- O `claude-pr-watch.yml` **não existe mais**: 22 disparos, zero execuções reais.
 
-**5. O resto do backlog não mudou de natureza.** H3 é proibido a agente por
-conduta; H5, L2 e L4 são decisão humana; L3 depende de o handoff de L1 chegar.
-Nenhum deles é trabalho parado por falta de execução.
+**4. O ciclo de auditoria deixou de ser o gargalo.** Dezessete auditorias
+entregaram e dezessete fichas foram escritas, cada uma na origem. Restam **dois
+repositórios em aberto**, e nenhum por falta de execução de agente — ver **L1**.
+
+**5. O que sobra é quase todo humano.** S1 (dado pessoal, risco aceito), S2
+(alcance de R1), C1 (orçamento do Actions), H7 (proteger as branches dos
+privados), H5 e L2 (decisão), L4 (criar rotina na UI), A1 (sessão escopada num
+privado). **H1-bis saiu daqui em 21/08, fechado** — o check é obrigatório. **Nenhum destrava insistindo daqui** — e A1 e L4, tentados daqui,
+violariam R1 ou repetiriam o defeito do P0.
 
 ### Achados que pertencem a outros repositórios
 
@@ -172,6 +197,14 @@ Cada item tem um **executor**, e é isso que determina se a nuvem resolve sozinh
 
 Severidade: **alta** = risco ativo ou controle ausente · **média** = divergência
 entre documentação e realidade · **baixa** = cosmético ou preventivo.
+
+**Cuidado com um choque de prefixo, notado em 2026-08-21.** `P0`, `P1` e `P2` são
+**itens deste backlog**; `P01`–`P17` são **apelidos de repositório** no índice do
+`AGENTS.md`. Um zero à esquerda separa as duas famílias, e isso é frágil demais
+para durar. Enquanto não houver renomeação — que custaria reescrever histórico de
+texto em vários arquivos —, vale a leitura: **dois dígitos é repositório, um
+dígito é item.** Apelido nunca é reciclado, então a colisão não piora; ela
+também não some sozinha.
 
 **Sobre o que este arquivo publica.** Ele vive num repositório público N2. Por
 isso registra *qual* controle existe, *onde* se confere e *o que* falta — e não
@@ -367,32 +400,31 @@ comando.
 
 ### O que segue aberto neste bloco
 
-**N6 — o PR Watch acorda, é barrado pelo gate, e nunca executou de verdade.**
+**Nada.** O único item que ficava aqui era o **N6**, e ele fechou em 2026-08-21
+— por remoção, não por conserto.
 
-Verificado na API em 2026-08-20: o workflow acumula **22 execuções e nenhuma
-real** — 12 `skipped` e 10 `cancelled`, **zero sucesso e zero falha**. A última
-foi em **2026-08-09**, e desde então ele não acordou.
+**O que o N6 dizia:** o PR Watch acordava, era barrado pela condição de guarda e
+nunca executava de verdade. Verificado na API em 2026-08-20: **22 execuções e
+nenhuma real** — 12 `skipped`, 10 `cancelled`, zero sucesso e zero falha, a
+última em 2026-08-09. O job mais recente reportava `steps=0`: nenhum passo chegou
+a existir, então o checkout e a action nunca rodaram e a chave de API nunca foi
+consultada.
 
-O job mais recente reporta `steps=0`: nenhum passo chegou a existir, então o
-checkout e a action nunca rodaram e a chave de API nunca foi consultada. A
-condição de guarda barrou tudo — os comentários não continham a menção exigida.
-É a **evidência de campo de R9/R2**: os eventos chegaram e o gate de autor +
-menção segurou, 22 vezes. Esse controle deixou de ser suposição.
+O mesmo fato lido nas duas direções, e as duas continuam verdadeiras:
 
-O que segue aberto é a outra metade: **nenhuma execução real** aconteceu, e ela
-continua bloqueada por **H3**. Run que pula não exercita a action, o modelo, as
-permissões nem o prompt.
+- **É evidência de campo de R9/R2.** Os eventos chegaram e o gate de autor +
+  menção segurou, 22 vezes. Esse controle deixou de ser suposição.
+- **E era cobertura aparente.** Workflow que nunca executa não exercita a action,
+  o modelo, as permissões nem o prompt — mas aparece na aba *Actions* como se
+  cobrisse alguma coisa. O dono optou por removê-lo em vez de destravar o segredo
+  (**H3**), e a remoção é o registro honesto: nada se perdeu, porque nada rodava.
 
-**Correção pendente em outro arquivo (não editado nesta sessão):** o cabeçalho de
-`.github/workflows/claude-pr-watch.yml` afirma "cinco runs" e descreve apenas
-2026-08-08. São 22 execuções, em pelo menos dois dias distintos — subconta por
-fator ~4. É o mesmo defeito de "realidade antiga" que o cabeçalho anterior tinha
-e que já foi corrigido uma vez; a lição é que contagem escrita à mão em cabeçalho
-volta a envelhecer no dia seguinte, e o texto deveria descrever o *comportamento*
-("acorda e é barrado pelo gate; nunca executou de verdade") em vez de um número.
-
-**Verificação, quando destravar:** um disparo manual conclui com `success` e o
-job mostra passos executados — não `skipped`.
+> A lição que sobra é do cabeçalho, não do workflow. Ele afirmava "cinco runs" e
+> descrevia um único dia, quando eram 22 execuções em pelo menos dois dias —
+> subconta por fator ~4, e era a segunda vez que aquele mesmo cabeçalho
+> envelhecia. **Contagem escrita à mão em cabeçalho volta a envelhecer no dia
+> seguinte.** É por isso que o número de casos da suíte do guardrail hoje não é
+> registrado em lugar nenhum além da saída do próprio script.
 
 ---
 
@@ -440,32 +472,118 @@ repositório. Aceitar o risco implica, portanto:
 qualquer um dos três repositórios deixar de ser privado, se um colaborador for
 adicionado, ou se surgir titular externo identificável no dado.
 
+**Quarta condição, acrescentada no fim de 2026-08-21 sem mexer na decisão.** No
+mesmo dia, uma sessão escopada nos privados produziu **14 PRs de remoção de dado
+pessoal, em 12 repositórios**, a pedido do dono. Confirmado com ele: **a decisão
+de manter vale, e é a que este item registra.** Os PRs ficaram abertos.
+
+Isso cria um estado que o item precisa vigiar, e é por isso que vira condição de
+reabertura em vez de nota de rodapé: **se aqueles PRs entrarem, este registro
+passa a descrever uma realidade que acabou** — dirá "o dado fica" sobre
+repositórios de onde o dado saiu. Não é hipótese remota; é trabalho pronto,
+esperando um merge, e merge de PR aberto é a coisa mais fácil de acontecer sem
+ninguém avisar o backlog.
+
+**R1 impede esta sessão de verificar aquele estado**, então a condição é escrita
+para quem tiver acesso: se os PRs de remoção forem mesclados, este item não
+reabre — ele **fecha por outro caminho**, e o texto tem de dizer que o dado saiu,
+não que foi mantido.
+
 > A decisão não é a que eu recomendaria por padrão, e é legítima: o dono é quem
 > pode aceitar risco sobre o próprio dado. O que este arquivo pode fazer é
 > garantir que a aceitação seja **explícita e datada** em vez de virar omissão —
 > risco aceito sem registro reaparece como surpresa, e aí já não há decisão, só
 > consequência.
 
-### H1 — Proteção de `main`
-**Severidade: alta · 🟡 PARCIALMENTE VERIFICÁVEL · Executor: 👤 Humano**
+### S2 — R1 protege o conteúdo dos privados, não a lista deles
+**Severidade: média · 🔴 ABERTO · Descoberto em 2026-08-21 · Executor: 👤 Humano (decisão de desenho)**
 
-Um controle de proteção de `main` foi criado em 2026-08-08 e, na ocasião, a API
-confirmou regras de bloqueio de deleção, de force push e de exigência de PR, sem
-bypass para ninguém — inclusive o dono.
+**Como apareceu.** Esta sessão — a do repositório **público** — consultou o
+estado de uma sessão de nuvem para saber se um trabalho tinha terminado. A
+resposta trouxe, junto, **a lista completa dos repositórios no escopo daquela
+sessão**: dezessete nomes reais de repositório privado, entregues a uma sessão
+que **R1** existe para manter do lado de fora.
 
-**O que se pode afirmar hoje, 2026-08-20:** a API devolve `main` como protegida.
-Isso prova que existe **alguma** proteção. Não diz qual regra, não diz o
-enforcement, não diz quem tem bypass. Os endpoints que responderiam a isso estão
-bloqueados pelo proxy de saída (**V1**).
+Nenhuma regra foi quebrada. Nenhum repositório privado foi clonado, aberto ou
+lido. **R1 continua íntegro no que ele protege** — e o que ele protege é
+conteúdo.
 
-**Não há indício de regressão.** Há a constatação de que a frase "H1 está
-fechado" deixou de ser verificável por quem escreve este arquivo, e por isso ela
-não vai continuar escrita como se fosse.
+**O que o achado diz, e é desconfortável:** as ferramentas de *metadados de
+sessão* atravessam a fronteira que as de repositório respeitam. Qualquer sessão
+deste ambiente, inclusive esta, consegue **enumerar os repositórios** da conta
+sem tocar em nenhum. A barreira é de leitura de arquivo, não de nomes.
 
-**Ação (👤):** conferir na UI, em *Settings → Rules*, que o controle segue ativo,
-com enforcement ativo e sem bypass concedido. Cinco minutos.
+**Por que isso importa aqui em particular.** Ontem este repositório trocou
+dezessete nomes reais por apelidos e escreveu, no `SECURITY.md`, que o
+mapeamento *"vive num repositório privado"*. A metade cara desse controle segue
+de pé: **qual apelido corresponde a qual repositório** continua fora daqui. A
+metade barata não: **a lista de que repositórios existem** é obtenível por
+qualquer sessão da conta, sem clonar nada.
 
-**Verificação:** um push direto para `main` é recusado, e um PR é exigido.
+Vale dizer sem eufemismo o que isso faz com o controle: L7 impede a
+**publicação** dos nomes — e essa era e continua sendo a exposição que importa,
+porque publicação alcança terceiros. O que ele não faz, e nunca fez, é impedir
+que uma sessão da própria conta os veja.
+
+**O que NÃO fazer.** Não há remediação de agente aqui, e tentar uma seria pior
+que o problema: deixar de consultar o estado das sessões de nuvem trocaria uma
+exposição interna por relatos não verificados — que é exatamente o defeito que
+custou três diagnósticos errados em **L1**. E abster-se de uma leitura que a
+plataforma oferece não a torna indisponível para a próxima sessão.
+
+**Ação (👤): decidir o enquadramento, não construir controle.** Duas leituras, e
+a diferença não é retórica:
+
+1. **Aceitável por desenho** — é a conta do próprio dono olhando os próprios
+   repositórios, e nenhum terceiro entra nisso. Então o item fecha como risco
+   aceito, com a data, e **R1 passa a declarar explicitamente que cobre conteúdo
+   e não inventário** — hoje ele não diz nem uma coisa nem outra, e é a omissão
+   que faz o controle parecer mais amplo do que é.
+2. **Não aceitável** — e aí o que muda não é a regra, é a topologia: sessões da
+   frente pública precisariam de uma conta ou ambiente separado dos privados.
+   Isso é caro, e a decisão é de quem paga.
+
+**Recomendo a primeira**, e a razão é a mesma que governa **S1**: a exposição é
+para a própria conta do dono, o inventário não contém dado de terceiro, e o custo
+da segunda é desproporcional ao que ela remove. Mas registro em vez de assumir —
+a diferença entre um controle que cobre menos do que se pensava e um controle
+que cobre exatamente o que se declarou é toda a diferença, e só se sabe qual é
+depois de alguém dizer.
+
+**Verificação:** o `SECURITY.md` declara, no texto de R1, que a regra cobre
+conteúdo de repositório e **não** inventário de repositórios — ou a topologia
+mudou. Qualquer uma fecha; o estado atual, em que a regra é silenciosa sobre o
+ponto, não.
+
+### H1 — Proteção de `main`: lida inteira, e ela é o que se dizia
+**Severidade: alta · ✅ VERIFICADO em 2026-08-21 · Verificado por: ☁️ Nuvem, via API**
+
+Este item passou 24 horas marcado como *"parcialmente verificável"* porque a
+leitura do ruleset devolvia 403. Em 2026-08-21 o mesmo endpoint devolveu **200**,
+e o controle foi lido por inteiro em vez de inferido.
+
+**O que a leitura devolveu**, e é o registro que faltava:
+
+| Propriedade | Estado |
+|---|---|
+| Enforcement | **ativo** |
+| Alvo | a branch default |
+| Atores com bypass | **nenhum** — inclusive o dono |
+| Deleção da branch | **bloqueada** |
+| Histórico reescrito (force push) | **bloqueado** |
+| Pull request | **exigido** — e com **zero aprovações**, que é o **H1-bis** |
+
+**Nada regrediu, e é a primeira vez que isso pode ser dito com evidência.** O que
+foi criado em 2026-08-08 está de pé, do jeito que foi descrito. O item fecha
+aqui; o que ele deixou em aberto — a contagem de aprovações em zero — não é
+regressão, é a configuração original, e vive em **H1-bis**.
+
+**A nota de método vale mais que o resultado.** O item não estava bloqueado; ele
+estava **medido uma vez e nunca remedido**. O 403 de 20/08 virou propriedade
+permanente do arquivo porque a frase que o registrava era enfática o bastante
+para desencorajar a segunda tentativa. Custou uma requisição descobrir. Ver a
+[seção sobre o que a nuvem alcança](#o-que-a-nuvem-não-alcança--e-por-quê), que
+por causa disso passou a datar cada bloqueio.
 
 > O controle **tem rota de saída** — ele pode ser removido na mesma tela em que é
 > conferido. Fica registrado que ela existe, e onde, porque controle sem rota de
@@ -495,6 +613,122 @@ code owner na mesma regra de proteção de `main`. É uma opção, não um proje
 
 **Verificação:** um PR que toca `/plugins/` fica bloqueado até o code owner
 aprovar.
+
+**Nota de 2026-08-21, e ela vale para os privados, não para cá.** *Code owners*
+em repositório privado exigia plano pago, e o Pro foi assinado. O impedimento
+neste repositório continua sendo o outro — um único dono, aritmética, não plano.
+Nos dezessete privados, o recurso passou a existir; usá-lo lá esbarra na mesma
+aritmética enquanto o dono for o único revisor. **Comprar a ferramenta não cria
+o segundo revisor.**
+
+### H7 — As branches principais dos privados seguem desprotegidas
+**Severidade: alta · 🟡 DESTRAVADO, FALTA CONFIGURAR · Executor: 👤 Humano**
+
+Registrado como item próprio em 2026-08-21, depois de aparecer duas vezes dentro
+de outros: como achado de auditoria em **L1** e como argumento de compra em
+**C1**.
+
+**O que se sabe:** pelo menos uma branch principal de repositório privado está
+sem proteção nenhuma. Quantas das dezessete estão, esta sessão **não pode
+verificar** — R1 — e o número não deve ser adivinhado.
+
+**O que mudou:** a causa registrada era limite de plano, e deixou de ser. Com o
+Pro ativo, proteção de branch existe em repositório privado. O item saiu de
+"decidir se vale pagar, ou aceitar o risco por escrito" e virou configuração.
+
+**Duas paredes independentes impedem um agente de aplicar isto, e a distinção
+importa porque uma delas é um botão que você tem** (e não deve apertar):
+
+| Parede | Evidência de 2026-08-21 | Configurável? |
+|---|---|---|
+| **1. Mediador da integração** | o `PUT` **nunca chega ao GitHub**: resposta sem `Server: github.com` e sem `X-Github-Request-Id`, corpo *"Write access to this GitHub API path is not permitted through this proxy"*. O token do ambiente tem 14 caracteres e prefixo `prox` — é um marcador, não credencial: a credencial real vive no mediador | **não.** Não há ajuste, e não é a política de egresso da conta — essa está limpa (`recentRelayFailures` vazio) |
+| **2. Permissão do GitHub App** | `/branches/*/protection` **chega ao GitHub** e o GitHub recusa: `X-Accepted-Github-Permissions: administration=read`. Ler ruleset pede `metadata=read`, que o app tem; escrever pede `administration=write`, que ele não tem | **sim** — e conceder **não destrava nada**, porque a parede 1 é anterior |
+
+**E há um terceiro fato, medido depois, que torna a pergunta "como liberar isso"
+malposta.** Mandei uma requisição para a API do GitHub com um token deliberadamente
+inválido, e depois **sem cabeçalho de autorização nenhum**. As duas voltaram
+`200`, identificando a conta corretamente.
+
+**A sessão não tem credencial do GitHub.** Ela tem uma **identidade emprestada**:
+o mediador injeta a credencial real, seja lá o que a sessão mande — ou não mande.
+Não existe token aqui para ampliar, restringir ou vazar. O que decide quem a
+sessão é, e o que ela pode escrever, mora inteiramente do outro lado.
+
+Isso reenquadra as duas paredes acima: não é que uma credencial esteja sendo
+filtrada. É que **nunca houve uma**. Perguntar como liberar o proxy é perguntar
+como usar uma chave que a sessão não tem — e a resposta não é "peça mais
+permissão", é que a permissão não é um objeto que exista deste lado.
+
+> Vale para qualquer superfície da Claude, não só esta sessão: outra sessão, um
+> agente com navegador, um ambiente diferente — todos chegam ao GitHub pelo mesmo
+> mediador, com a mesma identidade emprestada. Um navegador não muda isso; muda
+> só de onde a requisição parte. Para um agente agir **como você** nas telas de
+> configuração, ele precisaria da sua senha e do seu segundo fator — o que é
+> entregar credencial, classe 3 do `SECURITY.md`, e não se faz.
+
+> **Não conceda `Administration` ao app na esperança de destravar isto.** Amplia o
+> que agentes alcançam em todos os repositórios e não compra a escrita, porque a
+> recusa acontece antes de o GitHub ser consultado. É o pior tipo de troca: custo
+> real, benefício zero, e o benefício zero só se descobre depois de conceder.
+
+**O único caminho que de fato contorna** é um workflow do Actions com um PAT em
+segredo, rodando dentro do próprio repositório — ele não passa pelo mediador. E
+ele se anula: quem consegue adicionar um workflow consegue usar o segredo, então
+proteger a branch com uma chave capaz de desprotegê-la, guardada atrás dessa
+mesma branch, é circular. O `SECURITY.md` já registra exatamente esse raciocínio
+para a credencial de backup.
+
+**O que dá para entregar sem contornar nada:** a configuração pronta e um script
+que a aplica em lote, ambos em
+[`plugins/fundacao/templates/ruleset/`](../plugins/fundacao/templates/ruleset/README.md).
+
+O script é explicitamente **para o dono rodar, nunca um agente** — e a distinção
+não é cerimônia: rodá-lo por agente seria contornar a parede 2 com o token de
+outra pessoa, que é a definição de rota alternativa. Ele simula por padrão, exige
+`--aplicar` para escrever, descobre os repositórios pela API — em vez de carregar
+uma lista de privados dentro de um repositório público — e falha fechada quando
+não consegue interpretar uma resposta.
+
+**Duas correções vieram de rodá-lo, não de relê-lo**, e as duas eram do mesmo
+tipo — código que parecia certo e nunca tinha sido exercitado:
+
+1. **Ele perguntava se existia um ruleset com o nome dele**, em vez de perguntar
+   se a branch já estava protegida. Rodando contra este repositório, que já tinha
+   `protect-main`, a simulação anunciou que criaria `protect-default` **em cima**
+   — o empilhamento que o README ao lado mandava evitar e que o código não
+   implementava. Corrigido para consultar as regras **efetivas** da branch, que é
+   a pergunta certa.
+2. **Ele presumia `main`.** Repositório antigo ainda é `master`, e proteger a
+   branch errada é pior que não proteger: parece feito. Passou a ler a branch
+   default de cada repositório.
+
+> A primeira dessas é a mais instrutiva: **o README descrevia o comportamento
+> correto e o código fazia outro.** Documentação e implementação divergindo em
+> silêncio é o defeito que este repositório inteiro existe para caçar — e ele
+> apareceu dentro do arquivo que eu tinha acabado de escrever para caçá-lo.
+
+Dezoito repositórios viram um comando. O gate não se move: continua sendo uma
+pessoa, com a credencial dela, decidindo aplicar.
+
+**Ação (👤), um repositório por vez, na UI:** exigir PR antes do merge, proibir
+force push e proibir deleção da branch default. **Não exija aprovação** — é a
+mesma armadilha que este repositório documenta em **H1-bis**: com um único
+colaborador, exigir aprovação tranca o dono fora do próprio repositório, porque
+o GitHub não aceita autoaprovação.
+
+**Por que é o item de maior retorno da lista.** O gate humano do ecossistema
+inteiro é hoje **doutrina em dezessete repositórios e controle em um** — este,
+que é justamente o que menos guarda coisa sensível. H7 inverte essa assimetria, e
+não depende de nenhum agente, de nenhuma sessão e de nenhuma medição.
+
+**O que ele *não* resolve:** push protection continua indisponível em privado de
+usuário, então nos dois repositórios com dado pessoal confirmado (**S1**) segue
+não havendo barreira que aja *antes* de o dado entrar. Proteger a branch impede
+merge sem PR; não impede commit com dado dentro do PR.
+
+**Verificação:** em cada privado, a branch default aparece como protegida e uma
+tentativa de push direto é recusada pelo servidor — não pelo hook local, que é
+outra camada.
 
 ### H3 — Segredo de Actions para o PR Watch
 **Severidade: média · ABERTO por regra, não por esquecimento**
@@ -613,6 +847,57 @@ os repositórios com dado pessoal confirmado são privados, e o Pro **não** col
 push protection neles. A única barreira que age *antes* do segredo entrar
 continua existindo só no repositório público — que é, ironicamente, o único onde
 ela é grátis e o único que não guarda esse tipo de dado.
+
+**Assinado em 2026-08-21.** O dono ativou o Pro. O que isso passa a permitir, e
+o que continua faltando fazer:
+
+| Passa a existir | O que ainda falta |
+|---|---|
+| Proteção de branch nos dezessete privados | **ligar**, um a um. Pro dá a ferramenta, não a configuração — virou o **H7** |
+| *Code owners* em privado (**H2**) | idem: exige `CODEOWNERS` no repositório e a regra no ruleset |
+| Teto de 3.000 minutos | **medir o consumo.** O teto subiu 50% sobre um número que ninguém tinha |
+| — | Push protection em privado **continua fora do alcance** — exige Enterprise |
+
+**Ferramenta de medição entregue em 2026-08-21**, em
+[`plugins/fundacao/templates/actions/`](../plugins/fundacao/templates/actions/README.md):
+minutos faturáveis **por workflow e por repositório**, ordenados, somente
+leitura. Ela não opina sobre causa — entrega números.
+
+Existe por causa deste item, e o cabeçalho dela diz isso sem suavizar: o C1
+passou o dia com o culpado errado **duas vezes**, e o padrão dos dois erros é
+idêntico — *mecanismo plausível afirmado sem medir*. A ferramenta encerra a
+categoria.
+
+**E ela roda do celular**, o que era o bloqueio prático: um **Codespace** dá bash,
+curl e python3 num Linux de verdade aberto no navegador, com o `GITHUB_TOKEN` já
+injetado — para esta leitura normalmente não é preciso criar token nenhum. O
+plano Pro, já assinado, inclui 180 core-hours por mês; a medição custa minutos.
+
+Duas coisas na saída merecem leitura atenta, e estão no README: os sistemas
+operacionais vêm **separados**, porque Windows e macOS custam mais por minuto e
+somá-los esconde o que encarece; e **se o total lido for muito menor que a cota
+da conta, a diferença é o achado** — está em repositório que o script não leu.
+
+> Verificado no repositório público antes de entregar: três workflows, três
+> respostas `200`, **zero minutos faturáveis**. Zero ali é o resultado *correto* —
+> Actions é gratuito em público —, e a distinção está escrita no código para
+> ninguém ler zero como defeito.
+
+**A medição começou, e o primeiro número não é fato ainda.** Uma sessão escopada
+num privado está contando consumo por workflow em 2026-08-21. O primeiro retorno
+dela aponta uma linha de base da ordem de **doze minutos por commit**. Isso é
+**relato parcial de sessão em voo**, não medição fechada, e fica registrado como
+relato de propósito: confundir hipótese plausível com medição foi exatamente o
+que produziu o culpado errado dois blocos acima, no mesmo item, no mesmo dia.
+
+**Se o número se confirmar, ele inverte a recomendação deste item.** Custo por
+*commit* é proporcional ao trabalho, não ao calendário — e então podar cron, que
+é o que esta seção vinha propondo, resolve pouco. Contra custo por commit valem
+outras alavancas: `concurrency` com `cancel-in-progress` (mata a execução
+anterior a cada push numa mesma branch), gatilho por `paths` — que **nos
+privados** é seguro, porque lá nenhum check é obrigatório, ao contrário daqui —,
+`timeout-minutes` apertado e matriz de jobs reduzida. Nada disso deve ser
+aplicado antes do relatório: a lição do parágrafo anterior é literalmente essa.
 
 **Verificação:** o consumo de Actions nos privados é **medido** — aba Actions de
 um privado, ordenada por consumo — e a decisão sobre o orçamento está registrada
@@ -1080,8 +1365,45 @@ partir de um bundle**: backup sem restauração testada é intenção, não cont
 
 ---
 
-### H1-bis — O gate humano de `main` é doutrina, não controle
-**Severidade: alta · Executor: 👤 Humano · ABERTO**
+### H1-bis — O gate humano de `main` deixou de ser só doutrina
+**Severidade: alta · ✅ FECHADO em 2026-08-21 · Aplicado por: 👤 Humano, na UI · Verificado por: ☁️ Nuvem, via API**
+
+**Fechado no fim do dia em que foi aberto.** O check `verificar` passou a ser
+exigido pelo ruleset `protect-main`, e a leitura da API confirma:
+
+| Campo | Valor lido |
+|---|---|
+| Check exigido | **`verificar`** |
+| `integration_id` | **15368** — fixado no app do GitHub Actions |
+| `strict_required_status_checks_policy` | **`false`**, como recomendado |
+| Aprovações exigidas | 0 — intacto, e é o certo |
+| Atores com bypass | **nenhum** |
+
+**O `integration_id` fixado é a metade que quase se perde.** Sem ele, qualquer
+app que publicasse um check chamado `verificar` satisfaria a regra — e "qualquer
+app" inclui um instalado depois, por outro motivo, sem ninguém ligar uma coisa à
+outra. Com ele, só o GitHub Actions deste repositório serve.
+
+**O que isso muda, exatamente.** Um PR com o repositório quebrado **não entra
+mais** — a plataforma recusa, não a boa vontade do agente. O que **não** mudou:
+uma identidade com acesso de escrita ainda pode abrir um PR e mesclá-lo sozinha.
+Isso não tem solução por aprovação enquanto houver um único colaborador, e o
+resto continua sendo doutrina — declarada como tal.
+
+**Duas tentativas até pegar, e a primeira "feito" não era.** O relato de conclusão
+veio antes de a mudança existir: a API mostrava o ruleset inalterado, com um único
+ruleset no repositório e nenhuma regra de check. **A verificação custou uma
+requisição e desfez um fechamento falso** — o mesmo padrão que já tinha custado
+três diagnósticos errados no **L1**, hoje de manhã, noutro repositório.
+
+> Vale reter a regra que sai daí, porque ela é barata: **relato de configuração
+> aplicada é hipótese até a leitura confirmar.** Não é desconfiança de quem
+> relata — é que telas longas de formulário salvam parcialmente, e ninguém
+> percebe olhando a própria tela.
+
+---
+
+**Registro do estado anterior, para a próxima sessão entender de onde veio:**
 
 Em 2026-08-21 o dono reconectou a autorização do GitHub, e os caminhos que
 respondiam 403 por essa causa passaram a responder. Pela primeira vez foi
@@ -1130,17 +1452,40 @@ raciocínio que barrou exigir PR na branch principal do dossiê pessoal vale aqu
    de mesclar o próprio PR; impede que qualquer PR entre com o repositório
    quebrado, que é o dano concreto que a doutrina sozinha não previne.
 
-**A ordem importa, e é contraintuitiva:** o workflow tem de existir e ter rodado
-ao menos uma vez **antes** de ser exigido. Exigir um check que nunca rodou
-bloqueia todo merge, inclusive o PR que traria o check. Por isso o workflow foi
-criado primeiro e a marcação no ruleset é o passo seguinte.
+**Tentado por API em 2026-08-21, e barrado — o que é informação, não obstáculo.**
+A leitura do ruleset passou (200); a **escrita** devolveu 403 com
+*"Write access to this GitHub API path is not permitted through this proxy"*. O
+corte é limpo e vale registrar como desenho, não como falha: **a nuvem lê
+configuração e não a aplica.** Não há rota alternativa a procurar, e procurar uma
+seria o comportamento que o guardrail existe para impedir.
 
-As opções 2 e 3 se somam: mesmo com o check obrigatório, "nenhum agente mescla
-em `main`" continua sendo doutrina, e o texto do ecossistema deve chamá-la
-assim.
+**O caminho que foi seguido**, registrado porque ele se repete nos dezessete
+privados (**H7**): a tela de *New branch ruleset* é a **errada** — já existia um
+`protect-main` ativo sobre a branch default, e criar um segundo empilharia duas
+regras sobre o mesmo alvo, com a próxima sessão que lesse *"o ruleset"* lendo o
+errado. Editar o que existe:
 
-**Verificação:** o texto do ecossistema descreve o controle pelo que ele faz. Se
-a opção 1 for adotada, a contagem de aprovações deixa de ser zero.
+*Settings → Rules → Rulesets → `protect-main` → Require status checks to pass →
+Add checks → `verificar` → Save.*
+
+**"Require branches to be up to date before merging" ficou desmarcado**, de
+propósito: marcá-la obriga cada PR a incorporar `main` antes de mesclar, e cada
+incorporação redispara a CI. Com um único colaborador é atrito sem ganho, e cada
+re-execução custa minuto — o **C1**.
+
+**A ordem importava, e era contraintuitiva:** o workflow tinha de existir e ter
+rodado **antes** de ser exigido. Exigir um check que nunca rodou bloqueia todo
+merge, inclusive o PR que traria o check. Por isso o workflow veio primeiro e a
+marcação depois — e `verificar` já estava verde no head do PR #13 quando foi
+exigido.
+
+**As opções 2 e 3 se somam, e a 2 continua valendo:** mesmo com o check
+obrigatório, *"nenhum agente mescla em `main`"* segue sendo **doutrina**, e o
+texto do ecossistema deve chamá-la assim em vez de "gate".
+
+**Verificação — cumprida:** a leitura da API mostra `required_status_checks` com
+`verificar` fixado no app do Actions, `strict` em `false`, aprovações em zero e
+nenhum ator de bypass.
 
 > Vale registrar como o achado apareceu, porque é o argumento a favor de
 > reconectar autorização em vez de conviver com o 403: **este item ficou seis
@@ -1280,6 +1625,16 @@ qualquer sessão futura que leia aquele repositório — foi exatamente assim qu
 três fichas concluíram que a auditoria não existia. O gate humano continua certo
 como política; a fila que ele acumula é que virou o risco.
 
+> **E o item se provou de novo em 2026-08-21, do lado de dentro.** A ferramenta de
+> medição do **C1** foi escrita, testada contra a API e commitada — num PR draft.
+> Horas depois o dono abriu um Codespace para rodá-la e recebeu *"não existe no
+> diretório"*, porque o Codespace abre na branch default e a ferramenta não estava
+> lá. Não foi um contratempo de instalação: foi **este item acontecendo com a
+> ferramenta que este backlog pediu**, e desta vez quem tropeçou não foi uma
+> sessão de auditoria — foi a pessoa. O que a lição ganha com isso é alcance:
+> vale para relatório, ficha, script e qualquer coisa que alguém vá procurar
+> depois.
+
 > Terceira vez que este item é redescrito, e o padrão já se repetiu vezes
 > demais para ser coincidência: **a barreira declarada quase nunca é a barreira
 > real.** Primeiro era R1, e não era. Depois era o transporte, e não era. Vale
@@ -1361,6 +1716,35 @@ Não é ferramenta sem endpoint: é **limite do plano** — proteção de branch
 repositório privado exige plano pago. Isso muda o item de "tentar de novo por
 outra via" para "decidir se vale pagar, ou aceitar o risco por escrito". Nenhuma
 das duas é trabalho de agente.
+
+**Fechamento de 2026-08-21, fim do dia — o placar do ciclo.** O dono mesclou o PR
+de relatório do `P01` e autorizou apagar as branches já provadas mescladas. Com
+isso o ciclo de auditoria fica em **15 repositórios relatados como fechados e 2
+em aberto**.
+
+**"Relatado" é a palavra certa, e não é hedge.** Nenhum desses fechamentos foi
+reverificado desta sessão, e nenhum pode ser: **R1** impede o repositório público
+de abrir um privado. O que existe é o relato de cada sessão escopada, mais a
+confirmação do dono por canal direto — que é a única via legítima de atravessar a
+fronteira. Escrever "verificado" seria falso; escrever "em aberto" seria descartar
+informação boa. A terceira palavra é a honesta, e o índice do `AGENTS.md` usa a
+mesma.
+
+**Os dois que restam não são trabalho de agente:**
+
+| Repo | O que trava | Quem destrava |
+|---|---|---|
+| `P16` | CI vermelha porque faltam duas métricas que só uma pessoa coleta. A CI está **certa** — verde ali exigiria burlar o gate | 👤 coletar os dois números |
+| `P17` | Ficha de handoff com afirmação falsa sobre a própria auditoria, em correção na origem | ☁️ corrige na origem, 👤 mescla |
+
+**E o risco de branch principal desprotegida deixou de ser limite de plano.** Com
+o Pro assinado em 2026-08-21, proteger as branches principais dos privados passou
+de "decidir se vale pagar" para **configuração pendente** — é o **H7**. Vale
+notar o que a mudança faz com este arquivo: um item que passou semanas descrito
+como bloqueio de ferramenta era, o tempo todo, uma linha de preço. É o mesmo
+padrão que **L1** já tinha registrado três vezes — **a barreira declarada quase
+nunca é a barreira real** — aparecendo agora numa categoria nova: barreira que
+some com um clique de compra.
 
 ### L5 — O `.gitignore` dependia do ignore global da máquina
 **Severidade: média · Executor: ☁️ Nuvem · FECHADO em 2026-08-21**
@@ -1461,8 +1845,26 @@ estão fora de qualquer rotina, e reconciliar o organograma da seção 3 do
 blueprint com a taxonomia real. Os handoffs de **L1** são o insumo natural disso,
 o que torna a decisão humana de L2 o gargalo dos dois itens.
 
+**Achado de 2026-08-21: a coluna de departamento já tem o problema que a coluna de
+nome acabou de resolver.** O índice hoje publica departamento para **quatro** dos
+dezessete privados e escreve *"não declarado"* nos outros treze. Essa é
+exatamente a forma que **L7** rejeitou uma coluna à esquerda: **esconder
+seletivamente aponta para o que está escondido.** Quatro publicados e treze
+omitidos não descrevem quatro departamentos conhecidos — descrevem treze
+marcados como não-publicáveis, e a omissão vira o índice.
+
+E o estado é pior do que uma decisão ruim: **é uma decisão não tomada, executada
+pela metade.** Este item registra que publicar a taxonomia depende de decisão
+humana, e quatro nomes saíram antes dela.
+
+**O achado não muda a ação de L2, muda a urgência.** As saídas continuam três:
+publicar os dezoito, apelidar todos como se fez com os repositórios, ou retirar a
+coluna. Nenhuma é trabalho de agente. O que ele acrescenta é que **"deixar como
+está" não é neutro** — é uma quarta opção, e é a única que carrega o defeito.
+
 **Verificação:** o número de repositórios declarados no índice bate com o número
-que existe, e cada um tem setor.
+que existe, e a coluna de departamento é uniforme — todos nomeados, todos
+apelidados ou nenhum.
 
 ### L3 — Executores e hook seguem não exercitados
 **Severidade: média · Executor: ☁️ Nuvem + 👤 Humano · ABERTO**
@@ -1655,46 +2057,58 @@ consolidação do índice, que depende do transporte.
 
 ### A semana
 
-Hoje é **quinta-feira, 2026-08-20**.
+Hoje é **sexta-feira, 2026-08-21**. O plano foi escrito na quinta, e a sexta
+desmontou boa parte dele — não por estar errado, mas porque um dia rendeu mais
+que a linha reservada para ele.
 
-| Quando | O quê | Executor | Tempo |
+| Quando | O quê | Executor | Estado |
 |---|---|---|---|
-| **Hoje (qui)** | Recolher os handoffs das auditorias que já retornaram; guardar o entregável G sanitizado de cada uma | 👤 | 30 min |
-| **Hoje (qui)** | **H1 + H4** — conferir na UI e datar a conferência neste arquivo | 👤 | 5 min |
-| ~~Sex~~ | ~~**P2** — trocar o prompt das rotinas pelo ponteiro~~ | ☁️ | **feito em 2026-08-20 para a N2**; a de control-plane espera a decisão de onde a skill mora |
-| **Sex** | **L2** — decidir se os nomes de setor podem ser publicados | 👤 | 20 min |
-| **Sáb/dom** | Recolher os handoffs restantes | 👤 | conforme retorno |
-| **Antes de seg** | **V1** — escrever o workflow de leitura de configuração (depende de `.github/` estar livre) | ☁️ | 1 sessão |
-| **Seg** | Conferir as duas execuções semanais — em especial se a de control-plane continua sem o público no escopo | ☁️ ou 👤 | 5 min |
-| **Seg** | **L1** — consolidar os G no índice do `AGENTS.md`, com data | ☁️ | 1 sessão |
+| ~~Qui~~ | ~~Recolher os handoffs das auditorias que já retornaram~~ | 👤 | **feito** — 17 fichas escritas, cada uma na origem |
+| ~~Qui~~ | ~~**H1 + H4** — conferir na UI e datar a conferência~~ | 👤 | **feito em 21/08.** H4 fechou com evidência visual; H1 virou **H1-bis** |
+| ~~Sex~~ | ~~**P2** — trocar o prompt das rotinas pelo ponteiro~~ | ☁️ | **metade**; a de control-plane espera a decisão de onde a skill mora |
+| ~~Sex~~ | ~~**L2** — decidir se os nomes de setor podem ser publicados~~ | 👤 | **não decidido, e agravado** — ver o achado no item |
+| ~~Sex~~ | ~~**H1-bis** — marcar `verificar` como obrigatório~~ | 👤 | **feito e verificado na API em 21/08.** Precisou de duas tentativas: a primeira salvou sem o campo |
+| **Hoje (sex)** | **C1** — travar o orçamento de $0 do Actions, ou aceitar por escrito | 👤 | 5 min |
+| **Sáb/dom** | **H7** — proteger a branch default dos privados, um a um | 👤 | destravado hoje pelo Pro |
+| **Sáb/dom** | **P16** — coletar as duas métricas que a CI espera | 👤 | fecha o penúltimo repositório do ciclo |
+| **Antes de seg** | **V1** — workflow de leitura de configuração | ☁️ | 1 sessão |
+| **Seg** | Conferir as execuções semanais — em especial se a de control-plane continua sem o público no escopo | ☁️ ou 👤 | 5 min |
+| **Seg** | **A1** — migrar o orquestrador, em sessão escopada no privado | ☁️ | 1 sessão |
 
-**Nenhum dia desta semana tem hora marcada**, e é a primeira vez que isso é
-verdade neste arquivo — a hora marcada era P0. A segunda-feira segue sendo o dia
-de conferir as rotinas, mas agora para confirmar que continuam corretas, não para
-correr atrás de uma janela.
+**O que sobrou da semana é quase todo fila de cliques.** Das linhas em aberto,
+quatro são 👤 e nenhuma leva mais que alguns minutos. Isso não diz que sobrou
+pouco: diz que o trabalho de agente alcançou o próprio teto neste ciclo. O que
+resta exige **titularidade** — assinar, aceitar risco, configurar conta — e não
+capacidade. É a distinção que o `SECURITY.md` chama de classe 3, aparecendo aqui
+como cronograma.
 
 ### Fora da semana, sem data
 
-- **H3** — poucos minutos no terminal do dono, e destrava N6. Só entra num dia
-  quando o PR Watch importar; até lá ele é decoração declarada, não pendência
-  urgente. Note que hoje nem o estado dele é observável daqui (**V1**).
-- **H2** — quando existir um segundo revisor. Não antes: ver a aritmética no item.
+- ~~**H3**~~ — saiu em 2026-08-21: o PR Watch foi **removido**, então não há mais
+  o que destravar. Vale reter que ele nunca chegou a entrar num dia, e que a
+  saída foi por remoção, não por conserto.
+- **H2** — quando existir um segundo revisor. Não antes: ver a aritmética no
+  item. O Pro resolveu o lado do plano e não mexeu nessa aritmética.
 - **H5** — não tem data porque não tem dono declarado, e é o item de severidade
-  alta mais antigo em aberto. Dezessete repositórios foram lidos por agente hoje;
-  se as pré-condições não estiverem cumpridas, o custo disso não é técnico.
-- **L3** — depende de os handoffs de L1 chegarem.
-- **L4** — depende de L2, porque a topologia de rotinas segue a taxonomia.
+  alta mais antigo em aberto. Dezessete repositórios foram lidos por agente nesta
+  semana; se as pré-condições não estiverem cumpridas, o custo disso não é
+  técnico.
+- **L3** — depende de os handoffs de **L1** chegarem.
+- **L4** — depende de **L2**, porque a topologia de rotinas segue a taxonomia. E
+  o achado de 21/08 em L2 encareceu essa dependência: a taxonomia não está só
+  indecidida, está publicada pela metade.
 
 ### O que saiu da lista
 
-O passo "mesclar o que está em voo" saiu por não ter mais objeto: zero PRs
-abertos, dez mesclados, nenhuma branch residual. O bloco P0/P1, que ocupou a
-linha de topo por três semanas, saiu por ter sido feito na UI em 2026-08-10.
+O passo "mesclar o que está em voo" saiu por não ter mais objeto — e voltou a
+sair pelo mesmo motivo em 21/08, depois de dois PRs entrarem no mesmo dia. O
+bloco P0/P1, que ocupou a linha de topo por três semanas, saiu por ter sido feito
+na UI em 2026-08-10. **H3** saiu em 21/08 por remoção do workflow que o exigia.
 
-**Três vezes seguidas o topo da lista saiu por ter sido cumprido** — o merge do
-PR #7 e o watchdog, depois o bloco de configuração, agora P0/P1. É o sinal de que
-a lista está viva; quando um item sair por ter sido esquecido, o sintoma será
-este parágrafo parar de mudar.
+**Quatro vezes seguidas o topo da lista saiu por ter sido cumprido** — o merge do
+PR #7 e o watchdog, depois o bloco de configuração, depois P0/P1, agora o retorno
+dos handoffs. É o sinal de que a lista está viva; quando um item sair por ter
+sido esquecido, o sintoma será este parágrafo parar de mudar.
 
 O que **não** saiu, e merece nota: H5 está aberto desde 2026-08-02 sem uma única
 linha de progresso. Item que nunca entra na semana não é item de baixa
