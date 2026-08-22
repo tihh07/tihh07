@@ -2,9 +2,9 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Read(//home/user/tihh07/**)",
-      "Glob(//home/user/tihh07/**)",
-      "Grep(//home/user/tihh07/**)",
+      "Read(/**)",
+      "Glob(/**)",
+      "Grep(/**)",
       "Bash(git status:*)",
       "Bash(git log:*)",
       "Bash(git show:*)",
@@ -28,12 +28,12 @@
       "Bash(bash plugins/fundacao/hooks/test-guard-push.sh)"
     ],
     "deny": [
-      "Read(//home/user/tihh07/.env)",
-      "Read(//home/user/tihh07/.env.*)",
-      "Read(//home/user/tihh07/**/*.pem)",
-      "Read(//home/user/tihh07/**/*.key)",
-      "Read(//home/user/tihh07/**/credentials.json)",
-      "Read(//home/user/tihh07/**/secrets.json)"
+      "Read(/**/.env)",
+      "Read(/**/.env.*)",
+      "Read(/**/*.pem)",
+      "Read(/**/*.key)",
+      "Read(/**/credentials.json)",
+      "Read(/**/secrets.json)"
     ],
     "ask": [
       "Bash(git push:*)",

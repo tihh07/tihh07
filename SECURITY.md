@@ -66,9 +66,18 @@ Todo conteúdo versionado neste repositório, dentro ou fora do `README.md`,
 passa por:
 
 1. **Nomes** — nenhum cliente, empregador ou pessoa física sem consentimento.
-2. **Números reais** — nenhuma métrica comercial ou resultado de cliente. Número
-   publicado precisa estar rotulado como ilustrativo, e custo só aparece como
+2. **Números reais de terceiro** — nenhuma métrica comercial ou resultado de
+   cliente, empregador, conselho ou parceiro. Número desse tipo, se publicado,
+   precisa estar rotulado como ilustrativo, e custo de terceiro só aparece como
    cenário, nunca como fatura.
+
+   **Custo de infraestrutura própria é exceção declarada, e sai com data**:
+   consumo de CI, gasto de API, cota de plano. Emendado em 2026-08-22, e o
+   motivo importa mais que a exceção — a regra foi escrita larga demais e passou
+   a proibir o que é útil. Trocar *"1.802 de 2.000 minutos"* por *"a cota estava
+   alta"* não protege ninguém: destrói a evidência que torna o item de backlog
+   acionável e deixa só a impressão. **O que a regra existe para proteger é
+   número de terceiro**, e é isso que ela diz agora.
 3. **Dado pessoal** — zero, inclusive exemplo "fictício" que na origem é real.
 4. **Segredos** — zero, inclusive em screenshot, log colado e trecho de config.
 5. **Estrutura interna** — nenhum caminho de rede, hostname, nome de sistema
