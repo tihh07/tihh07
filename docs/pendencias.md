@@ -1625,6 +1625,16 @@ qualquer sessão futura que leia aquele repositório — foi exatamente assim qu
 três fichas concluíram que a auditoria não existia. O gate humano continua certo
 como política; a fila que ele acumula é que virou o risco.
 
+> **E o item se provou de novo em 2026-08-21, do lado de dentro.** A ferramenta de
+> medição do **C1** foi escrita, testada contra a API e commitada — num PR draft.
+> Horas depois o dono abriu um Codespace para rodá-la e recebeu *"não existe no
+> diretório"*, porque o Codespace abre na branch default e a ferramenta não estava
+> lá. Não foi um contratempo de instalação: foi **este item acontecendo com a
+> ferramenta que este backlog pediu**, e desta vez quem tropeçou não foi uma
+> sessão de auditoria — foi a pessoa. O que a lição ganha com isso é alcance:
+> vale para relatório, ficha, script e qualquer coisa que alguém vá procurar
+> depois.
+
 > Terceira vez que este item é redescrito, e o padrão já se repetiu vezes
 > demais para ser coincidência: **a barreira declarada quase nunca é a barreira
 > real.** Primeiro era R1, e não era. Depois era o transporte, e não era. Vale

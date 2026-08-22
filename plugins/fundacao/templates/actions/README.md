@@ -34,6 +34,24 @@ bash medir-actions.sh --todos            # inclui públicos
 bash medir-actions.sh --repo a --repo b  # só nesses
 ```
 
+### Se o arquivo "não existe no diretório"
+
+Então ele ainda não chegou na branch default, e o Codespace abriu em `main`.
+Aconteceu de verdade em 2026-08-21, horas depois de este arquivo ser escrito.
+Traga a branch:
+
+```
+git fetch origin <branch-do-PR>
+git checkout <branch-do-PR>
+```
+
+**Isso não é um contratempo de instalação — é o item L1 do backlog acontecendo
+com a ferramenta que o backlog pediu.** Está escrito lá que *trabalho completo
+que não entra na branch default é indistinguível de trabalho não feito para
+qualquer sessão futura*, e foi assim que três fichas de auditoria concluíram que
+um relatório não existia. Um script de medição parado num PR draft cai na mesma
+categoria — e desta vez quem tropeçou foi o dono.
+
 Se faltar permissão em algum repositório, ele **diz qual e segue** — um
 repositório inacessível não derruba o lote, e o total ao final avisa que aquele
 ficou de fora.
