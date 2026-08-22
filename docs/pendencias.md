@@ -157,9 +157,9 @@ entregaram e dezessete fichas foram escritas, cada uma na origem. Restam **dois
 repositórios em aberto**, e nenhum por falta de execução de agente — ver **L1**.
 
 **5. O que sobra é quase todo humano.** S1 (dado pessoal, risco aceito), S2
-(alcance de R1), C1 (orçamento do Actions), H1-bis (marcar o check), H7 (proteger
-as branches dos privados), H5 e L2 (decisão), L4 (criar rotina na UI), A1 (sessão
-escopada num privado). **Nenhum destrava insistindo daqui** — e A1 e L4, tentados daqui,
+(alcance de R1), C1 (orçamento do Actions), H7 (proteger as branches dos
+privados), H5 e L2 (decisão), L4 (criar rotina na UI), A1 (sessão escopada num
+privado). **H1-bis saiu daqui em 21/08, fechado** — o check é obrigatório. **Nenhum destrava insistindo daqui** — e A1 e L4, tentados daqui,
 violariam R1 ou repetiriam o defeito do P0.
 
 ### Achados que pertencem a outros repositórios

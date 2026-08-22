@@ -139,7 +139,7 @@ em dois lugares é a divergência que este repositório existe para evitar.
 | `.claude/skills/` | Conteúdo versionado das rotinas (padrão prompt-ponteiro) |
 | `.claude-plugin/marketplace.json` | Manifesto do marketplace que distribui o plugin-fundação |
 | `plugins/fundacao/` | Templates distribuíveis: executores, hook e sua suíte, telemetria, backup |
-| `.github/workflows/` | Verificação (a cada PR), PR Watch, watchdog e backup |
+| `.github/workflows/` | Verificação (a cada PR, check obrigatório), watchdog semanal e backup |
 | `.github/CODEOWNERS` | Donos por caminho — inerte até "Require review from Code Owners" |
 | `.gitignore` · `LICENSE` | Barra segredo e dado; CC BY 4.0 no texto, MIT nos snippets |
 | `reports/publicacao/` | Saída semanal da rotina N2, quando há achado |
