@@ -35,7 +35,7 @@
 | Item | Estado | Por quê |
 |---|---|---|
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
-| **C1** — minutos de Actions a 90% | 🟡 **Pro assinado; medição em voo** | teto foi a 3.000 e uma sessão escopada num privado está medindo o consumo por workflow. **Não é este repo** (público não consome) e **não é o plugin**. Assinar não fecha o item: teto maior sobre consumo não medido é adiamento |
+| **C1** — minutos de Actions a 90% | 🟡 **Pro assinado; ferramenta pronta, medição NÃO rodada** | teto foi a 3.000. A sessão que media abandonou a tarefa e o veredito nunca chegou — o item segue com **relato parcial**, não com medição. `medir-actions.sh` está na `main` e roda num Codespace. **Não é este repo** e **não é o plugin**. Assinar não fecha: teto maior sobre consumo não medido é adiamento |
 | **S2** — R1 cobre conteúdo, não inventário | 🔴 **novo em 2026-08-21** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
 | **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
@@ -883,12 +883,19 @@ da conta, a diferença é o achado** — está em repositório que o script não
 > Actions é gratuito em público —, e a distinção está escrita no código para
 > ninguém ler zero como defeito.
 
-**A medição começou, e o primeiro número não é fato ainda.** Uma sessão escopada
-num privado está contando consumo por workflow em 2026-08-21. O primeiro retorno
-dela aponta uma linha de base da ordem de **doze minutos por commit**. Isso é
-**relato parcial de sessão em voo**, não medição fechada, e fica registrado como
-relato de propósito: confundir hipótese plausível com medição foi exatamente o
-que produziu o culpado errado dois blocos acima, no mesmo item, no mesmo dia.
+**A medição começou e não terminou.** Em 2026-08-21 uma sessão escopada num
+privado contava consumo por workflow e devolveu uma linha de base da ordem de
+**doze minutos por commit**. Isso era **relato parcial**, não medição fechada.
+
+**Em 2026-08-22 ficou pior que parcial: virou órfão.** A sessão mudou de tarefa
+sem entregar o veredito, e o número nunca foi confirmado nem desmentido. Ele
+continua aqui **como relato**, e é assim que deve ser lido — confundir hipótese
+plausível com medição foi exatamente o que produziu o culpado errado dois blocos
+acima, no mesmo item, no mesmo dia.
+
+**O que destrava agora não depende de sessão nenhuma.** `medir-actions.sh` está
+na `main` e roda num Codespace em minutos, com o `GITHUB_TOKEN` que já vem
+injetado. O item deixou de esperar um agente e passou a esperar um comando.
 
 **Se o número se confirmar, ele inverte a recomendação deste item.** Custo por
 *commit* é proporcional ao trabalho, não ao calendário — e então podar cron, que
