@@ -123,44 +123,48 @@ por isso ficou mais barato.
 
 ## Retomada — por onde a próxima sessão começa
 
-Reescrita em **2026-08-21**. A versão anterior era de 20/08 e envelheceu inteira
-em um dia: o que ela chamava de "em voo" já pousou, e o que ela dava como estado
-do repositório descrevia dez PRs mesclados, que hoje são doze.
+Reescrita no fechamento de **2026-08-23**. A versão anterior era de 21/08; o que
+ela dava como aberto fechou, e três coisas mudaram de natureza.
 
-**1. Não tente reverificar configuração. Você não consegue.** Leia a
-[seção sobre o que a nuvem não alcança](#o-que-a-nuvem-não-alcança--e-por-quê)
-antes de gastar uma hora redescobrindo o mesmo 403. Se o estado de `main`, do
-secret scanning ou dos segredos importar para a sua tarefa, o caminho é pedir a
-conferência a uma pessoa ou implementar **V1** — não insistir na API.
+**1. O repositório está limpo, e isto foi conferido, não suposto.** Zero PRs
+abertos, `main` protegida com as quatro regras (`deletion`, `non_fast_forward`,
+`pull_request`, `required_status_checks`), nada não commitado. **Um resíduo:** a
+branch `claude/status-c1-medicao`, **provada mesclada** (zero linhas de diferença
+contra `main`), continua no remoto. Apagá-la é um clique humano — ver o item 4.
 
-**2. O estado do repositório, conferido nesta data:** **zero PRs abertos**, duas
-branches remotas (`main`, protegida, e a branch de trabalho deste ciclo, já
-mesclada). Todo o trabalho de 20 e 21 de agosto está na branch default — não há
-nada esperando merge aqui.
+**2. Quatro itens fecharam entre 21 e 23/08**, e nenhum deve ser recomendado de
+novo: **H1** (ruleset lido inteiro), **H1-bis** (`verificar` obrigatório, fixado
+no app do Actions), **H4** (secret scanning ativo), **L7** (apelidos aplicados).
+Fecharam também o item 5 do checklist N2 — as nove regras de permissão passaram
+para a âncora de raiz de projeto — e o item 2, emendado para separar número de
+terceiro de custo de infraestrutura própria.
 
-**3. O que ganhou existência em 21/08, e muda o que você pode assumir:**
+**3. Não recomende `$CLAUDE_PROJECT_DIR` em regra de permissão.** Variável de
+ambiente **não é expandida** ali; só vale em `hooks`. A âncora certa é `/` — barra
+simples, que resolve para a raiz do projeto. Este erro já foi cometido e corrigido
+antes de escalar para dezessete repositórios; a sintaxe está no relatório
+`reports/publicacao/2026-34.md`.
 
-- `verificacao.yml` roda a cada PR e **é check obrigatório desde 21/08**, fixado
-  no app do GitHub Actions. Um PR com o repositório quebrado não entra: a
-  plataforma recusa. Não confunda com o merge sem revisor, que segue doutrina.
-- O guardrail de push teve um defeito corrigido e ganhou **suíte hermética**. A
-  suíte passou a rodar num repositório descartável porque, rodando aqui, o
-  fallback da branch atual (`claude/*`) transformava defeito real em teste verde.
-  Se você editar o hook, rode `bash plugins/fundacao/hooks/test-guard-push.sh`.
-- Os dezessete privados são citados por **apelido** (`P01`–`P17`) em todo arquivo
-  versionado. O mapeamento não mora aqui e não deve passar a morar — a regra está
-  no [`SECURITY.md`](../SECURITY.md).
-- O `claude-pr-watch.yml` **não existe mais**: 22 disparos, zero execuções reais.
+**4. Duas paredes limitam o agente, e elas não são a mesma coisa que a doutrina.**
+O `SECURITY.md` autoriza agente a apagar branch já mesclada — **o mediador da
+plataforma não deixa**, e devolve 403 mesmo com a prova feita. O mesmo vale para
+qualquer escrita de configuração de repositório. **A plataforma é mais restritiva
+que a regra escrita**, e onde as duas divergem quem vence é a plataforma. Não
+procure rota alternativa: registre e devolva ao humano.
 
-**4. O ciclo de auditoria deixou de ser o gargalo.** Dezessete auditorias
-entregaram e dezessete fichas foram escritas, cada uma na origem. Restam **dois
-repositórios em aberto**, e nenhum por falta de execução de agente — ver **L1**.
+**5. O que sobra é quase todo humano**, e nenhum destrava insistindo daqui:
+**H7** (proteger a branch default dos privados) · **C1** (medir os minutos —
+`medir-actions.sh` está na `main`, mas **o token do Codespace não basta**: ele é
+escopado no repositório e não enumera a conta, então precisa de um PAT com
+`Actions: Read` e `Metadata: Read`) · **S2** (enquadrar o alcance de R1) · **L2**
+(a coluna de departamento, que é a pendência principal deste repositório) ·
+**P16** · **H5**.
 
-**5. O que sobra é quase todo humano.** S1 (dado pessoal, risco aceito), S2
-(alcance de R1), C1 (orçamento do Actions), H7 (proteger as branches dos
-privados), H5 e L2 (decisão), L4 (criar rotina na UI), A1 (sessão escopada num
-privado). **H1-bis saiu daqui em 21/08, fechado** — o check é obrigatório. **Nenhum destrava insistindo daqui** — e A1 e L4, tentados daqui,
-violariam R1 ou repetiriam o defeito do P0.
+**6. O despacho por sessão voltou a funcionar em 23/08**, depois de sete falhas
+seguidas de `create_session` ao longo do fim de semana. O piloto de três foi
+disparado — um repositório por sessão, somente leitura, com os quatro tokens de
+resposta do prompt em `.claude/prompts/despacho-diagnostico.md`. **Leia os três
+retornos antes de despachar correção**, e despache só onde o diagnóstico apontar.
 
 ### Achados que pertencem a outros repositórios
 
