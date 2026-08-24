@@ -157,7 +157,8 @@ procure rota alternativa: registre e devolva ao humano.
 `medir-actions.sh` está na `main`, mas **o token do Codespace não basta**: ele é
 escopado no repositório e não enumera a conta, então precisa de um PAT com
 `Actions: Read` e `Metadata: Read`) · **S2** (enquadrar o alcance de R1) · **L2**
-(a coluna de departamento, que é a pendência principal deste repositório) ·
+(a coluna de departamento — **decidida e aplicada em 24/08**; o que resta são as
+treze células que dependem do transporte de L1) ·
 **P16** · **H5**.
 
 **6. O despacho por sessão voltou a funcionar em 23/08**, depois de sete falhas
@@ -1006,7 +1007,7 @@ doutrina operacional, o backlog e o blueprint descrevem o ecossistema inteiro e
 vivem no único repositório **público**.
 
 **Decidido: vai para um repositório privado.** E o destino não é um repositório
-novo — é o **departamento de Fundação / Arquitetura** (`P01` no índice), que o
+novo — é o **departamento `D1`** (`P01` no índice), que o
 blueprint já define como "princípios, padrões, o sistema operacional" e como
 departamento-piloto. A pergunta do dono — *"já não deveria ser esse cara?"* —
 está certa, e vale registrar por quê: o blueprint **já** atribuía essa missão a
@@ -1827,7 +1828,7 @@ montando o próprio cenário, explicitamente. Sem repositório neutro a suíte
 > revisões humanas e uma suíte dedicada tinham deixado passar.
 
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
-**Severidade: alta · Executor: 👤 Humano (decisão) depois ☁️ Nuvem · ABERTO**
+**Severidade: alta · 🟡 OS NOMES FECHARAM, O EIXO NÃO — 2026-08-24 · Executor: 👤 Humano (decidiu) + ☁️ Nuvem (aplicou)**
 
 | O que a operação real tem | O que este repositório publica |
 |---|---|
@@ -1873,9 +1874,41 @@ publicar os dezoito, apelidar todos como se fez com os repositórios, ou retirar
 coluna. Nenhuma é trabalho de agente. O que ele acrescenta é que **"deixar como
 está" não é neutro** — é uma quarta opção, e é a única que carrega o defeito.
 
+**Decidido e aplicado em 2026-08-24: apelidar.** Das três saídas, o dono escolheu
+a do meio. Os cinco departamentos que o índice nomeava viraram `D1`–`D5`, com a
+mesma regra de estabilidade dos apelidos de repositório, e o mapeamento mora
+fora daqui. Os treze que este repositório **não conhece** deixaram de dizer *"não
+declarado"* e passaram a dizer **"não verificado"** — a palavra que o `AGENTS.md`
+já prescreve, e a distinção não é cosmética: *não declarado* afirma algo sobre o
+repositório remoto, que esta sessão não tem como afirmar; *não verificado* afirma
+algo sobre **esta** sessão, que é o que se sabe.
+
+**O `grep` de conferência achou o que a correção sozinha não teria fechado.**
+Trocar a coluna do índice deixou os cinco nomes reais publicados por extenso no
+organograma do [blueprint](orchestration-blueprint.md) — diagrama da seção 3 e
+tabela logo abaixo —, no título da seção 5.1, no roadmap da Fase 4 e uma vez mais
+neste arquivo. **Apelidar uma tabela enquanto a mesma informação está três telas
+adiante é a aparência da sanitização, não a sanitização**, e por pouco o PR saiu
+afirmando que o vazamento tinha fechado. É o erro que o **C1** cometeu duas
+vezes: afirmar sem abrir o que confirmaria.
+
+**Reconciliado no mesmo dia, e por isso o item fecha de verdade.** O organograma
+passou a `D1`–`D5` — inclusive os identificadores do mermaid, que também
+entregavam os nomes —, a seção 5.1 usa a sigla que o documento já usava, e a
+missão de cada departamento continua publicada, porque **é ela o desenho**, e é
+para isso que o blueprint existe. O `grep` pelos cinco nomes não devolve mais
+nenhuma linha versionada.
+
+**O eixo, esse, não fecha.** O índice continua sendo repositório × estado, e
+reeixá-lo para setor × repositórios depende dos handoffs de **L1**; enquanto eles
+não chegam, as treze células ficam vazias por ignorância declarada, e **R1**
+impede abrir o privado para preenchê-las daqui.
+
 **Verificação:** o número de repositórios declarados no índice bate com o número
-que existe, e a coluna de departamento é uniforme — todos nomeados, todos
-apelidados ou nenhum.
+que existe; a coluna de departamento não publica nome real nenhum — apelido onde
+se sabe, *"não verificado"* onde não se sabe — **e um `grep` pelos cinco nomes
+reais não os encontra em arquivo versionado nenhum.** As três passam em
+2026-08-24. O que segue aberto é o **eixo**, não os nomes.
 
 ### L3 — Executores e hook seguem não exercitados
 **Severidade: média · Executor: ☁️ Nuvem + 👤 Humano · ABERTO**
