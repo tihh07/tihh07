@@ -155,6 +155,8 @@ echo "Medindo ${#ALVOS[@]} repositório(s). Somente leitura."
 echo
 
 SEM_ACESSO=0
+SEM_WORKFLOW=0
+COM_WORKFLOW=0
 for repo in "${ALVOS[@]}"; do
   resp=$(api "/repos/$DONO/$repo/actions/workflows?per_page=100")
   corpo=${resp%$'\n'*}; codigo=${resp##*$'\n'}
@@ -167,7 +169,16 @@ import json,sys
 for w in json.load(sys.stdin).get('workflows',[]):
     # Workflow desativado ainda carrega o gasto que já fez neste período.
     print('%s\t%s' % (w['id'], w.get('name','(sem nome)')))" | tr -d '\r')
-  [ -z "$ids" ] && continue
+  # Repositório sem workflow nenhum e repositório que rodou e custou zero somem
+  # do mesmo jeito na soma, e até 2026-08-24 este `continue` não distinguia os
+  # dois. A conta importa: um total zero só é achado se houver repositório com
+  # workflow por trás dele. Sem isso, "nenhum minuto faturável" pode significar
+  # "nada gastou" ou "não havia o que medir", e foi essa a dúvida que sobrou da
+  # medição do C1.
+  if [ -z "$ids" ]; then
+    SEM_WORKFLOW=$((SEM_WORKFLOW + 1)); continue
+  fi
+  COM_WORKFLOW=$((COM_WORKFLOW + 1))
   while IFS=$'\t' read -r wid wnome; do
     [ -n "$wid" ] || continue
     r2=$(api "/repos/$DONO/$repo/actions/workflows/$wid/timing")
@@ -185,8 +196,12 @@ done
 echo
 if [ ! -s "$LINHAS" ]; then
   echo "Nenhum minuto faturável no período corrente — em nenhum repositório lido."
+  printf 'Repositórios com pelo menos um workflow, efetivamente medidos: %d de %d.\n' \
+    "$COM_WORKFLOW" "${#ALVOS[@]}"
   echo "Isso é resultado, não falha: se a cota está alta e nada aparece aqui,"
   echo "o gasto está fora do que esta medição alcança, e é isso que se reporta."
+  echo "Mas leia a linha acima antes de concluir: zero minuto medido em zero"
+  echo "repositório com workflow não é achado, é medição vazia."
 else
   python3 - "$LINHAS" <<'PY'
 import sys, collections
@@ -232,3 +247,5 @@ fi
 
 [ "$SEM_ACESSO" -eq 0 ] || echo "
 $SEM_ACESSO repositório(s) sem leitura de Actions — não entraram na soma acima."
+[ "$SEM_WORKFLOW" -eq 0 ] || echo "
+$SEM_WORKFLOW repositório(s) sem nenhum workflow — não havia o que medir neles."
