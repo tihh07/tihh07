@@ -106,22 +106,30 @@ rotina); triggers GitHub exigem o Claude GitHub App; runs agem com a identidade 
 ```mermaid
 flowchart TD
     CEO["🧠 Orquestrador Fable 5<br/>(agente da sessão principal)"]
-    CEO --> FUND["🏛️ Fundação / Arquitetura<br/><i>P01</i><br/>🔜 piloto Fase 1"]
-    CEO --> BRAIN["📚 Segundo Cérebro<br/><i>P02</i><br/>🔜"]
-    CEO --> IC["📈 Inteligência Comercial & Mercado<br/><i>P03</i><br/>🔜"]
-    CEO --> AG["🤝 Operação de Cliente<br/><i>P04</i><br/>🔜"]
-    CEO --> PUB["🌐 Fachada Pública / Marketing<br/><i>tihh07/tihh07</i><br/>✅ este documento"]
-    IC -. "cliente interno" .-> AG
-    FUND -- "padrões e templates<br/>(plugin sanitizado)" --> BRAIN & IC & AG & PUB
+    CEO --> D1["🏛️ D1<br/><i>P01</i><br/>🔜 piloto Fase 1"]
+    CEO --> D2["📚 D2<br/><i>P02</i><br/>🔜"]
+    CEO --> D3["📈 D3<br/><i>P03</i><br/>🔜"]
+    CEO --> D4["🤝 D4<br/><i>P04</i><br/>🔜"]
+    CEO --> D5["🌐 D5<br/><i>tihh07/tihh07</i><br/>✅ este documento"]
+    D3 -. "cliente interno" .-> D4
+    D1 -- "padrões e templates<br/>(plugin sanitizado)" --> D2 & D3 & D4 & D5
 ```
 
 | Repo | Departamento | Missão |
 |---|---|---|
-| `P01` (privado) | **Fundação / Arquitetura** | Princípios, padrões, o "sistema operacional"; **departamento-piloto da Fase 1** |
-| `P02` (privado) | **Segundo Cérebro** | Base de conhecimento e contexto que alimenta os demais |
-| `P03` (privado) | **Inteligência Comercial & Mercado** | Sede do setor de IC (seção 6.1) |
-| `P04` (privado) | **Operação de Cliente / Agência** | Trabalho de cliente real; cliente interno do setor de IC |
-| `tihh07/tihh07` (público) | **Fachada Pública / Marketing** | Este blueprint e o control-plane sanitizado |
+| `P01` (privado) | **D1** | Princípios, padrões, o "sistema operacional"; **departamento-piloto da Fase 1** |
+| `P02` (privado) | **D2** | Base de conhecimento e contexto que alimenta os demais |
+| `P03` (privado) | **D3** | Sede do setor de IC (seção 5.1) |
+| `P04` (privado) | **D4** | Trabalho de cliente real; cliente interno do setor de IC |
+| `tihh07/tihh07` (público) | **D5** | Este blueprint e o control-plane sanitizado |
+
+> **Por que `D1`–`D5` e não os nomes.** Mesma regra dos apelidos de repositório, e
+> pela mesma razão: nome de departamento entrega identidade de terceiro, e publicar
+> só alguns é pior, porque a omissão vira o índice. A regra inteira vive na nota do
+> índice em [`AGENTS.md`](../AGENTS.md), e o mapeamento apelido → departamento mora
+> fora deste repositório. O apelido é **estável** — nunca reciclado, nunca
+> renumerado. O que este documento continua publicando é a **missão** de cada um,
+> que é o desenho, e é para isso que ele existe.
 
 **Padrão para anexar um novo departamento** (🔜 replicável): criar/adicionar o repo → instalar o
 plugin-fundação (templates de agents/skills/rules) → escrever o CLAUDE.md do departamento (<200
@@ -205,9 +213,11 @@ que nenhum foi exercitado em produção, não que faltem escrever:
 Roteamento por modelo é a principal alavanca de custo: **Haiku para o mecânico, Sonnet para análise,
 Fable/Opus só para orquestração e síntese**.
 
-### 5.1 Setor de Inteligência Comercial & Mercado 🔜
+### 5.1 Setor de IC 🔜
 
-O departamento-especialidade do ecossistema — "os cientistas e analistas que se adaptam ao segmento".
+O nome por extenso do setor mora fora deste repositório, pela mesma regra dos
+apelidos de departamento — a sigla é a que este documento já usava. O
+departamento-especialidade do ecossistema — "os cientistas e analistas que se adaptam ao segmento".
 Sede em `P03`; atende `P04` como cliente interno.
 
 | Especialista | Papel |
@@ -502,8 +512,8 @@ corte: rotina que consome mais tempo de revisão do que economiza, por 3 semanas
   runs.jsonl; pré-condições LGPD cumpridas; 4 semanas de prova de valor.
 - **Fase 3 — Profundidade** 🔜: telemetria OTEL com custo real; hooks avançados (`type: prompt`/
   `agent`, redação de segredos); dashboard automatizado; rotina de curadoria de memória.
-- **Fase 4 — Escala** 🔜: replicação departamento a departamento (só com valor provado); setor de
-  Inteligência Comercial com briefings por segmento; avaliação de Agent SDK / Managed Agents
+- **Fase 4 — Escala** 🔜: replicação departamento a departamento (só com valor provado); setor de IC
+  com briefings por segmento; avaliação de Agent SDK / Managed Agents
   (scheduled deployments) / Agent Teams para cargas que o modelo de Routines não cobre.
 
 ---

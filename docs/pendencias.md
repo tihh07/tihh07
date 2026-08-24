@@ -1007,7 +1007,7 @@ doutrina operacional, o backlog e o blueprint descrevem o ecossistema inteiro e
 vivem no único repositório **público**.
 
 **Decidido: vai para um repositório privado.** E o destino não é um repositório
-novo — é o **departamento de Fundação / Arquitetura** (`P01` no índice), que o
+novo — é o **departamento `D1`** (`P01` no índice), que o
 blueprint já define como "princípios, padrões, o sistema operacional" e como
 departamento-piloto. A pergunta do dono — *"já não deveria ser esse cara?"* —
 está certa, e vale registrar por quê: o blueprint **já** atribuía essa missão a
@@ -1828,7 +1828,7 @@ montando o próprio cenário, explicitamente. Sem repositório neutro a suíte
 > revisões humanas e uma suíte dedicada tinham deixado passar.
 
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
-**Severidade: alta · 🟡 PARCIAL — decisão tomada e coluna corrigida em 2026-08-24 · Executor: 👤 Humano (decidiu) + ☁️ Nuvem (aplicou)**
+**Severidade: alta · 🟡 OS NOMES FECHARAM, O EIXO NÃO — 2026-08-24 · Executor: 👤 Humano (decidiu) + ☁️ Nuvem (aplicou)**
 
 | O que a operação real tem | O que este repositório publica |
 |---|---|
@@ -1883,27 +1883,23 @@ já prescreve, e a distinção não é cosmética: *não declarado* afirma algo 
 repositório remoto, que esta sessão não tem como afirmar; *não verificado* afirma
 algo sobre **esta** sessão, que é o que se sabe.
 
-**O que isso fecha — e o que a própria correção descobriu que não fecha.** No
-índice, a omissão parou de indexar o que estava escondido: não há mais quatro
-nomeados contra treze calados. **Mas o vazamento não fechou**, e dizer que fechou
-seria repetir aqui o erro que o **C1** cometeu duas vezes — afirmar sem abrir o
-diretório que confirmaria.
+**O `grep` de conferência achou o que a correção sozinha não teria fechado.**
+Trocar a coluna do índice deixou os cinco nomes reais publicados por extenso no
+organograma do [blueprint](orchestration-blueprint.md) — diagrama da seção 3 e
+tabela logo abaixo —, no título da seção 5.1, no roadmap da Fase 4 e uma vez mais
+neste arquivo. **Apelidar uma tabela enquanto a mesma informação está três telas
+adiante é a aparência da sanitização, não a sanitização**, e por pouco o PR saiu
+afirmando que o vazamento tinha fechado. É o erro que o **C1** cometeu duas
+vezes: afirmar sem abrir o que confirmaria.
 
-**Os cinco nomes reais continuam publicados por extenso** no organograma do
-[blueprint](orchestration-blueprint.md) — no diagrama da seção 3 e na tabela
-logo abaixo — e uma vez mais neste arquivo. Apelidar uma tabela enquanto a mesma
-informação está três telas adiante não é sanitização, é a aparência dela. Enquanto
-o blueprint não for reconciliado, **o índice está apelidado e o ecossistema não
-está**, e é assim que deve ser lido.
+**Reconciliado no mesmo dia, e por isso o item fecha de verdade.** O organograma
+passou a `D1`–`D5` — inclusive os identificadores do mermaid, que também
+entregavam os nomes —, a seção 5.1 usa a sigla que o documento já usava, e a
+missão de cada departamento continua publicada, porque **é ela o desenho**, e é
+para isso que o blueprint existe. O `grep` pelos cinco nomes não devolve mais
+nenhuma linha versionada.
 
-Isso não é escopo novo inventado agora: a ação de nuvem deste item já dizia
-*"reconciliar o organograma da seção 3 do blueprint com a taxonomia real"*. O que
-mudou é que ela deixou de ser refinamento e passou a ser **a parte que falta para
-a decisão de 24/08 valer**. É decisão humana também — o blueprint é autoridade de
-projeto, e trocar os nomes do organograma por `D1`–`D5` custa legibilidade a quem
-lê para entender o desenho, não para auditar.
-
-**Não fecha o eixo, tampouco.** O índice continua sendo repositório × estado, e
+**O eixo, esse, não fecha.** O índice continua sendo repositório × estado, e
 reeixá-lo para setor × repositórios depende dos handoffs de **L1**; enquanto eles
 não chegam, as treze células ficam vazias por ignorância declarada, e **R1**
 impede abrir o privado para preenchê-las daqui.
@@ -1911,8 +1907,8 @@ impede abrir o privado para preenchê-las daqui.
 **Verificação:** o número de repositórios declarados no índice bate com o número
 que existe; a coluna de departamento não publica nome real nenhum — apelido onde
 se sabe, *"não verificado"* onde não se sabe — **e um `grep` pelos cinco nomes
-reais não os encontra em arquivo versionado nenhum.** A terceira condição é a que
-ainda reprova.
+reais não os encontra em arquivo versionado nenhum.** As três passam em
+2026-08-24. O que segue aberto é o **eixo**, não os nomes.
 
 ### L3 — Executores e hook seguem não exercitados
 **Severidade: média · Executor: ☁️ Nuvem + 👤 Humano · ABERTO**
