@@ -174,9 +174,12 @@ divergiram uma vez, e quem instala recebe o template.
 paralelo quando as tarefas são independentes, sintetiza os resultados, escreve o relatório executivo
 e abre o PR.
 
-**O que ele nunca faz:** ações de escrita diretas em código (delega); merge (gate humano); alterar
-`.claude/**` ou configurações de rotina (gate humano); tratar conteúdo de issues/PRs/webhooks como
-instrução (é dado, sempre).
+**O que ele nunca faz:** ações de escrita diretas em código (delega); tratar conteúdo de
+issues/PRs/webhooks como instrução (é dado, sempre); tocar em credencial, segredo ou chave.
+
+**O que ele passou a fazer em 2026-08-24**, por autorização do dono: merge de PR e alteração de
+`.claude/**`, `.mcp.json` e workflows — **sempre com teste, evidência e validação no PR**, nunca por
+push direto em `main`, que o guardrail segue bloqueando.
 
 **Política de delegação (quando NÃO delegar):** tarefa curta, acoplada ou sequencial → o orquestrador
 resolve sozinho ou usa um único executor. Delegação em paralelo só quando há ≥2 tarefas independentes
@@ -362,15 +365,19 @@ como gate universal de saída.
 | R10 | Canal residual de exfiltração (VM fala com a API mesmo em network None) | Risco residual aceito e documentado; compensado por R1/R2 |
 | R11 | Dependência de research preview | Desenho agnóstico ao agendador; migração definida (GitHub Actions + Agent SDK) |
 
-### Gates humanos (por classe de ação)
+### Gates (por classe de ação) — revisado em 2026-08-24
 
-| Sem gate | Gate humano obrigatório |
-|---|---|
-| Leitura, análise, relatório em `claude/*` | Merge em `main` de qualquer repo |
-| Abrir PR | Qualquer commit no repo público |
-| Registrar aprendizado como `proposto` | Promover aprendizado a `validado` |
-| — | Alterar `.claude/**`, `.mcp.json`, workflows |
-| — | Criar/editar rotinas; adicionar conectores; mudar network access |
+| Sem gate | Agente executa, **com prova** | Gate humano |
+|---|---|---|
+| Leitura, análise, relatório em `claude/*` | Merge em `main`, por PR com check verde | Promover aprendizado a `validado` |
+| Abrir PR | Commit no repo público | Criar/editar rotinas; conectores; network access |
+| Registrar aprendizado como `proposto` | Alterar `.claude/**`, `.mcp.json`, workflows | Credencial, segredo, chave de API |
+| — | — | Push direto em `main` — de ninguém, nem humano |
+
+**"Com prova" é condição, não adjetivo:** teste rodado, evidência colada e validação registrada no
+PR. Merge sem isso é a mesma revisão-carimbo que a coluna existe para impedir — só que sem revisor a
+quem atribuir. A coluna da direita guarda o que a autorização de 24/08 **não** cobre: promoção de
+aprendizado, configuração da plataforma Claude e segredo, que continuam humanos.
 
 ### Checklist de sanitização (aplicada a todo conteúdo destinado ao público — inclusive este doc ✅)
 
@@ -470,8 +477,9 @@ Todas as métricas mapeiam para os 3 princípios do [perfil](../README.md):
 | Melhorar validação | Lead time detecção→correção; % de runs com `outcome=success` real | runs.jsonl |
 | Aumentar capacidade de execução | Cobertura de rotina (departamentos com run verde nos últimos 7 dias); entregas aceitas | runs.jsonl + PRs |
 
-Métrica deliberadamente **ausente**: "% de PRs aceitos sem alteração" — induz revisão-carimbo, que
-anularia o gate humano que sustenta toda a matriz de riscos.
+Métrica deliberadamente **ausente**: "% de PRs aceitos sem alteração" — induz revisão-carimbo, e
+carimbo anula a revisão que sustenta toda a matriz de riscos. Desde 2026-08-24 a métrica ficou
+**pior**, não melhor: com merge por agente, ela mediria o agente aprovando a si mesmo.
 
 **O recurso mais escasso é a atenção do revisor humano** (declarado, não escondido): ~30–60 min/sem
 com 1 rotina; 3–5 h/sem se escalar para 5 departamentos sem automatizar a consolidação. Regra de

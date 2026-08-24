@@ -43,8 +43,13 @@ Duas regras do blueprint valem em toda sessão neste repo:
 - **R1** — nenhuma sessão mistura repositórios privados com este, que é público.
   Auditorias rodam escopadas em um projeto por vez, e só o resumo sanitizado
   chega aqui.
-- **Gate humano** — nada é mesclado em `main` por agente, e todo commit no repo
-  público passa por revisão.
+- **Merge por agente, com prova** — desde 2026-08-24, por autorização do dono,
+  sessão de agente executa operação de GitHub aqui, **merge incluído**, sob uma
+  condição que não é formalidade: teste, evidência e validação registrados no PR.
+  A trava não mudou — agente **não** empurra direto para `main`, o `guard-push.sh`
+  bloqueia, e tudo entra por PR com o check obrigatório verde. O controle passou a
+  ser a plataforma mais o registro, não a atenção do revisor: é o que **H1-bis**
+  tornou possível ao fixar `verificar` como obrigatório e sem ator de bypass.
 
 ## Frontmatter de identificação
 

@@ -54,8 +54,10 @@ que divergem só no cabeçalho e que **o template é o lado que vale**.
    o [README do template](templates/backup/README.md) — a credencial é humana, e
    até ela existir o workflow falha de propósito, em vez de pular calado.
 
-**Alterar `.claude/**` é gate humano.** Nenhum agente executa esta instalação
-sozinho.
+**Instalar é decisão de quem responde pelo departamento.** Desde 2026-08-24 um
+agente pode alterar `.claude/**` com teste, evidência e validação no PR — mas
+escolher que um departamento passe a rodar este plugin não é edição de arquivo,
+e continua sendo do dono.
 
 ## Estado
 
