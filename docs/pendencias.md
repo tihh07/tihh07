@@ -769,7 +769,7 @@ nem por chat. Quem cria o segredo é quem o digita. Registrado assim para que um
 sessão futura não trate isso como pendência a executar.
 
 ### C1 — Minutos de Actions a 90% do plano
-**Severidade: média · 🔴 ABERTO · Executor: 👤 Humano (orçamento) + ☁️ Nuvem (medir)**
+**Severidade: média · 🟡 ABERTO · Executor: 👤 Humano (orçamento) + ☁️ Nuvem (medir)**
 
 Alerta do GitHub em 2026-08-21: **1.802 de 2.000 minutos consumidos**, 90% do
 incluído, com reset em 1º de setembro. Restam ~198 minutos para 11 dias.
