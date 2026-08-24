@@ -1,0 +1,156 @@
+# LER A CONFIGURAÇÃO DE DENTRO — o substituto proposto no item V1 do backlog.
+#
+# POR QUE EXISTE: uma sessão de nuvem não alcança parte da configuração deste
+# repositório. A medição de 2026-08-21, endpoint a endpoint, mostrou que dados do
+# repositório e `/rulesets` respondem 200, mas secret scanning, segredos de
+# Actions, colaboradores e proteção clássica de branch devolvem 403 — uns por
+# allowlist do proxy de saída, outro por escopo do app. Este workflow roda DENTRO
+# do GitHub, com o token nativo da execução, que não passa por esse proxy. A
+# partir daqui, qualquer sessão lê o que sempre pôde ler: a saída de um job.
+#
+# O QUE ELE NÃO COBRE — e workflow que promete mais do que verifica dá verde
+# vazio:
+#
+# - **Não aplica nada.** É leitura pura, e isso é o gate, não uma limitação:
+#   nenhuma sessão de agente aplica configuração. Aplicar é clique humano.
+# - **Não julga se a configuração está certa.** Ele reporta o que ela é. Ler
+#   `secret_scanning: disabled` é um fato; decidir se isso é aceitável, não.
+# - **Não prova o que não conseguir ler.** Endpoint que devolver 403 aparece
+#   como 403 na tabela, e isso é resultado útil: passa a estar provado que só a
+#   UI responde, em vez de ser redescoberto a cada rodada.
+# - **Não confere sanitização N2, link quebrado nem coerência de doutrina.**
+#   Isso é `verificacao.yml` e leitura humana.
+#
+# REGRA DE SAÍDA, E ELA É DE SEGURANÇA: este repositório é público, e o resumo do
+# job é público junto. Então a tabela publica **código HTTP, estado e contagem —
+# nunca identidade nem valor**. Nome de colaborador e nome de segredo ficam de
+# fora de propósito: são justamente os itens 1 e 7 do checklist do SECURITY.md.
+# Valor de segredo a API não devolve a ninguém, e não é nisso que confiamos.
+#
+# CUSTO: zero. Actions é gratuito em repositório público, e é por isso que este
+# workflow não agrava o item C1 — a cota que está a 90% é a dos privados.
+#
+# PORTABILIDADE: só `curl` e `python3` da imagem `ubuntu-latest`. Sem PyYAML,
+# sem `gh`, sem dependência instalada.
+
+name: configuracao
+
+on:
+  schedule:
+    - cron: '20 7 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ler:
+    name: Ler a configuração com o token nativo
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Consultar e publicar
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json, os, sys, urllib.error, urllib.request
+
+          TOKEN = os.environ['GH_TOKEN']
+          REPO = os.environ['REPO']
+          API = 'https://api.github.com'
+
+          def ler(caminho):
+              req = urllib.request.Request(API + caminho, headers={
+                  'Authorization': 'Bearer ' + TOKEN,
+                  'Accept': 'application/vnd.github+json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+              })
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      return r.status, json.loads(r.read().decode('utf-8'))
+              except urllib.error.HTTPError as e:
+                  return e.code, None
+              except Exception:
+                  return 0, None
+
+          # Cada leitura devolve só estado, contagem ou nome de regra. Nunca
+          # identidade de pessoa, nunca nome de segredo — a saída é pública.
+          def repo(d):
+              return 'visibilidade %s · default `%s`' % (d.get('visibility'), d.get('default_branch'))
+
+          def seguranca(d):
+              sa = d.get('security_and_analysis') or {}
+              if not sa:
+                  return 'objeto ausente — o token não recebeu esse campo'
+              return ' · '.join('%s: **%s**' % (k, (v or {}).get('status', '?'))
+                                for k, v in sorted(sa.items()))
+
+          def rulesets(d):
+              if not d:
+                  return 'nenhum ruleset'
+              return ' · '.join('`%s` (%s)' % (r.get('name'), r.get('enforcement')) for r in d)
+
+          def protecao(d):
+              return ' · '.join(sorted(k for k in d)) if d else 'sem proteção clássica'
+
+          def permissoes(d):
+              return 'enabled=%s · allowed=%s' % (d.get('enabled'), d.get('allowed_actions'))
+
+          def contagem(d):
+              n = d.get('total_count') if isinstance(d, dict) else len(d or [])
+              return '**%s** (só a contagem — nomes não são publicados)' % n
+
+          ALVOS = [
+              ('dados do repositório', '/repos/%s' % REPO, repo),
+              ('secret scanning · push protection', '/repos/%s' % REPO, seguranca),
+              ('rulesets', '/repos/%s/rulesets' % REPO, rulesets),
+              ('proteção clássica de `main`', '/repos/%s/branches/main/protection' % REPO, protecao),
+              ('permissões de Actions', '/repos/%s/actions/permissions' % REPO, permissoes),
+              ('segredos de Actions', '/repos/%s/actions/secrets' % REPO, contagem),
+              ('colaboradores', '/repos/%s/collaborators' % REPO, contagem),
+          ]
+
+          linhas = ['| Caminho | Código | O que se lê |', '|---|---|---|']
+          transporte = 0
+          for rotulo, caminho, resumo in ALVOS:
+              codigo, corpo = ler(caminho)
+              if codigo == 0:
+                  transporte += 1
+                  leitura = 'falha de transporte — nem chegou ao GitHub'
+              elif codigo == 404:
+                  leitura = 'não existe — ausência real, não falta de acesso'
+              elif codigo != 200:
+                  leitura = 'não alcançou — conferir na UI'
+              else:
+                  try:
+                      leitura = resumo(corpo)
+                  except Exception as e:
+                      leitura = 'resposta 200 em formato inesperado: %s' % type(e).__name__
+              linhas.append('| %s | **%s** | %s |' % (rotulo, codigo, leitura))
+
+          saida = '\n'.join([
+              '## Configuração lida de dentro, com o token nativo',
+              '',
+              'Repositório: `%s`' % REPO,
+              '',
+          ] + linhas + [
+              '',
+              '**403 aqui é resultado, não defeito:** significa que nem o token da',
+              'execução alcança aquele caminho, e que só a UI responde. Registre a',
+              'data e confira na UI — não escreva "fechado" sobre o que ninguém leu.',
+          ])
+
+          print(saida)
+          resumo_path = os.environ.get('GITHUB_STEP_SUMMARY')
+          if resumo_path:
+              with open(resumo_path, 'a', encoding='utf-8') as fh:
+                  fh.write(saida + '\n')
+
+          # Falha fechada: se NENHUM alvo chegou ao GitHub, o job não mediu nada,
+          # e verde aqui seria a mentira que este workflow existe para não contar.
+          if transporte == len(ALVOS):
+              print('FALHA: nenhuma requisição chegou ao GitHub.', file=sys.stderr)
+              sys.exit(1)
+          PY
