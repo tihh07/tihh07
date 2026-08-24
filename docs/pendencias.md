@@ -1439,6 +1439,16 @@ Doutrina é um controle real, e este vinha sendo respeitado; mas um controle que
 depende de todo agente lembrar a regra falha de um jeito diferente de um que
 recusa a operação.
 
+> **Revogado em 2026-08-24, e o parágrafo acima fica como registro do que se
+> sabia.** O dono autorizou sessão de agente a executar operação de GitHub,
+> **merge incluído**, com teste, evidência e validação no PR. A frase *"nada é
+> mesclado em `main` por agente"* **não vale mais** — quem a ler aqui sem esta
+> nota concluiria o contrário, que é o defeito que o **C1** cometeu num
+> cabeçalho e custou uma correção nesta mesma data. A regra viva está no
+> [`AGENTS.md`](../AGENTS.md); o que este item descobriu continua de pé e ficou
+> mais importante, não menos: **a plataforma não exige revisor**, então a prova
+> passou a ser a única coisa entre um PR e a `main`.
+
 Isso também explica **H2** sem mistério: o `CODEOWNERS` é inerte porque a regra
 não pede revisão de code owner. Não é só a opção "Require review from Code
 Owners" que falta — é a contagem de aprovações em zero.
@@ -1634,8 +1644,10 @@ era o gargalo real: **é o merge**. As 34 sessões deixaram cerca de 32 PRs em
 draft, e só dois repositórios tiveram algo entrando na branch default. Trabalho
 completo que não entra na default é indistinguível de trabalho não feito para
 qualquer sessão futura que leia aquele repositório — foi exatamente assim que
-três fichas concluíram que a auditoria não existia. O gate humano continua certo
-como política; a fila que ele acumula é que virou o risco.
+três fichas concluíram que a auditoria não existia. O gate humano estava certo
+como política; a fila que ele acumulava é que virou o risco — e foi essa fila que
+a diretriz de **2026-08-24** atacou, ao deixar o agente mesclar com prova em vez
+de estacionar o trabalho num PR à espera de uma pessoa.
 
 > **E o item se provou de novo em 2026-08-21, do lado de dentro.** A ferramenta de
 > medição do **C1** foi escrita, testada contra a API e commitada — num PR draft.

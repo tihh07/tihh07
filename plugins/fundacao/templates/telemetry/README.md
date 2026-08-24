@@ -41,6 +41,7 @@ data,plano,consumo_pct,runs_no_periodo,observacao
 ## O que não medir
 
 **"% de PRs aceitos sem alteração" está deliberadamente ausente.** A métrica
-induz revisão-carimbo, e revisão-carimbo anula o gate humano que sustenta a
-matriz de riscos inteira. Uma métrica que corrompe o controle que ela deveria
-observar é pior que métrica nenhuma.
+induz revisão-carimbo, e carimbo anula a revisão que sustenta a matriz de riscos
+inteira. Uma métrica que corrompe o controle que ela deveria observar é pior que
+métrica nenhuma — e desde que o merge pode ser do próprio agente (2026-08-24),
+ela mediria o agente aprovando a si mesmo, que é pior ainda.

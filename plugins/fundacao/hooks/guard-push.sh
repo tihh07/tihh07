@@ -102,7 +102,7 @@ CMD=$(printf '%s' "$CMD" | sem_heredoc)
 
 deny() {
   echo "guard-push: $1" >&2
-  echo "Sessões de agente só empurram para branches claude/*. Merge e main são gate humano." >&2
+  echo "Sessões de agente só empurram para branches claude/*. Push direto em main é bloqueado; merge é por PR." >&2
   exit 2
 }
 
