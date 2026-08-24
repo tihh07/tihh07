@@ -14,10 +14,30 @@ name: Backup para o Google Drive
 # humano periódico para renovar. O que pode quebrar é a chave ser revogada ou a
 # pasta deixar de estar compartilhada — ambos falham ruidosamente aqui.
 #
+# ---------------------------------------------------------------------------
+# O QUE ELE NÃO COBRE — workflow que promete mais do que faz dá verde vazio
+# ---------------------------------------------------------------------------
+# - **Não é restauração.** Ele prova que o bundle é íntegro no momento em que o
+#   gerou (`git bundle verify`), não que alguém consegue restaurar dele. Backup
+#   nunca restaurado é backup presumido; a restauração é exercício humano.
+# - **Não vigia o destino.** Depois do upload, nada aqui confere que o arquivo
+#   continua no Drive, que a pasta segue compartilhada ou que a cota não
+#   estourou. Se o backup for apagado lá, este workflow não percebe.
+# - **Não guarda histórico de versões nem poda cópias velhas.** O que existe na
+#   pasta é o que as execuções deixaram; retenção é política do Drive.
+# - **Não faz backup do que não está em git.** Issues, PRs, releases, wiki,
+#   Actions secrets e configuração do repositório ficam de fora — o bundle são
+#   as refs, e só.
+# - **Não protege o conteúdo no destino.** A análise de risco de guardar o
+#   bundle no Drive é por repositório e não é feita aqui (ver o bloco de
+#   instalação, quando houver).
+# - **Não é o backup do ecossistema.** Este workflow só enxerga o repositório
+#   onde está instalado, por construção — é assim que ele fica R1-seguro.
+#
 # CÓPIA INSTALADA NESTE REPOSITÓRIO: `.github/workflows/backup-drive.yml`. Ela é
-# este arquivo mais dois blocos de cabeçalho sobre o repositório público — e nada
-# mais. Este aqui é o lado que vale: correção feita lá precisa voltar para cá,
-# senão as duas cópias divergem e uma delas passa a mentir.
+# este arquivo mais dois blocos de cabeçalho sobre o repositório público, e o
+# `timeout-minutes` — e nada mais. Este aqui é o lado que vale: correção feita
+# lá precisa voltar para cá, senão as duas cópias divergem e uma delas mente.
 #
 # ---------------------------------------------------------------------------
 # `fetch-depth: 0` NÃO É DETALHE — É O QUE FAZ ISTO SER UM BACKUP
