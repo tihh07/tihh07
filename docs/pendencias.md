@@ -863,6 +863,34 @@ de abrir um privado para contar execuções. A verificação é humana, ou de um
 sessão escopada num privado: aba *Actions*, workflow *Watchdog*, e ver se há uma
 execução por dia.
 
+**O que a medição devolveu, em números** — restaurado em 2026-08-24 do texto que
+o `b2782fb` removeu ao adotar a versão rival. As duas sessões cederam uma à
+outra ao mesmo tempo, e nessa troca esta tabela caiu sem que ninguém a
+descartasse:
+
+| | |
+|---|---|
+| Repositórios privados medidos | **16** |
+| Com pelo menos um workflow | **16 de 16** |
+| Sem leitura de Actions | **0** |
+| Minutos faturáveis no período corrente | **zero** |
+| Retries de TLS / falhas residuais | 56 / **0** |
+
+**Por que não rodava, e por que isso importa para confiar no zero.** O
+`medir-actions.sh` morria no primeiro `GET /user`: `curl (35) schannel
+CRYPT_E_NO_REVOCATION_CHECK`, HTTP 000 — a rede local passa por um proxy que
+intercepta TLS e o schannel do curl às vezes não consegue checar a revogação do
+certificado. Pior, o script chamava isso de *token inválido* e mandava trocar
+uma credencial que estava boa. Corrigido nos PRs **#24** (retry com
+`--ssl-no-revoke`, avisando em stderr toda vez) e **#25** (contagem de
+repositórios com workflow).
+
+> **Ele falhava fechado, então nunca chegou a produzir um zero mentiroso.** Esta
+> é a linha que faz o zero medido valer alguma coisa: sem ela, um leitor futuro
+> não tem como distinguir um zero que foi lido de um zero que a ferramenta
+> quebrada inventou. Foi a primeira coisa a se perder na troca de versões, e é a
+> última que se poderia dispensar.
+
 **Uma ressalva de R1, dita em vez de contornada.** Esta medição foi disparada de
 uma sessão escopada no repositório **público**. Nenhum nome de repositório
 privado entrou **neste arquivo**: o relatório completo foi para um
