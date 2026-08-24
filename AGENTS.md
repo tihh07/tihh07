@@ -229,8 +229,12 @@ envelhece.
   ecossistema no privado, o que sobra aqui é fachada pública e cabe folgado.
   Enquanto isso, o número real vale mais que o número redondo — o pecado da
   regra é o crescimento **calado**, não o crescimento. Em 2026-08-24 cresceu
-  mais sete linhas, na nota de apelido, para registrar que a coluna de
-  departamento deixou de vazar nome — dito aqui em vez de escondido.
+  três vezes, e as três ficam ditas: **dez linhas** na nota de apelido e na
+  coluna de departamento que deixou de vazar nome, e **mais cinco** na regra de
+  merge por agente, mais **quatro** desta correção: a soma foi de 232 a 251.
+  A primeira das três se declarou como "sete linhas" — era o tamanho da nota,
+  não o do arquivo — e a segunda não se declarou. Errar a conta e omitir a
+  conta produzem o mesmo resultado que esta regra existe para impedir.
 - **Sanitização** — nada de caminho local absoluto, nome de cliente, token ou
   URL interna em arquivo versionado, inclusive fora do `README.md`. O índice
   acima guarda caminhos locais apenas se forem genéricos; caso contrário,
