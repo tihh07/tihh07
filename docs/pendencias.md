@@ -36,7 +36,7 @@
 |---|---|---|
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
 | **C1** — minutos de Actions a 90% | 🟡 **medido em 2026-08-24: zero minuto faturável em 16 de 16 repositórios com workflow** | teto foi a 3.000. A medição rodou e é válida — o denominador é 16, não zero. Mas ela **não explica os 1.802 minutos** do alerta de 21/08: o gasto está fora do que ela alcança, e essa lacuna é agora o item. **Não é este repo** e **não é o plugin**. Fecha quando a composição da cota for lida em Settings → Billing |
-| **S2** — R1 cobre conteúdo, não inventário | 🔴 **novo em 2026-08-21** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
+| **S2** — R1 cobre conteúdo, não inventário | 🔴 **aberto, e com segunda ocorrência em 24/08** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. E em 24/08 a medição do C1 fez o mesmo por outro canal, com o sanitizador da ferramenta falhando aberto e imprimindo quinze nomes reais num transcript público — nada em arquivo versionado. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
 | **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | ✅ **fechado em 2026-08-21** | `verificar` exigido no `protect-main`, fixado no app do Actions, sem bypass. PR quebrado não entra mais — é plataforma, não boa vontade. O merge sem revisor segue doutrina |
@@ -501,7 +501,7 @@ não que foi mantido.
 > consequência.
 
 ### S2 — R1 protege o conteúdo dos privados, não a lista deles
-**Severidade: média · 🔴 ABERTO · Descoberto em 2026-08-21 · Executor: 👤 Humano (decisão de desenho)**
+**Severidade: média · 🔴 ABERTO · Descoberto em 2026-08-21, segunda ocorrência em 2026-08-24 · Executor: 👤 Humano (decisão de desenho)**
 
 **Como apareceu.** Esta sessão — a do repositório **público** — consultou o
 estado de uma sessão de nuvem para saber se um trabalho tinha terminado. A
@@ -529,6 +529,28 @@ Vale dizer sem eufemismo o que isso faz com o controle: L7 impede a
 **publicação** dos nomes — e essa era e continua sendo a exposição que importa,
 porque publicação alcança terceiros. O que ele não faz, e nunca fez, é impedir
 que uma sessão da própria conta os veja.
+
+**Segunda ocorrência, em 2026-08-24, e ela move o item.** A primeira veio de
+metadados de sessão — um canal que ninguém escolheu. A segunda veio de trabalho
+deliberado desta frente: a medição do **C1**, disparada daqui, enumerou os
+repositórios privados pela própria API do GitHub. Isso por si só já era o que o
+item descreve. O que ele **não** previa é o que aconteceu em seguida: a
+ferramenta tinha um sanitizador, o sanitizador **falhou aberto**, e quinze nomes
+reais foram impressos no transcript de uma sessão escopada no repositório
+público.
+
+O defeito era de construção, não de descuido: a redação procurava o **formato da
+saída** para achar o que redigir. Quando toda leitura falhou, o formato não
+apareceu, o sanitizador não encontrou nada para redigir — e deixou passar tudo.
+Redação que depende do sucesso da operação que ela protege é redação que só
+funciona quando não é necessária.
+
+Isso não muda o enquadramento — muda o que a decisão precisa cobrir. Não basta
+responder *"a conta do dono pode se enumerar?"*; é preciso responder também **o
+que vale quando a contenção de que dependemos falha**. Nada aqui chegou a
+arquivo versionado, então **L7** e a sanitização N2 seguem íntegros. Mas o
+transcript não é apagável, e a exposição, embora interna, é maior que a que este
+item registrava.
 
 **O que NÃO fazer.** Não há remediação de agente aqui, e tentar uma seria pior
 que o problema: deixar de consultar o estado das sessões de nuvem trocaria uma
@@ -841,10 +863,53 @@ de abrir um privado para contar execuções. A verificação é humana, ou de um
 sessão escopada num privado: aba *Actions*, workflow *Watchdog*, e ver se há uma
 execução por dia.
 
+**O que a medição devolveu, em números** — restaurado em 2026-08-24 do texto que
+o `b2782fb` removeu ao adotar a versão rival. As duas sessões cederam uma à
+outra ao mesmo tempo, e nessa troca esta tabela caiu sem que ninguém a
+descartasse:
+
+| | |
+|---|---|
+| Repositórios privados medidos | **16** |
+| Com pelo menos um workflow | **16 de 16** |
+| Sem leitura de Actions | **0** |
+| Minutos faturáveis no período corrente | **zero** |
+| Retries de TLS / falhas residuais | 56 / **0** |
+
+**Por que não rodava, e por que isso importa para confiar no zero.** O
+`medir-actions.sh` morria no primeiro `GET /user`: `curl (35) schannel
+CRYPT_E_NO_REVOCATION_CHECK`, HTTP 000 — a rede local passa por um proxy que
+intercepta TLS e o schannel do curl às vezes não consegue checar a revogação do
+certificado. Pior, o script chamava isso de *token inválido* e mandava trocar
+uma credencial que estava boa. Corrigido nos PRs **#24** (retry com
+`--ssl-no-revoke`, avisando em stderr toda vez) e **#25** (contagem de
+repositórios com workflow).
+
+> **Ele falhava fechado, então nunca chegou a produzir um zero mentiroso.** Esta
+> é a linha que faz o zero medido valer alguma coisa: sem ela, um leitor futuro
+> não tem como distinguir um zero que foi lido de um zero que a ferramenta
+> quebrada inventou. Foi a primeira coisa a se perder na troca de versões, e é a
+> última que se poderia dispensar.
+
 **Uma ressalva de R1, dita em vez de contornada.** Esta medição foi disparada de
 uma sessão escopada no repositório **público**. Nenhum nome de repositório
-privado entrou na sessão nem neste arquivo: o relatório completo foi para um
-arquivo local não versionado e só **contagens** atravessaram. Ainda assim, ler
+privado entrou **neste arquivo**: o relatório completo foi para um
+arquivo local não versionado e só **contagens** atravessaram.
+
+> **Correção de 2026-08-24, escrita pela sessão que errou.** A frase acima dizia
+> originalmente que nenhum nome entrou *"na sessão"*. No arquivo, verdade — e é
+> a metade que importa para publicação. **Na sessão, não.** Uma execução anterior
+> da mesma ferramenta, noutra sessão também escopada neste repositório público,
+> imprimiu **quinze nomes reais de repositório privado** no transcript. O
+> sanitizador do script falhou **aberto**: ele redigia procurando o formato da
+> saída, e quando toda leitura falhou o formato não apareceu, então não havia o
+> que redigir e tudo passou. Nada chegou a arquivo versionado, e o transcript não
+> é apagável. A ferramenta foi reescrita para redigir a partir da lista
+> autoritativa da API e **verificar** que nenhum nome sobreviveu antes de
+> imprimir — mas o registro fica, porque um controle que falha aberto e um
+> controle que funciona são indistinguíveis no dia em que dá certo.
+
+Ainda assim, ler
 metadados de faturamento dos privados a partir daqui está na fronteira que o
 **S2** descreve — R1 cobre conteúdo, e isto é inventário. Não me arrogo o
 enquadramento: fica como caso concreto para o S2 decidir, e se a decisão for
