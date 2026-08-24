@@ -31,6 +31,12 @@
 # gratuito ali. Conferido neste repositório — três workflows, três respostas 200,
 # zero minutos. Zero é resultado, não falha.
 #
+# Se a sua rede passa por um proxy que intercepta TLS, o curl com schannel pode
+# não conseguir checar a revogação do certificado e devolver HTTP 000, sem
+# resposta nenhuma. O script repete a chamada uma vez com `--ssl-no-revoke` — que
+# desliga só essa checagem, não a validação da cadeia — e avisa em stderr sempre
+# que precisa fazer isso.
+#
 # Uso:
 #   bash medir-actions.sh                    # todos os privados
 #   bash medir-actions.sh --todos            # inclui públicos
@@ -52,7 +58,7 @@ while [ $# -gt 0 ]; do
     --todos) INCLUIR_PUBLICOS=1; shift ;;
     --repo)  [ $# -ge 2 ] || { echo "--repo exige um nome de repositório" >&2; exit 2; }
              ALVOS+=("$2"); shift 2 ;;
-    -h|--help) sed -n '2,45p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    -h|--help) sed -n '2,48p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) echo "argumento desconhecido: $1" >&2; exit 2 ;;
   esac
 done
@@ -66,12 +72,32 @@ TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
 command -v curl >/dev/null || { echo "curl não encontrado" >&2; exit 1; }
 command -v python3 >/dev/null || { echo "python3 não encontrado" >&2; exit 1; }
 
+# HTTP 000 significa "nenhuma resposta chegou", e aqui ele tem duas causas que
+# se parecem: o proxy que intercepta TLS desta rede, cujo schannel às vezes não
+# consegue checar a revogação do certificado (CRYPT_E_NO_REVOCATION_CHECK), e
+# URL malformada pelo \r do python no Windows (ver o comentário logo abaixo).
+# O retry só resolve a primeira, mas o script não sabe distinguir as duas daqui
+# — por isso o aviso fala em "sem resposta", não em "TLS".
+#
+# `--ssl-no-revoke` desliga SÓ a checagem de revogação; a validação da cadeia
+# continua valendo. E o aviso sai em stderr toda vez, de propósito: enfraquecer
+# verificação de certificado em silêncio é como isso vira o padrão da casa.
 api() {
-  curl -sS -w '\n%{http_code}' \
+  local resp
+  resp=$(curl -sS -w '\n%{http_code}' \
     -H "Authorization: Bearer $TOKEN" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
-    "$API$1"
+    "$API$1")
+  if [ "${resp##*$'\n'}" = "000" ]; then
+    echo "AVISO: sem resposta HTTP; repetindo uma vez com --ssl-no-revoke." >&2
+    resp=$(curl -sS --ssl-no-revoke -w '\n%{http_code}' \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Accept: application/vnd.github+json" \
+      -H "X-GitHub-Api-Version: 2022-11-28" \
+      "$API$1")
+  fi
+  printf '%s' "$resp"
 }
 
 # O `tr -d '\r'` que aparece depois de cada python3 daqui em diante não é
@@ -81,11 +107,26 @@ api() {
 # function", HTTP 000, em todos os repositórios. Foi o que aconteceu em
 # 2026-08-24: a medição inteira do C1 voltou vazia por isso, e o zero foi lido
 # como "nenhum minuto faturável" em vez de "nenhuma requisição saiu".
-DONO=$(api /user | python3 -c "
+#
+# O diagnóstico deste portão separa rede de credencial. Até 2026-08-24 ele
+# chamava qualquer falha de "token inválido", e na medição daquele dia mandou
+# trocar uma credencial que estava boa: o token era o mesmo que listara os
+# repositórios segundos antes, e o que faltava era o retry de TLS acima.
+resp=$(api /user)
+corpo=${resp%$'\n'*}; codigo=${resp##*$'\n'}
+if [ "$codigo" != "200" ]; then
+  case "$codigo" in
+    000) echo "GET /user não obteve resposta (HTTP 000), nem no retry." >&2
+         echo "Isso é rede, não credencial: proxy, DNS ou TLS. O token não foi recusado." >&2 ;;
+    401|403) echo "GET /user recusado (HTTP $codigo): token inválido ou sem escopo de leitura." >&2 ;;
+    *) echo "GET /user falhou (HTTP $codigo)." >&2 ;;
+  esac
+  exit 1
+fi
+DONO=$(printf '%s' "$corpo" | python3 -c "
 import json,sys
-p=sys.stdin.read().rsplit('\n',1)
-print(json.loads(p[0]).get('login','') if p[1].strip()=='200' else '')" | tr -d '\r')
-[ -n "$DONO" ] || { echo "token inválido: GET /user falhou." >&2; exit 1; }
+print(json.load(sys.stdin).get('login',''))" | tr -d '\r')
+[ -n "$DONO" ] || { echo "GET /user devolveu 200 sem campo 'login'." >&2; exit 1; }
 echo "Conta: $DONO"
 
 if [ ${#ALVOS[@]} -eq 0 ]; then
