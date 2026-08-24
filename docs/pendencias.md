@@ -157,7 +157,8 @@ procure rota alternativa: registre e devolva ao humano.
 `medir-actions.sh` está na `main`, mas **o token do Codespace não basta**: ele é
 escopado no repositório e não enumera a conta, então precisa de um PAT com
 `Actions: Read` e `Metadata: Read`) · **S2** (enquadrar o alcance de R1) · **L2**
-(a coluna de departamento, que é a pendência principal deste repositório) ·
+(a coluna de departamento — **decidida e aplicada em 24/08**; o que resta são as
+treze células que dependem do transporte de L1) ·
 **P16** · **H5**.
 
 **6. O despacho por sessão voltou a funcionar em 23/08**, depois de sete falhas
@@ -1827,7 +1828,7 @@ montando o próprio cenário, explicitamente. Sem repositório neutro a suíte
 > revisões humanas e uma suíte dedicada tinham deixado passar.
 
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
-**Severidade: alta · Executor: 👤 Humano (decisão) depois ☁️ Nuvem · ABERTO**
+**Severidade: alta · 🟡 PARCIAL — decisão tomada e coluna corrigida em 2026-08-24 · Executor: 👤 Humano (decidiu) + ☁️ Nuvem (aplicou)**
 
 | O que a operação real tem | O que este repositório publica |
 |---|---|
@@ -1873,9 +1874,45 @@ publicar os dezoito, apelidar todos como se fez com os repositórios, ou retirar
 coluna. Nenhuma é trabalho de agente. O que ele acrescenta é que **"deixar como
 está" não é neutro** — é uma quarta opção, e é a única que carrega o defeito.
 
+**Decidido e aplicado em 2026-08-24: apelidar.** Das três saídas, o dono escolheu
+a do meio. Os cinco departamentos que o índice nomeava viraram `D1`–`D5`, com a
+mesma regra de estabilidade dos apelidos de repositório, e o mapeamento mora
+fora daqui. Os treze que este repositório **não conhece** deixaram de dizer *"não
+declarado"* e passaram a dizer **"não verificado"** — a palavra que o `AGENTS.md`
+já prescreve, e a distinção não é cosmética: *não declarado* afirma algo sobre o
+repositório remoto, que esta sessão não tem como afirmar; *não verificado* afirma
+algo sobre **esta** sessão, que é o que se sabe.
+
+**O que isso fecha — e o que a própria correção descobriu que não fecha.** No
+índice, a omissão parou de indexar o que estava escondido: não há mais quatro
+nomeados contra treze calados. **Mas o vazamento não fechou**, e dizer que fechou
+seria repetir aqui o erro que o **C1** cometeu duas vezes — afirmar sem abrir o
+diretório que confirmaria.
+
+**Os cinco nomes reais continuam publicados por extenso** no organograma do
+[blueprint](orchestration-blueprint.md) — no diagrama da seção 3 e na tabela
+logo abaixo — e uma vez mais neste arquivo. Apelidar uma tabela enquanto a mesma
+informação está três telas adiante não é sanitização, é a aparência dela. Enquanto
+o blueprint não for reconciliado, **o índice está apelidado e o ecossistema não
+está**, e é assim que deve ser lido.
+
+Isso não é escopo novo inventado agora: a ação de nuvem deste item já dizia
+*"reconciliar o organograma da seção 3 do blueprint com a taxonomia real"*. O que
+mudou é que ela deixou de ser refinamento e passou a ser **a parte que falta para
+a decisão de 24/08 valer**. É decisão humana também — o blueprint é autoridade de
+projeto, e trocar os nomes do organograma por `D1`–`D5` custa legibilidade a quem
+lê para entender o desenho, não para auditar.
+
+**Não fecha o eixo, tampouco.** O índice continua sendo repositório × estado, e
+reeixá-lo para setor × repositórios depende dos handoffs de **L1**; enquanto eles
+não chegam, as treze células ficam vazias por ignorância declarada, e **R1**
+impede abrir o privado para preenchê-las daqui.
+
 **Verificação:** o número de repositórios declarados no índice bate com o número
-que existe, e a coluna de departamento é uniforme — todos nomeados, todos
-apelidados ou nenhum.
+que existe; a coluna de departamento não publica nome real nenhum — apelido onde
+se sabe, *"não verificado"* onde não se sabe — **e um `grep` pelos cinco nomes
+reais não os encontra em arquivo versionado nenhum.** A terceira condição é a que
+ainda reprova.
 
 ### L3 — Executores e hook seguem não exercitados
 **Severidade: média · Executor: ☁️ Nuvem + 👤 Humano · ABERTO**

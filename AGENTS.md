@@ -65,24 +65,24 @@ O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 
 | Repo | Departamento | Estado do ciclo | Última auditoria |
 |---|---|---|---|
-| `P01` | Fundação / Arquitetura | fechado | 2026-08-20 |
-| `P02` | Segundo Cérebro | fechado — relato tardio, após três diagnósticos errados | 2026-08-20 |
-| `P03` | Inteligência Comercial & Mercado | fechado | 2026-08-20 |
-| `P04` | Operação de Cliente / Agência | fechado | 2026-08-20 |
-| `P05` | não declarado | fechado | 2026-08-20 |
-| `P06` | não declarado | fechado | 2026-08-20 |
-| `P07` | não declarado | fechado | 2026-08-20 |
-| `P08` | não declarado | fechado | 2026-08-20 |
-| `P09` | não declarado | fechado | 2026-08-20 |
-| `P10` | não declarado | fechado | 2026-08-20 |
-| `P11` | não declarado | fechado | 2026-08-20 |
-| `P12` | não declarado | fechado | 2026-08-20 |
-| `P13` | não declarado | fechado | 2026-08-20 |
-| `P14` | não declarado | fechado | 2026-08-20 |
-| `P15` | não declarado | fechado | 2026-08-20 |
-| `P16` | não declarado | em aberto — CI vermelha por dado que só uma pessoa coleta | 2026-08-20 |
-| `P17` | não declarado | em aberto — ficha em correção | 2026-08-20 |
-| `tihh07/tihh07` (público) | Fachada Pública / Marketing | auditado — documentação, workflows e templates | 2026-08-20 |
+| `P01` | D1 | fechado | 2026-08-20 |
+| `P02` | D2 | fechado — relato tardio, após três diagnósticos errados | 2026-08-20 |
+| `P03` | D3 | fechado | 2026-08-20 |
+| `P04` | D4 | fechado | 2026-08-20 |
+| `P05` | não verificado | fechado | 2026-08-20 |
+| `P06` | não verificado | fechado | 2026-08-20 |
+| `P07` | não verificado | fechado | 2026-08-20 |
+| `P08` | não verificado | fechado | 2026-08-20 |
+| `P09` | não verificado | fechado | 2026-08-20 |
+| `P10` | não verificado | fechado | 2026-08-20 |
+| `P11` | não verificado | fechado | 2026-08-20 |
+| `P12` | não verificado | fechado | 2026-08-20 |
+| `P13` | não verificado | fechado | 2026-08-20 |
+| `P14` | não verificado | fechado | 2026-08-20 |
+| `P15` | não verificado | fechado | 2026-08-20 |
+| `P16` | não verificado | em aberto — CI vermelha por dado que só uma pessoa coleta | 2026-08-20 |
+| `P17` | não verificado | em aberto — ficha em correção | 2026-08-20 |
+| `tihh07/tihh07` (público) | D5 | auditado — documentação, workflows e templates | 2026-08-20 |
 
 > **Por que apelido, e não nome.** Publicar os nomes reais entregaria identidade de
 > terceiro — empregador, cliente, conselho — e aciona os itens 1 e 7 do checklist do
@@ -92,6 +92,14 @@ O ecossistema tem **18 repositórios**: 17 privados e este, o único público.
 >
 > O apelido é **estável**: uma vez atribuído, nunca é reciclado nem renumerado, senão
 > duas leituras do mesmo índice descrevem repositórios diferentes.
+>
+> **A coluna de departamento passou a seguir a mesma regra em 2026-08-24.** Ela
+> publicava quatro nomes reais e treze *"não declarado"* — a forma exata que este
+> bloco rejeita, com a omissão virando o índice. Agora todo departamento é apelido
+> (`D1`–`D5`, estáveis pela mesma razão), e célula que este repositório não conhece
+> diz **"não verificado"**: ignorância declarada, não recusa de publicar. Os treze
+> só se preenchem com o transporte do handoff (**L1**) — **R1** impede abrir o
+> privado para descobrir.
 >
 > **"Auditado" não é "fechado".** As 17 auditorias de 2026-08-20 entregaram — a coluna
 > de data é delas. Relatório que fica em PR não mesclado, porém, é indistinguível de
@@ -215,7 +223,9 @@ envelhece.
   topologia de branches. O excedente se resolve em **A1**: com a doutrina de
   ecossistema no privado, o que sobra aqui é fachada pública e cabe folgado.
   Enquanto isso, o número real vale mais que o número redondo — o pecado da
-  regra é o crescimento **calado**, não o crescimento.
+  regra é o crescimento **calado**, não o crescimento. Em 2026-08-24 cresceu
+  mais sete linhas, na nota de apelido, para registrar que a coluna de
+  departamento deixou de vazar nome — dito aqui em vez de escondido.
 - **Sanitização** — nada de caminho local absoluto, nome de cliente, token ou
   URL interna em arquivo versionado, inclusive fora do `README.md`. O índice
   acima guarda caminhos locais apenas se forem genéricos; caso contrário,
