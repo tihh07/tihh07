@@ -1,0 +1,22 @@
+# Fim de linha — por que este arquivo existe
+#
+# Até 2026-08-24 não havia `.gitattributes` aqui, e a máquina de trabalho tem
+# `core.autocrlf=true`. Resultado: o índice guarda LF, o checkout local entrega
+# CRLF, e **todo shell script deste repositório roda no Windows com \r no fim
+# de cada linha** — inclusive `guard-push.sh`, que é o único controle executável
+# que o repositório tem.
+#
+# O CI nunca viu isso: o runner é Linux, o índice é LF, lá o arquivo chega
+# limpo. Um defeito que só existe na máquina de quem escreve, e que a
+# verificação automática não alcança por construção, é o pior formato possível.
+#
+# `eol=lf` fixa o checkout em LF em qualquer sistema. Scripts continuam
+# idênticos no índice; muda só o que aparece no disco de quem usa Windows.
+
+* text=auto
+
+*.sh    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
