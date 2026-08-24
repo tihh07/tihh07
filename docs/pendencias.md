@@ -35,7 +35,7 @@
 | Item | Estado | Por quê |
 |---|---|---|
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
-| **C1** — minutos de Actions a 90% | 🟡 **Pro assinado; ferramenta pronta, medição NÃO rodada** | teto foi a 3.000. A sessão que media abandonou a tarefa e o veredito nunca chegou — o item segue com **relato parcial**, não com medição. `medir-actions.sh` está na `main` e roda num Codespace. **Não é este repo** e **não é o plugin**. Assinar não fecha: teto maior sobre consumo não medido é adiamento |
+| **C1** — minutos de Actions a 90% | 🟡 **medido em 2026-08-24: zero minuto faturável em 16 de 16 repositórios com workflow** | teto foi a 3.000. A medição rodou e é válida — o denominador é 16, não zero. Mas ela **não explica os 1.802 minutos** do alerta de 21/08: o gasto está fora do que ela alcança, e essa lacuna é agora o item. **Não é este repo** e **não é o plugin**. Fecha quando a composição da cota for lida em Settings → Billing |
 | **S2** — R1 cobre conteúdo, não inventário | 🔴 **novo em 2026-08-21** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
 | **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
@@ -770,7 +770,40 @@ nem por chat. Quem cria o segredo é quem o digita. Registrado assim para que um
 sessão futura não trate isso como pendência a executar.
 
 ### C1 — Minutos de Actions a 90% do plano
-**Severidade: média · 🟡 ABERTO · Executor: 👤 Humano (orçamento) + ☁️ Nuvem (medir)**
+**Severidade: média · 🟡 MEDIDO EM 2026-08-24, E O RESULTADO NÃO FECHA A CONTA · Executor: 👤 Humano (ler a cota) + 💻 Local (mediu)**
+
+> **A medição finalmente rodou, e o que ela devolve é uma lacuna, não uma causa.**
+>
+> **16 de 16** repositórios com pelo menos um workflow foram efetivamente
+> medidos. Total de minutos faturáveis no período de cobrança corrente: **zero**.
+>
+> Isso **não é medição vazia** — a distinção é do PR #25 e se provou na primeira
+> execução. Fossem 0 de 0, o instrumento estaria mudo; sendo 16 de 16, é leitura.
+>
+> **As três hipóteses que este item acusou ao longo de 2026-08-21 caem juntas:**
+> o workflow distribuído pelo plugin (que um `find` já havia derrubado), o cron
+> diário como linha de base, e o custo por merge do ciclo de fechamento. Nenhuma
+> aparece na medição. Nenhuma delas precisava ter sido afirmada.
+>
+> **E abre uma contradição que fica registrada em vez de resolvida à mão:** o
+> alerta de 21/08 falava em **1.802 de 2.000 minutos**. A medição de 24/08 não
+> encontra nenhum deles. As duas afirmações não se conciliam por raciocínio
+> daqui, e as explicações candidatas — ciclo de cobrança que virou na assinatura
+> do Pro, gasto fora de `affiliation=owner`, ou consumo que não é Actions
+> (Codespaces, storage, LFS) — são **hipóteses, e este item já pagou caro por
+> tratar hipótese como causa três vezes**.
+>
+> **O que fecha:** ler a composição da cota em **Settings → Billing**. Pela API
+> exigiria o escopo `user`, que o token local não tem (`gist`, `read:org`,
+> `repo`, `workflow`) — ampliar escopo é ação de credencial, humana.
+>
+> **Por que levou três dias para uma leitura de dois minutos:** o instrumento
+> tinha dois defeitos em série, e nenhum dos dois foi encontrado por leitura de
+> código — os dois só apareceram ao executar contra a API de verdade. Um `\r`
+> do Python no Windows ia parar dentro da URL e derrubava 15 de 16 requisições
+> devolvendo um zero que parecia resposta (PR #23); o proxy que intercepta TLS
+> matava a primeira chamada e o script culpava o token (PR #24). **O zero de
+> hoje só é legível porque a contagem `16 de 16` passou a existir** (PR #25).
 
 Alerta do GitHub em 2026-08-21: **1.802 de 2.000 minutos consumidos**, 90% do
 incluído, com reset em 1º de setembro. Restam ~198 minutos para 11 dias.
