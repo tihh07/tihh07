@@ -874,7 +874,7 @@ parecer defeito quando for orçamento.
 |---|---|---|
 | `verificacao.yml`: removido o gatilho `push: [main]` | **metade das execuções** — todo merge rodava a verificação duas vezes, PR e push, no mesmo commit | nada. A segunda execução não trazia informação nova |
 | `watchdog.yml`: diário → **semanal** | 7× menos execuções | **latência de detecção sobe para até sete dias.** O watchdog existe para perceber quando a automação para; semanal, ele percebe mais tarde. Aceitável para operador solo, e está escrito no cabeçalho |
-| `backup-drive.yml` (template): timeout 30 → **15 min** | corta pela metade o teto do caso patológico, multiplicado por cada privado que instalou o template | nada em operação normal — backup de repositório de documentação leva minutos |
+| `backup-drive.yml` (template): timeout 30 → **15 min** — **só no template** | corta pela metade o teto do caso patológico, multiplicado por cada privado que instalou o template | nada em operação normal — backup de repositório de documentação leva minutos. **Mas esta linha esteve numa tabela chamada “a poda feita aqui” descrevendo uma poda que aqui não foi feita:** a cópia instalada continua em 30, e a divergência é deliberada — o minuto é cobrado nos privados que instalam o template e grátis neste repositório público. Ficou dois dias sem estar declarada em lugar nenhum, até o `bb876e1` pôr a exceção no cabeçalho dos dois arquivos |
 
 **A armadilha que NÃO foi usada, e está escrita no workflow para ninguém tentar:**
 filtro `paths`/`paths-ignore` no check de verificação parece economia e é
