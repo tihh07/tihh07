@@ -74,10 +74,17 @@ api() {
     "$API$1"
 }
 
+# O `tr -d '\r'` que aparece depois de cada python3 daqui em diante não é
+# supersticioso. No Windows, o python nativo abre stdout em modo texto e troca
+# cada \n por \r\n; o bash então lê nomes com um \r colado no fim, e o \r vai
+# parar DENTRO da URL — que a API recusa com "Malformed input to a URL
+# function", HTTP 000, em todos os repositórios. Foi o que aconteceu em
+# 2026-08-24: a medição inteira do C1 voltou vazia por isso, e o zero foi lido
+# como "nenhum minuto faturável" em vez de "nenhuma requisição saiu".
 DONO=$(api /user | python3 -c "
 import json,sys
 p=sys.stdin.read().rsplit('\n',1)
-print(json.loads(p[0]).get('login','') if p[1].strip()=='200' else '')")
+print(json.loads(p[0]).get('login','') if p[1].strip()=='200' else '')" | tr -d '\r')
 [ -n "$DONO" ] || { echo "token inválido: GET /user falhou." >&2; exit 1; }
 echo "Conta: $DONO"
 
@@ -92,7 +99,7 @@ import json,sys,os
 pub = os.environ.get('INCLUIR_PUBLICOS') == '1'
 for r in json.load(sys.stdin):
     if r.get('archived'): continue
-    if r.get('private') or pub: print(r['name'])")
+    if r.get('private') or pub: print(r['name'])" | tr -d '\r')
     [ -z "$nomes" ] && break
     while IFS= read -r n; do [ -n "$n" ] && ALVOS+=("$n"); done <<< "$nomes"
     pagina=$((pagina + 1))
@@ -118,7 +125,7 @@ for repo in "${ALVOS[@]}"; do
 import json,sys
 for w in json.load(sys.stdin).get('workflows',[]):
     # Workflow desativado ainda carrega o gasto que já fez neste período.
-    print('%s\t%s' % (w['id'], w.get('name','(sem nome)')))")
+    print('%s\t%s' % (w['id'], w.get('name','(sem nome)')))" | tr -d '\r')
   [ -z "$ids" ] && continue
   while IFS=$'\t' read -r wid wnome; do
     [ -n "$wid" ] || continue
@@ -130,7 +137,7 @@ import json,sys,os
 d=json.load(sys.stdin).get('billable',{}) or {}
 for so,v in d.items():
     ms=v.get('total_ms',0) or 0
-    if ms: print('%s\t%s\t%s\t%.1f' % (os.environ['REPO'], os.environ['WF'], so, ms/60000.0))" >> "$LINHAS"
+    if ms: print('%s\t%s\t%s\t%.1f' % (os.environ['REPO'], os.environ['WF'], so, ms/60000.0))" | tr -d '\r' >> "$LINHAS"
   done <<< "$ids"
 done
 
