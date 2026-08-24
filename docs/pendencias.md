@@ -35,7 +35,7 @@
 | Item | Estado | Por quê |
 |---|---|---|
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
-| **C1** — minutos de Actions a 90% | 🟡 **Pro assinado; ferramenta pronta, medição NÃO rodada** | teto foi a 3.000. A sessão que media abandonou a tarefa e o veredito nunca chegou — o item segue com **relato parcial**, não com medição. `medir-actions.sh` está na `main` e roda num Codespace. **Não é este repo** e **não é o plugin**. Assinar não fecha: teto maior sobre consumo não medido é adiamento |
+| **C1** — minutos de Actions a 90% | 🟡 **medição rodou em 24/08 e deu ZERO — o achado agora é a contradição** | teto foi a 3.000. `medir-actions.sh` mediu 16 repositórios privados, todos com workflow, e devolveu **nenhum minuto faturável** no período corrente — contra um alerta de 1.802/2.000. Zero medido não fecha o item: **desloca-o** de "não medido" para "medido, e o gasto está fora do alcance da medição". **Não é este repo** e **não é o plugin**. Hipótese aberta: `affiliation=owner` exclui repositório de organização |
 | **S2** — R1 cobre conteúdo, não inventário | 🔴 **novo em 2026-08-21** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
 | **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
@@ -153,10 +153,10 @@ que a regra escrita**, e onde as duas divergem quem vence é a plataforma. Não
 procure rota alternativa: registre e devolva ao humano.
 
 **5. O que sobra é quase todo humano**, e nenhum destrava insistindo daqui:
-**H7** (proteger a branch default dos privados) · **C1** (medir os minutos —
-`medir-actions.sh` está na `main`, mas **o token do Codespace não basta**: ele é
-escopado no repositório e não enumera a conta, então precisa de um PAT com
-`Actions: Read` e `Metadata: Read`) · **S2** (enquadrar o alcance de R1) · **L2**
+**H7** (proteger a branch default dos privados) · **C1** (não é mais "medir": a
+medição rodou em 24/08 de uma sessão local, com `gh auth token`, e enumerou os
+privados sem PAT novo — o que sobra é **decidir o orçamento** e explicar o zero)
+· **S2** (enquadrar o alcance de R1) · **L2**
 (a coluna de departamento — **decidida e aplicada em 24/08**; o que resta são as
 treze células que dependem do transporte de L1) ·
 **P16** · **H5**.
@@ -807,6 +807,56 @@ do guardrail que uma suíte dedicada dava como verde.
 de abrir um privado para contar execuções. A verificação é humana, ou de uma
 sessão escopada num privado: aba *Actions*, workflow *Watchdog*, e ver se há uma
 execução por dia.
+
+#### A medição rodou em 2026-08-24, e o resultado é uma contradição
+
+Até aqui este item dizia "medição não rodada". Rodou, e o que ela devolveu não
+fecha o C1 — **desloca** o que precisa ser explicado.
+
+**Por que não rodava.** O `medir-actions.sh` morria no primeiro `GET /user`:
+`curl (35) schannel CRYPT_E_NO_REVOCATION_CHECK`, HTTP 000. A rede local passa
+por um proxy que intercepta TLS, e o schannel do curl às vezes não consegue
+checar a revogação do certificado. Pior, o script chamava isso de `token
+inválido` e mandava trocar uma credencial que estava boa. Consertado nos PRs
+**#24** (retry com `--ssl-no-revoke`, avisando em stderr toda vez) e **#25**
+(contagem de repositórios com workflow). Falhava **fechado**, então nunca chegou
+a produzir um zero mentiroso.
+
+**O que a medição diz**, com a saída conferida e as contagens trazidas sem nome:
+
+| | |
+|---|---|
+| Repositórios privados medidos | **16** |
+| Com pelo menos um workflow | **16 de 16** |
+| Sem leitura de Actions | **0** |
+| Minutos faturáveis no período corrente | **zero** |
+| Retries de TLS / falhas residuais | 56 / **0** |
+
+**A contradição é o achado.** O alerta diz 1.802 de 2.000 minutos consumidos no
+período; o endpoint de `timing`, workflow a workflow, devolve zero nos mesmos
+dezesseis. E o zero **não** é o artefato conhecido de repositório público: os
+dezesseis são privados, e todos tinham workflow — foi para poder afirmar isso que
+o #25 existiu. Alguma coisa gasta minuto fora do que este script enxerga.
+
+**Hipótese mais barata de testar, ainda não testada:** o script lista com
+`affiliation=owner`, então repositório de **organização**, ou onde o dono é apenas
+colaborador, não entra na lista e seu gasto fica invisível. Um `--todos` ou
+trocar o `affiliation` responde. Fica registrado como hipótese porque é isso que
+ela é — o padrão que este item já custou duas vezes é **afirmar mecanismo
+plausível sem medir**, e não vou pagar a terceira.
+
+**Uma ressalva de R1, dita em vez de contornada.** Esta medição foi disparada de
+uma sessão escopada no repositório **público**. Nenhum nome de repositório
+privado entrou na sessão nem neste arquivo: o relatório completo foi para um
+arquivo local não versionado e só **contagens** atravessaram. Ainda assim, ler
+metadados de faturamento dos privados a partir daqui está na fronteira que o
+**S2** descreve — R1 cobre conteúdo, e isto é inventário. Não me arrogo o
+enquadramento: fica como caso concreto para o S2 decidir, e se a decisão for
+"não", o conserto é rodar a medição de uma sessão escopada num privado, não
+apagar este registro.
+
+**Resta de C1**, portanto: não mais *medir*, mas **explicar o zero** (👤 ou sessão
+escopada num privado) e **decidir o orçamento** (👤, abaixo).
 
 **Ação (👤): decidir sobre o orçamento de $0.** O e-mail do GitHub oferece travar
 o uso adicional. Recomendo **definir**, e a razão é o modo de falha: com $0, a CI
