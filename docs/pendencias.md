@@ -35,7 +35,7 @@
 | Item | Estado | Por quê |
 |---|---|---|
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
-| **C1** — minutos de Actions a 90% | 🟡 **medido em 2026-08-24: zero minuto faturável em 16 de 16 repositórios com workflow** | teto foi a 3.000. A medição rodou e é válida — o denominador é 16, não zero. Mas ela **não explica os 1.802 minutos** do alerta de 21/08: o gasto está fora do que ela alcança, e essa lacuna é agora o item. **Não é este repo** e **não é o plugin**. Fecha quando a composição da cota for lida em Settings → Billing |
+| **C1** — minutos de Actions a 90% | 🟡 **medido em 2026-08-24: zero minuto faturável em 16 de 16 repositórios com workflow** | teto foi a 3.000. A medição rodou e é válida — o denominador é 16, não zero. Mas ela **não explica os 1.802 minutos** do alerta de 21/08: o gasto está fora do que ela alcança, e essa lacuna é agora o item. **Não é este repo** e **não é o plugin**. Orçamento adicional **decidido em 24/08: $0**, operar dentro do limite mensal — falta gravar na UI. Fecha quando a composição da cota for lida em Settings → Billing |
 | **S2** — R1 cobre conteúdo, não inventário | 🔴 **aberto, e com segunda ocorrência em 24/08** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. E em 24/08 a medição do C1 fez o mesmo por outro canal, com o sanitizador da ferramenta falhando aberto e imprimindo quinze nomes reais num transcript público — nada em arquivo versionado. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
 | **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
@@ -916,15 +916,31 @@ enquadramento: fica como caso concreto para o S2 decidir, e se a decisão for
 "não", o conserto é rodar a medição de uma sessão escopada num privado, não
 apagar este registro.
 
-**Ação (👤): decidir sobre o orçamento de $0.** O e-mail do GitHub oferece travar
-o uso adicional. Recomendo **definir**, e a razão é o modo de falha: com $0, a CI
-dos privados **para** quando os minutos acabarem, e você percebe na hora; sem $0,
-o aviso vem como fatura, depois. **Entre um controle que avisa falhando e um que
-avisa cobrando, o primeiro é melhor** — e este é reversível a qualquer momento.
+**Ação (👤): ✅ DECIDIDO em 2026-08-24 — orçamento adicional em $0, operar dentro
+do limite mensal.** A recomendação era essa, e a razão é o modo de falha: com $0,
+a CI dos privados **para** quando os minutos acabarem, e o dono percebe na hora;
+sem $0, o aviso vem como fatura, depois. **Entre um controle que avisa falhando e
+um que avisa cobrando, o primeiro é melhor** — e este é reversível a qualquer
+momento.
 
-O custo dessa escolha é real e precisa ser dito: com o orçamento travado, um
-merge em privado pode encontrar CI parada nos próximos 11 dias, e isso vai
-parecer defeito quando for orçamento.
+O custo dessa escolha é real e foi aceito junto com ela: com o orçamento travado,
+um merge em privado pode encontrar CI parada antes da virada do ciclo, e **isso
+vai parecer defeito quando for orçamento**. Fica escrito aqui para que a próxima
+sessão que topar com uma CI parada em privado consulte este parágrafo antes de
+diagnosticar.
+
+**A decisão está tomada; a aplicação não.** Travar o orçamento é mudança de
+configuração de faturamento da conta, em *Settings → Billing and plans → Budgets
+and alerts*. Não é ação de agente: pela API exige escopo que o token local não
+carrega, e escrita de configuração de conta é do dono por regra, não por limite
+técnico. Este item só fecha quando alguém confirmar o valor gravado na UI.
+
+> **E a decisão não explica o zero.** São dois problemas que este item carrega
+> juntos e que não se resolvem um ao outro: *quanto se pode gastar* está decidido;
+> *por que a medição não encontra o gasto* continua aberto — 1.802 de 2.000
+> reportados em 21/08 contra zero minuto faturável medido em 24/08. Travar o teto
+> sobre um consumo que a medição não enxerga não torna o consumo visível. A
+> leitura que falta é a da composição da cota, na mesma tela.
 
 **A poda feita em 2026-08-21, aqui, com o custo de cada uma declarado:**
 
@@ -2232,7 +2248,7 @@ que a linha reservada para ele.
 | ~~Sex~~ | ~~**P2** — trocar o prompt das rotinas pelo ponteiro~~ | ☁️ | **metade**; a de control-plane espera a decisão de onde a skill mora |
 | ~~Sex~~ | ~~**L2** — decidir se os nomes de setor podem ser publicados~~ | 👤 | **não decidido, e agravado** — ver o achado no item |
 | ~~Sex~~ | ~~**H1-bis** — marcar `verificar` como obrigatório~~ | 👤 | **feito e verificado na API em 21/08.** Precisou de duas tentativas: a primeira salvou sem o campo |
-| **Hoje (sex)** | **C1** — travar o orçamento de $0 do Actions, ou aceitar por escrito | 👤 | 5 min |
+| **Hoje (sex)** | **C1** — travar o orçamento de $0 do Actions, ou aceitar por escrito — ✅ **decidido em 24/08: $0**; resta gravar em *Settings → Billing and plans → Budgets and alerts* | 👤 | 5 min |
 | **Sáb/dom** | **H7** — proteger a branch default dos privados, um a um | 👤 | destravado hoje pelo Pro |
 | **Sáb/dom** | **P16** — coletar as duas métricas que a CI espera | 👤 | fecha o penúltimo repositório do ciclo |
 | **Antes de seg** | **V1** — workflow de leitura de configuração | ☁️ | 1 sessão |
