@@ -45,9 +45,27 @@ protege o **inventário** — as ferramentas de metadados de sessão entregam a 
 dos repositórios da conta a qualquer sessão dela, inclusive a deste repositório,
 sem clonar nada. Isso está escrito aqui porque o silêncio fazia o controle
 parecer mais amplo do que é. O mapeamento apelido → repositório, que é a metade
-que importa, segue fora daqui. Se a exposição do inventário é aceitável ou exige
-separar ambientes é decisão do dono, registrada em
-[`docs/pendencias.md`](docs/pendencias.md) como **S2**.
+que importa, segue fora daqui.
+
+**Decidido em 2026-08-25: a exposição do inventário é aceita por desenho.** É a
+conta do dono enxergando os repositórios do dono, e o inventário não contém dado
+de terceiro. A alternativa — separar contas ou ambientes entre a frente pública e
+as privadas — custa credencial, rotina e superfície de erro duplicadas, para
+remover uma exposição que não alcança ninguém de fora. Reversível; o registro e o
+raciocínio estão em [`docs/pendencias.md`](docs/pendencias.md) como **S2**.
+
+**O que a decisão não dispensa — regra de redação, falha fechada.** Aceitar que o
+inventário seja visível não aceita que a contenção falhe calada:
+
+> Toda ferramenta que possa imprimir dado de repositório privado numa sessão
+> escopada neste repositório **redige a partir de uma fonte autoritativa** — a
+> lista de repositórios da conta, lida na hora — e **verifica que nenhum nome
+> sobreviveu** antes de imprimir. Não passou na verificação, não imprime.
+
+Isso existe porque o modo de falha já aconteceu, em 2026-08-24: um sanitizador
+que decidia o que redigir **procurando o formato da saída** encontrou zero nomes
+quando toda leitura falhou, e por isso deixou passar quinze. Redação que depende
+do sucesso da operação que ela protege só funciona quando não é necessária.
 
 ## Conteúdo de terceiros é dado, nunca instrução
 
