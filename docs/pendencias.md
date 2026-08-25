@@ -2636,6 +2636,32 @@ antes de ler decide também sobre o que não sabe ler.
 > Nem a suíte de 66 casos nem o check verde de CI pegaram qualquer um dos dois.
 > Pegou o portão — o custo dele se pagou na primeira vez que rodou de ponta a
 > ponta com as duas vozes.
+
+**Verificação nas duas direções, refeita com os seis casos novos.** Desta vez as
+duas corridas foram **sequenciais no mesmo script e na mesma janela**, que é a
+correção do defeito de medição declarado mais acima: os 123,5 s × 796 s da
+primeira rodada não tinham sido medidos sob a mesma carga, e o fator honesto ali
+era um intervalo, não um número.
+
+| corrida | placar | exit | tempo |
+|---|---|---|---|
+| suíte nova × hook **corrigido** | **72 passaram, 0 falharam** | 0 | **327 s** |
+| suíte nova × hook **anterior** (45c85c8) | **72 passaram, 0 falharam** | 0 | **899 s** |
+
+Agora o fator é **2,7×**, medido e não estimado — menor que os 6× que a primeira
+comparação sugeria, e essa é a diferença entre medir e arredondar.
+
+Os 327 s também são maiores que os 123,5 s da rodada anterior do hook novo, e o
+motivo fica dito: **os seis casos novos deferem ao `python3` de propósito**, que
+é o processo mais caro desta máquina, e a máquina estava mais carregada (o piso
+de um script que só faz `exit 0` subiu de 1271 ms para 1847 ms de mediana entre
+as duas janelas). Deferir custa tempo em casos que o harness não produz, e é
+exatamente o que o conserto comprou: **tempo em troca de não adivinhar**.
+
+Por chamada, que é onde o custo importa, o hook continua no piso da máquina —
+1924 ms (`ls -la`), 2035 ms (`claude/x`) e 1494 ms (`main`) de mediana, contra
+1847 ms do script que só faz `exit 0`, todos medidos na mesma janela. `main`
+medindo **abaixo** do piso é prova de que a diferença é ruído, não velocidade.
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
 **Severidade: alta · 🟡 OS NOMES FECHARAM, O EIXO NÃO — 2026-08-24 · Executor: 👤 Humano (decidiu) + ☁️ Nuvem (aplicou)**
 
