@@ -36,7 +36,7 @@
 |---|---|---|
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
 | **C1** — minutos de Actions a 90% | 🟢 **explicado em 24/08: não havia contradição** | teto foi a 3.000. A medição rodou e é válida — o denominador é 16, não zero. Ela media **minuto faturável** ($0, coberto por desconto) e o alerta media **consumo de franquia** (2.837,3 de 3.000 em 24/08) — duas grandezas, nenhuma contradição. Restam **162,7 min** e a franquia vira em **7 dias**; com $0 e *stop usage*, o Actions **para na conta** quando acabar. Repositório público não consome franquia: o consumo é dos privados. **Não é este repo** e **não é o plugin**. Orçamento adicional **decidido e gravado em 24/08: $0 com *stop usage*, conferido na tela**. Fecha quando a composição da cota for lida em Settings → Billing |
-| **S2** — R1 cobre conteúdo, não inventário | 🔴 **aberto, e com segunda ocorrência em 24/08** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. E em 24/08 a medição do C1 fez o mesmo por outro canal, com o sanitizador da ferramenta falhando aberto e imprimindo quinze nomes reais num transcript público — nada em arquivo versionado. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
+| **S2** — R1 cobre conteúdo, não inventário | ✅ **fechado em 25/08: risco aceito** | metadados de sessão entregam a **lista** dos privados a uma sessão do público, e em 24/08 mais três canais fizeram o mesmo — a medição do C1, a listagem de sessões e o rateio de faturamento. Aceito por desenho: é a conta do dono olhando os repositórios do dono, sem dado de terceiro. O mapeamento apelido → repo segue protegido, e o `SECURITY.md` declara que R1 cobre conteúdo e não inventário. **Sobra uma regra:** ferramenta que possa imprimir dado de privado numa sessão pública redige de fonte autoritativa e **verifica** antes de imprimir — falha fechada |
 | **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | ✅ **fechado em 2026-08-21** | `verificar` exigido no `protect-main`, fixado no app do Actions, sem bypass. PR quebrado não entra mais — é plataforma, não boa vontade. O merge sem revisor segue doutrina |
@@ -511,7 +511,7 @@ não que foi mantido.
 > consequência.
 
 ### S2 — R1 protege o conteúdo dos privados, não a lista deles
-**Severidade: média · 🔴 ABERTO · Descoberto em 2026-08-21, segunda ocorrência em 2026-08-24 · Executor: 👤 Humano (decisão de desenho)**
+**Severidade: média · ✅ FECHADO EM 2026-08-25 — risco aceito, e sobra uma regra de contenção · Descoberto em 2026-08-21, quatro ocorrências em 24 horas**
 
 **Como apareceu.** Esta sessão — a do repositório **público** — consultou o
 estado de uma sessão de nuvem para saber se um trabalho tinha terminado. A
@@ -568,8 +568,45 @@ exposição interna por relatos não verificados — que é exatamente o defeito
 custou três diagnósticos errados em **L1**. E abster-se de uma leitura que a
 plataforma oferece não a torna indisponível para a próxima sessão.
 
-**Ação (👤): decidir o enquadramento, não construir controle.** Duas leituras, e
-a diferença não é retórica:
+#### ✅ DECIDIDO em 2026-08-25 — leitura 1, exposição de inventário aceita por desenho
+
+Decidido pela sessão, sob autorização explícita do dono para assumir portões que
+dependeriam dele. **Reversível a qualquer momento**, e a razão de fechar em vez de
+esperar é que o item acumulou **quatro ocorrências em 24 horas** — metadados de
+sessão, a medição do C1, a listagem de sessões e o rateio de faturamento — e um
+item que descreve o cotidiano da operação sem decidir nada só ensina a ignorá-lo.
+
+**Por que a leitura 1.** A exposição é da conta do dono para a conta do dono. O
+inventário não contém dado de terceiro: são nomes de repositório dele. A leitura 2
+— separar contas ou ambientes entre a frente pública e as privadas — remove uma
+exposição interna ao custo de duplicar credencial, rotina e superfície de erro, e
+esse custo é desproporcional ao que ela remove. É o mesmo raciocínio que fechou o
+**S1**.
+
+**O que o `SECURITY.md` já faz, e continua valendo:** o texto de R1 declara, em
+vez de deixar implícito, que a regra protege **conteúdo** e não **inventário**, e
+que o mapeamento apelido → repositório — a metade que importa — segue fora daqui.
+Um controle que se sabe estreito é utilizável; um que se supõe amplo, não.
+
+#### E a quarta ocorrência acrescentou uma exigência que a decisão não dispensa
+
+Aceitar a exposição de inventário **não** aceita que a contenção falhe em silêncio.
+Do que aconteceu em 24/08 sai uma regra operacional, e ela não é sobre topologia:
+
+> **Toda ferramenta que possa imprimir dado de repositório privado numa sessão
+> escopada no público redige a partir de uma fonte autoritativa e verifica que
+> nenhum nome sobreviveu antes de imprimir. Falha fechada.**
+
+O sanitizador que falhou procurava o **formato da saída** para saber o que redigir;
+quando toda leitura falhou, não havia formato, não havia o que redigir, e passou
+tudo. Redação que depende do sucesso da operação que ela protege só funciona quando
+não é necessária. A ferramenta já foi reescrita assim, e as varreduras de
+sanitização desde então rodam contra a lista autoritativa da conta — nenhuma contra
+o formato do texto.
+
+**Ação (👤): decidir o enquadramento, não construir controle** — *feito acima; o
+que segue é o registro das duas leituras que se ofereceram.* A diferença não é
+retórica:
 
 1. **Aceitável por desenho** — é a conta do próprio dono olhando os próprios
    repositórios, e nenhum terceiro entra nisso. Então o item fecha como risco
@@ -988,6 +1025,71 @@ que a própria tela diz, ao listar *"discounts cover Actions usage in public
 repositories"*. Os 2.837 minutos são dos privados. Otimizar os workflows daqui não
 devolve um minuto sequer; **onde a otimização paga é nos privados**, e o rateio por
 repositório está em *View details*, na mesma tela — leitura humana, R1 impede daqui.
+
+#### 2026-08-24, depois — o CSV fecha ao minuto, e a hipótese de cron cai
+
+O relatório oficial de uso da conta (`usageReport`, linha a linha, campo
+`quantity`) foi lido por duas sessões em separado — a de governança e esta — e as
+duas chegaram ao mesmo lugar. **Reconciliação exata:**
+
+| | |
+|---|---|
+| Linux, repositórios privados | **2.527 min** |
+| Windows, 186 min brutos × 1,667 | **310 min** equivalentes |
+| **soma** | **2.837 min** |
+| Billing (tela) | 2.837,3 — **diferença 0,0** |
+
+> **E isso mede o que antes era inferência.** Este arquivo afirmou, algumas horas
+> antes, que repositório público não consome franquia — lendo o texto do desconto.
+> O CSV prova: o público gastou **63 min** de Linux no período, e é exatamente a
+> diferença entre os 2.590 min totais de Linux e os 2.527 dos privados. A conta
+> só fecha se os 63 ficarem de fora.
+
+**A hipótese de cadência de cron estava errada, e era a primeira da lista de
+sondagem.** No 1º colocado a suspeita recaía sobre dois workflows **agendados** —
+um de ingestão diária falhando em 8 de 8 execuções, e um de medição a cada 3 horas
+com ~77 execuções no mês. Medido:
+
+| Workflow do 1º colocado | Minutos | Disparo |
+|---|---|---|
+| integração contínua | **672** (59%) | push / PR |
+| varredura de segredo | **309** (27%) | push / PR |
+| medição horária | 81 (7%) | agendado |
+| ingestão diária que falha sempre | **8** (0,7%) | agendado |
+
+> **Cortar cadência de cron economiza ~40 min/mês e deixa 981 intactos.** O gasto
+> não é agendado: é disparado por `push` e `pull_request`. A sonda de menor retorno
+> era a que estava em primeiro lugar na lista — porque *"cron diário"* é a causa que
+> mais parece verdadeira antes de medir, e este item já pagou três vezes por isso.
+
+**A ingestão que falha em 8 de 8 custa 1 minuto por execução**, porque falha
+*antes* de instalar as dependências pesadas. Falhar cedo é barato — o defeito dela
+é real, mas não é de custo.
+
+**Onde está o retorno, medido e em ordem:**
+
+- **1º colocado, os dois workflows de push/PR: 981 min = 34,6% da franquia inteira,
+  num repositório só.** Picos de 178 min num dia e 142 no seguinte. Falta ler os
+  arquivos para saber *por quê* — gatilho duplicado, `concurrency` sem
+  `cancel-in-progress`, ausência de filtro de `paths`.
+- **2º colocado: 471 min**, também todo push/PR.
+- **3º colocado: a única poda que não custa nada.** Um workflow roda em **Windows**,
+  cujo multiplicador **nesta conta é 1,667** ($0,01 contra $0,006 por minuto) — e
+  **não 2×**, como foi dito antes de olhar a tarifa aplicada. Os 186 min brutos
+  viram 310. Migrar para Linux, se o job permitir, devolve **~124 min/mês sem perder
+  cobertura nenhuma**.
+
+**Erro de método, registrado porque ele reaparece:** estimar minutos dividindo o
+`gross_amount` do repositório por $0,006 **superestima**, porque o gross inclui
+Codespaces, que não consome minuto de Actions. No 2º colocado deu ~602 contra 471
+reais — **22% de erro**. No 3º a fórmula acertou por acidente aritmético: como o
+Windows é cobrado a $0,01 e a divisão usou $0,006, o resultado calhou de equivaler
+ao minuto já multiplicado. Acerto por coincidência não valida o método.
+
+**Ainda não medido:** o CSV diz **quanto**, não **por quê**. Gatilho duplicado,
+`concurrency`, `timeout-minutes` e filtro de branch exigem ler os arquivos de
+workflow nos privados — sondagem em curso na sessão de governança, **R1** impede
+daqui.
 
 **O que a medição devolveu, em números** — restaurado em 2026-08-24 do texto que
 o `b2782fb` removeu ao adotar a versão rival. As duas sessões cederam uma à
