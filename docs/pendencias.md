@@ -44,7 +44,7 @@
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em plano nem em ação. Nos privados o recurso passou a existir com o Pro (2026-08-21) — mas comprar a ferramenta não cria o segundo revisor |
 | **H7** — branches principais dos privados desprotegidas | 🟢 **aplicado em 24/08 por API, mas não é gate de merge** | 17 de 18 com ruleset `deletion` + `non_fast_forward` na default, enforcement ativo, bypass vazio — **16 têm só essas duas**: impedem apagar e dar force push, **não exigem PR nem check e não impedem push direto**. Só este repo público tem gate de merge. Não foi clique humano: foi `POST /rulesets` em lote, de outra sessão. Fica aberta a **lacuna de rastreamento** entre "protegido contra destruição" e "com gate" |
 | **H3 · N6** — PR Watch | ✅ **fechado por remoção** | 22 disparos, **zero execuções** — nunca alcançou a action. Removido em 2026-08-21 a pedido do dono. Deixá-lo parado era cobertura aparente |
-| **H5** | ❌ aberto | decisão humana, sem dono declarado, aberto desde 2026-08-02 |
+| **H5** — pré-condições jurídicas | ❌ aberto, **decomposto em 25/08 em cinco linhas** | aberto desde 2026-08-02 sem dono porque era **um rótulo para cinco obrigações** de custos incomparáveis — a mais barata (um print datado, **H5.1**) represada atrás da mais cara (comunicação escrita a clientes, **H5.4**). Agora cada uma fecha sozinha. **H5.5** tem modelo escrito ([`registro-operacoes.md`](registro-operacoes.md)); o preenchido é N1 e mora no privado. **H5.3 colide com S1:** a aceitação de risco de lá cobria a *posse* do dado, não a *leitura por rotina* — e as 17 sessões de 20/08 clonaram os privados. Destrava com uma frase: os dois repos do S1 estão dentro ou fora do escopo das rotinas? |
 | **L2** — o índice publicado tem o eixo errado | 🟡 **os nomes fecharam em 24/08, o eixo não** | a metade que agravava o item **fechou**: a coluna de departamento virou `D1`–`D5` com treze *"não verificado"*, e o `grep` de conferência pegou os cinco nomes reais que sobravam no blueprint. Conferido em 25/08 no `AGENTS.md` — a única ocorrência de *"não declarado"* que resta descreve o estado passado, dentro da nota. **Segue aberto o que dá nome ao item:** o índice publica um recorte por repositório, não setor × repositórios. Depende dos handoffs de **L1** |
 | **L4** — cobertura recorrente | 🟡 **decidido** | desenho C (uma rotina por setor). Criar a rotina é na UI: daqui herdaria o ambiente público e repetiria o defeito do P0 |
 | **A1** — orquestrador no prédio errado | 🟡 **decidido, plano escrito** | vai para o departamento de Fundação; visibilidade deste repo **não muda**. Ordem: criar no privado, conferir, só então podar aqui. Executa uma sessão escopada no privado — daqui violaria R1 |
@@ -1335,11 +1335,80 @@ Daqui não há como verificar se as condições foram cumpridas — podem ter si
 offline. Se não foram, a Fase 2 está rodando à frente do gate que ela mesma
 declarou inegociável.
 
-**Ação:** confirmar opt-out com evidência datada; verificar titularidade dos
-dados de cada repositório no escopo das rotinas.
+#### Decomposto em 2026-08-25 — não é um item, são cinco
 
-**Verificação:** existe evidência datada do opt-out, e cada repositório no escopo
-de rotina tem titularidade declarada.
+**O item está aberto desde 2026-08-02 porque o rótulo é único e as obrigações
+não.** O portão do blueprint (seção *Condições jurídicas*) impõe **cinco** coisas
+distintas, com donos e custos que não se parecem. A mais barata custa um print e
+estava represada atrás da mais cara, que é externa e demora semanas. **Item que
+só fecha quando cinco coisas fecham nunca mostra progresso, e por isso ninguém o
+pega** — 23 dias sem dono declarado é a evidência disso, não uma coincidência.
+
+| # | Obrigação | Fase | Estado | Executor |
+|---|---|---|---|---|
+| **H5.1** | opt-out de treinamento confirmado, **evidência datada** | 1 | ❌ aberto | 👤 — um print com data |
+| **H5.2** | titularidade dos dados de cada repo verificada | 1 | ❌ aberto | 👤, ou chega pelos handoffs de **L1** |
+| **H5.3** | repos lidos por rotina **sem dado pessoal bruto** (*regra dura*) | 2 | ❌ **colide com S1** | 👤 — decisão de escopo |
+| **H5.4** | ciência dos clientes **por escrito** | 2 | ❌ aberto | 👤 — externo, é o que manterá H5 aberto |
+| **H5.5** | registro simplificado de operações (Res. CD/ANPD 2/2022) | 2 | 🟡 **modelo escrito em 25/08** | ☁️ redige · 👤 preenche |
+
+#### H5.3 colide com S1, e a colisão não é hipótese
+
+O **S1** concluiu, com três varreduras somente-leitura, que **dois repositórios
+privados contêm dado real de pessoa identificável** — num deles em volume que a
+alegação original não sugeria — e o dono **aceitou o risco em 2026-08-21**. A
+regra dura da Fase 2 diz que repositório lido por rotina **não** contém dado
+pessoal bruto.
+
+O próprio S1 já escrevera a mitigação: *"não anexar esses repositórios como fonte
+de sessão sem necessidade"*. Mas em **2026-08-20 foram despachadas 17 sessões,
+uma por privado**, e sessão de nuvem **clona o conteúdo** para um contêiner
+efêmero. Se aqueles dois estavam no lote — e não há por que supor que não —, a
+regra dura já foi atravessada uma vez.
+
+> **A aceitação de risco do S1 cobria a posse do dado, não a leitura por rotina.**
+> São coisas diferentes: posse é estado, leitura é operação, e cada leitura por
+> agente cria cópia nova, fora do país, num contêiner que ninguém inspeciona
+> depois. Este arquivo tratava as duas como uma só, e é isso que a decomposição
+> corrige.
+
+**A decisão que destrava H5.3 cabe numa frase:** aqueles dois repositórios estão
+**dentro** ou **fora** do escopo das rotinas? Fora → a regra dura volta a valer e
+H5.3 fecha por exclusão de escopo. Dentro → exige sanitização **na origem**, que
+é trabalho real e não decisão.
+
+#### H5.5 — o modelo existe; o preenchimento é N1
+
+Escrito em 2026-08-25: [`registro-operacoes.md`](registro-operacoes.md), na forma
+simplificada que a Res. CD/ANPD 2/2022 admite para agente de pequeno porte.
+
+**O registro preenchido não pode morar aqui**, e a razão é o item 3 do checklist
+do [`SECURITY.md`](../SECURITY.md): ele mapeia dado pessoal a sistema, titular e
+volume. Publicá-lo entregaria de graça o mapa que um atacante teria de descobrir.
+Segue-se o padrão que o [`control-plane.md`](control-plane.md) já fixou — **a
+forma é pública, o mapa operacional não** —, e o preenchido vive no privado de
+governança.
+
+O modelo já carrega o ponto que mais se omite: **toda sessão de nuvem clona o
+repositório** para um contêiner efêmero fora do país. Isso é tratamento e é
+transferência internacional, e um registro que descreve as rotinas mas omite a
+clonagem descreve metade da operação.
+
+**Ação, agora com dono por linha:** 👤 fecha H5.1 hoje (custo: um print) e decide
+H5.3 (custo: uma frase); ☁️ já entregou o modelo de H5.5; H5.2 chega de graça com
+**L1** se os handoffs trouxerem titularidade; H5.4 é externo e estreita — só se
+aplica onde há cliente cujo dado esteja presente, que é subconjunto, não os 17.
+
+**Verificação, por linha:** H5.1 — existe evidência datada do opt-out. H5.2 —
+cada repositório em escopo de rotina tem titularidade declarada. H5.3 — os dois
+repositórios do S1 estão declaradamente fora do escopo, ou sanitizados na origem.
+H5.4 — existe comunicação escrita, datada, aos clientes afetados. H5.5 — o
+registro preenchido existe no privado e cada linha tem data de revisão.
+
+> **H5 fecha quando as cinco fecharem** — mas cada uma fecha sozinha, e é essa a
+> diferença que a decomposição compra. Enquanto o item era um só, "fechar H5"
+> significava resolver simultaneamente um print e uma comunicação jurídica a
+> terceiros, o que garantia que nenhum dos dois acontecesse.
 
 ### H6 — Branch residual do PR #7 no remoto
 **Severidade: média · ✅ FECHADO em 2026-08-08 · reconfirmado em 2026-08-20**
