@@ -50,6 +50,20 @@ Duas regras do blueprint valem em toda sessão neste repo:
   bloqueia, e tudo entra por PR com o check obrigatório verde. O controle passou a
   ser a plataforma mais o registro, não a atenção do revisor: é o que **H1-bis**
   tornou possível ao fixar `verificar` como obrigatório e sem ator de bypass.
+- **A garantia do `guard-push.sh` termina onde o diretório do projeto termina.**
+  O hook e o `.claude/settings.json` que o declara moram os dois dentro dele: numa
+  sessão ancorada em worktree, remover o worktree apaga os dois de uma vez, e o
+  que resta não é hook que erra — é hook que nunca foi declarado. Quando o
+  caminho sobrevive mas o arquivo não, o hook sai com **127**, e o contrato de
+  `PreToolUse` só bloqueia em **2**: a sessão segue com poderes plenos de git,
+  calada. Medido em 2026-08-25, e registrado como **G1** em
+  [`docs/pendencias.md`](docs/pendencias.md) com a evidência.
+  O `hooks-presentes.sh` anuncia a metade que ainda dá para anunciar — sessão que
+  **começa** com a declaração presente e o arquivo ausente. A outra metade não
+  tem conserto local: nada dentro do projeto sobrevive ao fim do projeto, e quem
+  a cobre é o ruleset no servidor. **Limite escrito é limite; limite implícito é
+  armadilha** — e este esteve implícito até uma sessão apagar três branches
+  remotas sem que nada perguntasse nada.
 
 ## Frontmatter de identificação
 
@@ -152,7 +166,7 @@ em dois lugares é a divergência que este repositório existe para evitar.
 | `.claude/prompts/` | Prompts reutilizáveis entre projetos |
 | `.claude/skills/` | Conteúdo versionado das rotinas (padrão prompt-ponteiro) |
 | `.claude-plugin/marketplace.json` | Manifesto do marketplace que distribui o plugin-fundação |
-| `plugins/fundacao/` | Templates distribuíveis: executores, hook e sua suíte, telemetria, backup |
+| `plugins/fundacao/` | Templates distribuíveis: executores, os dois hooks e as suítes deles, telemetria, backup |
 | `.github/workflows/` | Verificação (a cada PR, check obrigatório), watchdog semanal e backup |
 | `.github/CODEOWNERS` | Donos por caminho — inerte até "Require review from Code Owners" |
 | `.gitignore` · `LICENSE` | Barra segredo e dado; CC BY 4.0 no texto, MIT nos snippets |
@@ -162,8 +176,8 @@ em dois lugares é a divergência que este repositório existe para evitar.
 
 Não há gerenciador de pacotes, linter nem etapa de build, e não se deve
 introduzir um sem que isso seja o pedido explícito. O repositório é Markdown,
-YAML, três manifestos JSON e dois shell scripts — um guardrail e a suíte que o
-verifica.
+YAML, três manifestos JSON e quatro shell scripts — um guardrail, um relator, e
+a suíte de cada um.
 
 **Desde 2026-08-21 essa verificação roda sozinha** em
 `.github/workflows/verificacao.yml`, a cada PR para `main`. Rodá-la à mão antes
@@ -185,15 +199,23 @@ A verificação, antes de qualquer PR:
   (o glob antigo, `.claude-plugin/*.json`, deixava o manifesto do plugin de
   fora do procedimento);
 - **`bash plugins/fundacao/hooks/test-guard-push.sh` passa inteira**, e os blocos
-  `run:` dos workflows passam em `bash -n`. A suíte é a única verificação
-  executável do repositório: prova que o hook bloqueia push para `main`, force
-  push, deleção remota e push de repositório inteiro, e libera `claude/*`.
-  Guardrail sem suíte é afirmação, não controle. A contagem de casos não fica
-  aqui: já envelheceu uma vez neste arquivo, calada, entre duas correções.
+  `run:` dos workflows passam em `bash -n`. Prova que o hook bloqueia push para
+  `main`, force push, deleção remota e push de repositório inteiro, e libera
+  `claude/*`. Guardrail sem suíte é afirmação, não controle. A contagem de casos
+  não fica aqui: já envelheceu uma vez neste arquivo, calada, entre duas
+  correções.
   **A suíte roda num repositório descartável, nunca no diretório ambiente** — a
   branch atual daqui é `claude/*`, e o fallback do hook libera nela, o que já
   transformou um defeito real em teste verde. Se ela recusar rodar por não
   conseguir montar esse repositório, é falha fechada e proposital.
+- **`bash plugins/fundacao/hooks/test-hooks-presentes.sh` passa inteira.** É a
+  outra metade: o guardrail prova que bloqueia, o relator prova que a ausência
+  dele deixa de ser silenciosa. Pelo mesmo motivo ela monta um projeto
+  descartável por caso — aqui os hooks existem, e todo caso de ausência passaria
+  por acidente. **Ela pula casos em vez de fingir**: no Git-for-Windows o bit de
+  execução vem do conteúdo do arquivo, o cenário "sem permissão" não se deixa
+  construir, e o pulo sai declarado na saída. Só o runner Linux da verificação
+  roda aquele caso.
 
 ## Topologia de branches
 
@@ -243,6 +265,12 @@ envelhece.
   nota erraram a conta antes desta — declarar cresce o arquivo que a declaração
   mede. A regra que faltava: **escreva a nota, rode `wc -l`, e só então fixe o
   número** — o previsto está errado por construção, o medido converge.)*
+  Ainda em 2026-08-25 cresceu **28 linhas**, de 259 a 287, por **G1**: a maior
+  parte na declaração de que a garantia do `guard-push` termina onde o diretório
+  do projeto termina, e o resto entre a lista de verificação, o índice de
+  arquivos e esta nota. Era o item que menos podia seguir implícito — custou três
+  branches remotas apagadas sem que nada perguntasse nada. A regra acima foi
+  seguida à risca desta vez: nota escrita, `wc -l` rodado, número fixado depois.
 - **Sanitização** — nada de caminho local absoluto, nome de cliente, token ou
   URL interna em arquivo versionado, inclusive fora do `README.md`. O índice
   acima guarda caminhos locais apenas se forem genéricos; caso contrário,
