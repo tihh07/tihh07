@@ -10,7 +10,7 @@
 > que uma classe inteira de itens não é reverificável a partir da nuvem, e isso
 > ganhou [seção própria](#o-que-a-nuvem-não-alcança--e-por-quê).
 
-## Placar — rodada de 2026-08-20, atualizado em 2026-08-21
+## Placar — rodada de 2026-08-20, atualizado em 2026-08-21 e em 2026-08-25 (**G1**)
 
 **Fechados nesta rodada**
 
@@ -34,6 +34,7 @@
 
 | Item | Estado | Por quê |
 |---|---|---|
+| **G1** — a garantia do `guard-push` termina junto com o diretório do projeto | 🟡 **metade fechada em 25/08** | worktree removido no meio da sessão levou junto o hook **e** o `settings.json` que o declara; depois disso um push e **três deleções remotas** passaram sem guarda. Medido: com o arquivo ausente o hook sai **127**, e só o **2** bloqueia — falha aberta, calada. Entregue o relator `SessionStart` que anuncia hook declarado sem arquivo, com suíte e com o limite escrito no `AGENTS.md`. Instalar o **bloqueador** em `~/.claude` foi avaliado e **recusado**: ele não tem noção de escopo e negaria `git push origin main` em toda a máquina. Falta o **ruleset** recusando deleção e força em `claude/*` — única cobertura do caso em que o diretório morre no meio da sessão |
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
 | **C1** — minutos de Actions a 90% | 🟢 **explicado em 24/08: não havia contradição** | teto foi a 3.000. A medição rodou e é válida — o denominador é 16, não zero. Ela media **minuto faturável** ($0, coberto por desconto) e o alerta media **consumo de franquia** (2.837,3 de 3.000 em 24/08) — duas grandezas, nenhuma contradição. Restam **162,7 min** e a franquia vira em **7 dias**; com $0 e *stop usage*, o Actions **para na conta** quando acabar. Repositório público não consome franquia: o consumo é dos privados. **Não é este repo** e **não é o plugin**. Orçamento adicional **decidido e gravado em 24/08: $0 com *stop usage*, conferido na tela**. Fecha quando a composição da cota for lida em Settings → Billing |
 | **S2** — R1 cobre conteúdo, não inventário | ✅ **fechado em 25/08: risco aceito** | metadados de sessão entregam a **lista** dos privados a uma sessão do público, e em 24/08 mais três canais fizeram o mesmo — a medição do C1, a listagem de sessões e o rateio de faturamento. Aceito por desenho: é a conta do dono olhando os repositórios do dono, sem dado de terceiro. O mapeamento apelido → repo segue protegido, e o `SECURITY.md` declara que R1 cobre conteúdo e não inventário. **Sobra uma regra:** ferramenta que possa imprimir dado de privado numa sessão pública redige de fonte autoritativa e **verifica** antes de imprimir — falha fechada |
@@ -1433,6 +1434,101 @@ dias e três merges depois, continua valendo.
 
 ## 3. Ainda em aberto ☁️ / 🏠
 
+### G1 — A garantia do `guard-push` termina junto com o diretório do projeto
+**Severidade: alta · 🟡 METADE FECHADA EM 25/08 · Executor: ☁️ Nuvem (feito) + 👤 Humano (o que falta)**
+
+**O que aconteceu, e não é hipótese.** Numa sessão ancorada num worktree, o
+worktree foi removido no meio do trabalho. Sumiram juntos o hook e a
+configuração que o declara:
+
+```
+CLAUDE_PROJECT_DIR ...................... vazio
+plugins/fundacao/hooks/guard-push.sh .... No such file or directory
+.claude/settings.json ................... No such file or directory
+```
+
+Depois disso, **na mesma sessão**, rodaram sem guarda alguma um `git push`, um
+`gh pr merge` e **três `git push origin --delete`** de branches remotas. Deleção
+remota é um dos casos que a suíte testa e que o hook bloqueia por desenho.
+Passou reto porque não havia hook — e nada foi anunciado.
+
+> O `gh pr merge` teria passado de todo jeito: o hook só inspeciona segmentos
+> que são `git push`. Fica dito para que a evidência não prove mais do que
+> prova — o que a ausência do hook liberou foram o push e as três deleções.
+
+**A assimetria, medida em 2026-08-25** com o mesmo envelope de um
+`git push origin --delete`:
+
+| Situação | Exit |
+|---|---|
+| projeto presente | **2** — bloqueou |
+| projeto removido, caminho ainda apontando | **127** — não bloqueou |
+| projeto removido, `$CLAUDE_PROJECT_DIR` vazio | **127** — não bloqueou |
+
+O hook falha **fechada** quando a *entrada* é ilegível — há caso de suíte para
+isso. Quando o *arquivo* não existe, quem decide é o harness, e ele falha
+**aberto**: só o exit 2 bloqueia, 127 é "o hook errou", e errar não interrompe
+nada. **Guardrail cuja ausência é silenciosa é indistinguível de guardrail que
+aprovou** — a mesma classe de "ausência de arquivo não dispara alarme em
+ninguém" que este backlog já registra sobre rotina de nuvem fora de operação.
+
+**São duas camadas, e confundi-las leva ao conserto errado:**
+
+1. **A declaração some junto.** O `.claude/settings.json` também mora dentro do
+   projeto. Removido o diretório, não há hook que erre — não há declaração. É
+   silêncio por construção, sem contrato de exit code envolvido. Foi esta a
+   camada que operou no incidente.
+2. **A declaração sobrevive, o arquivo não.** Aí sim vale o 127 acima. É o modo
+   de falha que a **distribuição** do plugin-fundação vai produzir: aqui o
+   caminho é `$CLAUDE_PROJECT_DIR`, num departamento pode ser
+   `${CLAUDE_PLUGIN_ROOT}`, e hoje errar entre os dois não produz sinal nenhum.
+
+**Instalar o `guard-push.sh` em `~/.claude` foi avaliado e recusado.** Ele não
+tem noção nenhuma de escopo — a única menção a `CLAUDE_PLUGIN_ROOT` no arquivo
+inteiro está num comentário. Em nível de usuário ele passaria a incidir em toda
+sessão da máquina, e o que negaria, medido:
+
+```
+exit=2  git push origin main
+exit=2  git push -u origin feature/x
+exit=2  git push origin HEAD
+```
+
+Negar o fluxo legítimo de repositórios que não adotam esta política é o caminho
+mais curto para alguém desinstalar o hook — está escrito no cabeçalho do próprio
+arquivo, sobre a versão que dependia de `jq`, e vale de novo aqui. **E não
+resolveria a camada 1**, que é a que operou.
+
+**Feito em 25/08 — a metade que tem conserto local:**
+
+- `plugins/fundacao/hooks/hooks-presentes.sh`, hook `SessionStart` que anuncia
+  todo hook declarado cujo arquivo não existe. **Reporta e nunca bloqueia**, e
+  essa é a decisão de desenho, não preguiça: um relator pode ser instalado em
+  nível de usuário sem impor política a ninguém, um bloqueador não.
+- `plugins/fundacao/hooks/test-hooks-presentes.sh`, a suíte dele, no passo 5 da
+  verificação. Congela dois defeitos que a própria escrita produziu: um parse
+  que casava `"type": "command"` em vez da chave e devolvia **silêncio num
+  cenário montado para gritar**, e casos que compartilhavam um diretório porque
+  o contador rodava em subshell.
+- O limite escrito no [`AGENTS.md`](../AGENTS.md), onde a doutrina afirma a
+  trava. Limite escrito é limite; limite implícito é armadilha.
+
+**O que segue aberto, e por quê:**
+
+| O que falta | Executor | Por quê |
+|---|---|---|
+| Ruleset no servidor recusando **deleção** e **força** nas branches `claude/*` | 👤 Humano | É a **única** cobertura da camada 1: nada dentro do projeto sobrevive ao fim do projeto. As três deleções do incidente eram de `claude/*`, que o ruleset de `main` não alcança. Escrita de ruleset esbarra em **V1** — o `POST /rulesets` rodou da nuvem em 15 privados, então aqui é questão de fazer, não de poder |
+| Instalar o **relator** também em `~/.claude` | 👤 Humano ou sessão em `~/.claude` | Caminho absoluto fora de qualquer worktree, pega a camada 2 em toda sessão da máquina. Não se faz daqui: `~/.claude` é outro repositório, e sessão deste não mexe nele |
+
+**Verificação:** para o ruleset, um `git push origin --delete` de uma branch
+`claude/*` descartável que volte recusado **pelo servidor**, com a saída
+literal. Para o relator em `~/.claude`, uma sessão que comece num projeto com
+hook declarado e arquivo ausente e traga a linha `HOOK DECLARADO SEM ARQUIVO`.
+
+**Nenhum dos dois fecha a camada 1 dentro da sessão.** Quando o diretório do
+projeto morre no meio do trabalho, o que resta é o servidor. Este item não vai
+prometer mais do que isso.
+
 ### A1 — O orquestrador está no prédio errado (decidido: muda)
 
 **DECIDIDO em 2026-08-21 — vai para o privado.**
@@ -2414,7 +2510,9 @@ pagando o preço de um caminho que ele próprio documenta como fallback.
 **A consequência já observada não era o incômodo, era a prova.** A suíte roda o
 hook uma vez por caso e deixou de terminar em dez minutos. Suíte que não termina
 na máquina de quem mantém o repositório é indistinguível de suíte que não roda —
-e ela é a **única verificação executável deste repositório**.
+e ela era, naquele momento, a **única verificação executável deste
+repositório**. Deixou de ser no mesmo dia: **G1** acrescentou a suíte do relator
+de hooks ausentes, e são duas.
 
 **O conserto:** todo o caminho quente passou a usar expansão de parâmetro, `case`
 e `[[ =~ ]]`, que são builtins e não criam processo. As quatro travas continuam

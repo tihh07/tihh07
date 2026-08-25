@@ -38,9 +38,16 @@ name: Verificação
 #   sintaxe: ele pega parêntese não fechado, não pega comando errado. Script
 #   sintaticamente perfeito que apaga a árvore passa.
 #
+# - **Presença dos hooks em tempo de sessão.** O passo 5 prova que o relator de
+#   hooks ausentes funciona; ele não prova que os hooks estarão lá quando uma
+#   sessão rodar. Não há como: a garantia do `guard-push.sh` termina onde o
+#   diretório do projeto termina, e nenhum check de CI alcança isso. O limite
+#   está escrito no AGENTS.md, e a cobertura dele é do servidor — ruleset —, não
+#   deste arquivo.
+#
 # PORTABILIDADE: depende de `python3` com PyYAML, presente na imagem
-# `ubuntu-latest` do GitHub. Em runner self-hosted enxuto, instale antes. A
-# suíte do guardrail (passo 4) é bash puro e não tem essa dependência.
+# `ubuntu-latest` do GitHub. Em runner self-hosted enxuto, instale antes. As
+# suítes dos passos 4 e 5 são bash puro e não têm essa dependência.
 #
 # NÃO REGISTRE AQUI UMA CONTAGEM DE CASOS DA SUÍTE: ela já envelheceu calada uma
 # vez no AGENTS.md, entre duas correções. A contagem viva é a saída do próprio
@@ -158,7 +165,19 @@ jobs:
           echo "scripts conferidos: $encontrados"
 
       - name: Suíte do guardrail de push
-        # A única verificação executável do repositório: prova que o hook bloqueia
+        # Uma das duas verificações executáveis do repositório: prova que o hook bloqueia
         # push para main, force push, deleção remota e push de repositório inteiro,
         # e libera claude/*. Guardrail sem suíte é afirmação, não controle.
         run: bash plugins/fundacao/hooks/test-guard-push.sh
+
+      - name: Suíte do relator de hooks ausentes
+        # A contraparte do passo anterior. O guardrail prova que BLOQUEIA; este
+        # prova que a AUSÊNCIA dele deixa de ser silenciosa. As duas metades são
+        # necessárias: um hook cuja falta ninguém anuncia é indistinguível de um
+        # hook que aprovou.
+        #
+        # Aqui, e não só na máquina de quem edita: o caso do bit de execução PULA
+        # no Git-for-Windows, porque lá o MSYS deriva a permissão do conteúdo e a
+        # fixture não se deixa construir. Este runner é Linux, e é o único lugar
+        # onde aquele caso roda de verdade.
+        run: bash plugins/fundacao/hooks/test-hooks-presentes.sh

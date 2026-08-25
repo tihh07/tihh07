@@ -25,7 +25,8 @@
       "Bash(rg:*)",
       "Bash(diff:*)",
       "Bash(bash -n:*)",
-      "Bash(bash plugins/fundacao/hooks/test-guard-push.sh)"
+      "Bash(bash plugins/fundacao/hooks/test-guard-push.sh)",
+      "Bash(bash plugins/fundacao/hooks/test-hooks-presentes.sh)"
     ],
     "deny": [
       "Read(/**/.env)",
@@ -50,6 +51,18 @@
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/plugins/fundacao/hooks/guard-push.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/plugins/fundacao/hooks/hooks-presentes.sh",
+            "timeout": 10,
+            "statusMessage": "Conferindo se os hooks declarados existem..."
           }
         ]
       }

@@ -23,6 +23,8 @@ O conteúdo daqui é derivado exclusivamente do blueprint, que já é público.
 | `agents/` | Os oito executores: orquestrador + 7 papéis especializados |
 | `hooks/guard-push.sh` | Guardrail `PreToolUse` — push só em `claude/*`, sem force, sem deleção |
 | `hooks/test-guard-push.sh` | A suíte que prova o guardrail — rode-a depois de qualquer edição nele |
+| `hooks/hooks-presentes.sh` | Relator `SessionStart` — anuncia hook declarado cujo arquivo não existe |
+| `hooks/test-hooks-presentes.sh` | A suíte do relator, pela mesma razão |
 | `templates/telemetry/` | Esqueleto de `runs.jsonl` e do snapshot semanal |
 | `templates/backup/` | Workflow de backup do repositório para o Google Drive, e como instalá-lo |
 
@@ -46,6 +48,20 @@ que divergem só no cabeçalho e que **o template é o lado que vale**.
 2. Instalar o hook — o `guard-push.sh` precisa estar referenciado nos `hooks`
    do `settings.json` para agir. Copiar o arquivo sem registrar o hook não
    protege nada.
+
+   **E registrar o hook sem copiar o arquivo protege menos ainda, porque não
+   avisa.** Medido em 2026-08-25: hook declarado cujo arquivo não existe sai com
+   127, e o contrato de `PreToolUse` só bloqueia em 2 — a sessão segue com
+   poderes plenos de git, em silêncio. É por isso que o `hooks-presentes.sh`
+   existe e por isso ele entra junto, em `SessionStart`: aqui o caminho é
+   `$CLAUDE_PROJECT_DIR`, num departamento pode ser `${CLAUDE_PLUGIN_ROOT}`, e
+   errar entre os dois é exatamente o modo de falha que a distribuição produz.
+
+   O `hooks-presentes.sh` **reporta e nunca bloqueia**, de propósito. Ele pode,
+   por isso, ser instalado também em `~/.claude` — nível de usuário, caminho
+   fora de qualquer worktree — sem impor política a repositório nenhum. O
+   `guard-push.sh` **não pode**: ele não tem noção de escopo, e lá negaria
+   `git push origin main` em toda a máquina.
 3. Copiar `.github/workflows/watchdog.yml` do repositório público para
    `.github/workflows/` do departamento. Sem ajustes.
 4. Copiar `templates/telemetry/` para `telemetry/` quando a primeira rotina
