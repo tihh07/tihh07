@@ -63,8 +63,17 @@ json_para() {
   # Escapa barra invertida, aspas e — o que faltava — quebra de linha: newline
   # literal dentro de string JSON é JSON inválido, e o hook a recusaria por falha
   # fechada, fazendo um caso legítimo parecer um bloqueio.
-  printf '{"tool_input":{"command":"%s"}}' \
-    "$(printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g')"
+  #
+  # Expansão de parâmetro, não `sed`: eram dois processos por caso, e a suíte
+  # roda uma vez por caso. Na máquina Windows onde o custo foi medido em
+  # 2026-08-25 isso sozinho somava perto de dois segundos por caso — a suíte
+  # inteira deixou de terminar em dez minutos, e suíte que não termina é
+  # indistinguível de suíte que não roda. O resultado é byte a byte o mesmo.
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  printf '{"tool_input":{"command":"%s"}}' "$s"
 }
 
 # caso <esperado 0|2> <descrição> <comando> [diretório]
@@ -265,6 +274,85 @@ else
   echo "  pulado: não foi possível criar repositório temporário"
 fi
 
+
+# ---------------------------------------------------------------------------
+# O ENVELOPE JSON — o que o hook lê antes de ter um comando para julgar
+# ---------------------------------------------------------------------------
+# Até 2026-08-25 a leitura de `.tool_input.command` era terceirizada inteira ao
+# jq ou ao python, e a suíte nunca a exercitou: todo caso chegava por
+# `json_para`, que produz o envelope mais simples possível. Quando o custo do
+# hook obrigou a escrever um extrator em bash puro, isso deixou de ser
+# aceitável — extrator próprio é código próprio, e código próprio sem caso é
+# afirmação.
+#
+# Estes casos entram pelo envelope CRU, sem passar por `json_para`, porque o
+# que está sob teste é justamente a forma do envelope. Todos valem para
+# qualquer leitor: descrevem o que o JSON significa, não como este hook o lê.
+# Rodá-los contra a versão anterior do hook é o controle — se um deles só passa
+# na nova, ele está medindo a implementação e não a política.
+echo
+echo "guard-push — leitura do envelope JSON"
+
+# caso_bruto <esperado 0|2> <descrição> <envelope JSON literal>
+caso_bruto() {
+  local esperado="$1" desc="$2" envelope="$3" obtido
+  obtido=0
+  ( cd "$NEUTRO" && printf '%s' "$envelope" | "$HOOK" >/dev/null 2>&1 ) || obtido=$?
+  if [ "$obtido" -eq "$esperado" ]; then
+    PASS=$((PASS + 1))
+    printf '  ok    %s\n' "$desc"
+  else
+    FAIL=$((FAIL + 1))
+    printf '  FALHA %s\n        esperado exit=%s, obtido exit=%s\n        envelope: %s\n' \
+      "$desc" "$esperado" "$obtido" "$envelope"
+  fi
+}
+
+# O ataque que um extrator ingênuo sofre: `"command"` escrito DENTRO do valor de
+# outro campo, para que a busca por substring pare na chave falsa e o hook
+# inspecione um comando benigno enquanto o verdadeiro empurra para `main`.
+# Dentro de uma string JSON toda aspa é escapada, então a aspa da chave falsa é
+# sempre precedida de `\` e a da verdadeira, de `{` ou `,` — é essa a distinção
+# que fecha o buraco, e é ela que estes dois casos medem, nas duas direções.
+caso_bruto 2 "chave \"command\" forjada não esconde o push" \
+  '{"tool_input":{"description":"x\"command\": \"echo ok\"","command":"git push origin main"}}'
+caso_bruto 0 "chave forjada também não inventa um push" \
+  '{"tool_input":{"description":"x\"command\": \"git push origin main\"","command":"ls -la"}}'
+
+# `\uXXXX` é a única forma de o JSON escrever uma letra ASCII sem escrevê-la —
+# e portanto a única forma de a palavra `push` não aparecer nos bytes crus de um
+# comando que é um push. Qualquer atalho que olhe os bytes crus precisa se
+# desligar aqui, nas duas direções.
+caso_bruto 2 "push escondido em \\u0070" \
+  '{"tool_input":{"command":"git \u0070ush origin main"}}'
+caso_bruto 0 "\\u0075 num destino claude/* legítimo" \
+  '{"tool_input":{"command":"git p\u0075sh origin claude/x"}}'
+
+# Escapes dentro do próprio comando não podem truncar a leitura: se a string
+# terminar cedo, o segmento com o push some e o hook libera o que devia negar.
+caso_bruto 2 "aspa escapada no meio do comando" \
+  '{"tool_input":{"command":"echo \"oi\" && git push origin main"}}'
+caso_bruto 2 "barra invertida antes de aspa escapada" \
+  '{"tool_input":{"command":"echo \\\" && git push origin main"}}'
+caso_bruto 2 "barra invertida dupla no meio" \
+  '{"tool_input":{"command":"echo c:\\\\tmp && git push origin main"}}'
+caso_bruto 2 "quebra de linha escapada antes do push" \
+  '{"tool_input":{"command":"echo oi\ngit push origin main"}}'
+
+# Branco entre a chave e os dois-pontos é JSON válido e não pode confundir a
+# localização da chave.
+caso_bruto 2 "espaço entre chave e dois-pontos" \
+  '{"tool_input" : {"command" : "git push origin main"}}'
+
+# `tool_input` sem `command`: não há comando para julgar, e o envelope carregar
+# a palavra `push` noutro campo não muda isso.
+caso_bruto 0 "envelope sem .tool_input.command" \
+  '{"tool_name":"push_stuff","tool_input":{}}'
+
+# Falha fechada em envelope que não é objeto. O JSON é válido; o que ele não é
+# é o envelope que o hook recebe — e o que o hook não entende, ele bloqueia.
+caso_bruto 2 "envelope que não é objeto (falha fechada)" \
+  '[1,2]'
 echo
 echo "$PASS passaram, $FAIL falharam"
 [ "$FAIL" -eq 0 ]
