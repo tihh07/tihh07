@@ -133,6 +133,13 @@ abertos, `main` protegida com as quatro regras (`deletion`, `non_fast_forward`,
 branch `claude/status-c1-medicao`, **provada mesclada** (zero linhas de diferença
 contra `main`), continua no remoto. Apagá-la é um clique humano — ver o item 4.
 
+> **Corrigido em 2026-08-25: o resíduo não existe mais, e não foi clique humano
+> que o tirou.** O remoto tem hoje **uma única branch, `main`** — conferido por
+> `list_branches`. A `claude/status-c1-medicao` sumiu em algum momento entre 23 e
+> 25/08; **quem a apagou e quando não se estabelece daqui**, e fica dito em vez de
+> inventado. O que se mediu foi o caso novo: a branch deste ciclo foi criada,
+> mesclada e **desapareceu sozinha**, sem nenhuma deleção emitida — ver **H6**.
+
 **2. Quatro itens fecharam entre 21 e 23/08**, e nenhum deve ser recomendado de
 novo: **H1** (ruleset lido inteiro), **H1-bis** (`verificar` obrigatório, fixado
 no app do Actions), **H4** (secret scanning ativo), **L7** (apelidos aplicados).
@@ -160,6 +167,17 @@ restritivo que a regra escrita**, e onde os dois divergem quem vence é o ambien
 > barrada aqui, não é *"como libero o proxy"*; é **"de qual sessão isso passa"**.
 > Registrar e devolver ao humano continua certo como piso; parar de procurar, não.
 > Ver **H7**.
+
+> **Emendado em 2026-08-25 — a parede segue de pé, a consequência que ela citava
+> não.** O item 1 apontava para cá para explicar por que uma branch mesclada
+> ficava esperando clique humano. Esse efeito **não se reproduz**: a plataforma
+> apaga a branch de trabalho no ato do merge, e o resíduo não se acumula mais.
+>
+> A parede em si **não foi reverificada hoje**, e a distinção importa: não houve
+> tentativa de deleção por API — esta sessão não tem ferramenta para isso — e
+> `git push --delete` é barrado pelo próprio `guard-push`, que é o
+> comportamento desejado, não um obstáculo a contornar. Então o que caiu foi a
+> **necessidade** de apagar, não a demonstração de que o agente consegue.
 
 **5. O que sobra é quase todo humano**, e nenhum destrava insistindo daqui —
 **mas o H7 saiu desta lista em 24/08, e a razão importa: ele não foi destravado
@@ -1422,6 +1440,29 @@ A branch sobrevivente ao merge do PR #7 foi apagada, e o padrão se manteve: em
 Fica o registro do padrão, que é o que interessa reter: apagar no ato do merge é
 o que impede a categoria 4 da auditoria de poda de reaparecer todo ciclo. Doze
 dias e três merges depois, continua valendo.
+
+**Reconfirmado em 2026-08-25, e desta vez de dentro do ciclo.** As confirmações
+anteriores eram leituras de estado — `git branch -r` num instante em que nenhuma
+branch sobrava, o que também é o que se veria se ninguém tivesse aberto PR
+nenhum. Aqui o ciclo inteiro foi observado no mesmo dia: a `claude/…` do PR #38
+**existia** (o push devolveu `* [new branch]`), o PR foi mesclado por squash em
+`45c85c8`, e minutos depois `list_branches` devolve **só `main`**. Nenhuma
+deleção foi emitida entre os dois pontos — não havia como: o `guard-push` barra
+`push --delete` e a sessão não tem ferramenta de apagar branch. Logo a remoção é
+da plataforma, no merge.
+
+**O que não se conferiu, e por que:** o flag `delete_branch_on_merge` do
+repositório **não foi lido** — o payload que esta frente recebe não o traz.
+Portanto o mecanismo está inferido do efeito, não lido na configuração. É a
+mesma classe de limite do **V1**, e vale a mesma regra: o efeito está medido e
+datado; a causa, nomeada como inferência. Quem tiver a UI aberta fecha isso com
+um olhar em Settings → General.
+
+> Este item se cruza com o **1** e o **4** da Retomada, que ficaram um ciclo
+> descrevendo um resíduo já inexistente. O padrão é o de sempre neste arquivo:
+> **duas camadas que envelhecem em velocidades diferentes** — o item detalhado
+> estava certo, o resumo no topo não. Foi exatamente o que o L2 e o V1 já tinham
+> mostrado em 25/08, e é o terceiro caso da mesma forma em um dia.
 
 > H1, H2 e H4 são entrega prevista da **Fase 1**, e o que esta rodada mostrou é
 > que o problema deles mudou de "não existem" para "não se sabe daqui". H5 é a
