@@ -37,7 +37,7 @@
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
 | **C1** — minutos de Actions a 90% | 🟢 **explicado em 24/08: não havia contradição** | teto foi a 3.000. A medição rodou e é válida — o denominador é 16, não zero. Ela media **minuto faturável** ($0, coberto por desconto) e o alerta media **consumo de franquia** (2.837,3 de 3.000 em 24/08) — duas grandezas, nenhuma contradição. Restam **162,7 min** e a franquia vira em **7 dias**; com $0 e *stop usage*, o Actions **para na conta** quando acabar. Repositório público não consome franquia: o consumo é dos privados. **Não é este repo** e **não é o plugin**. Orçamento adicional **decidido e gravado em 24/08: $0 com *stop usage*, conferido na tela**. Fecha quando a composição da cota for lida em Settings → Billing |
 | **S2** — R1 cobre conteúdo, não inventário | ✅ **fechado em 25/08: risco aceito** | metadados de sessão entregam a **lista** dos privados a uma sessão do público, e em 24/08 mais três canais fizeram o mesmo — a medição do C1, a listagem de sessões e o rateio de faturamento. Aceito por desenho: é a conta do dono olhando os repositórios do dono, sem dado de terceiro. O mapeamento apelido → repo segue protegido, e o `SECURITY.md` declara que R1 cobre conteúdo e não inventário. **Sobra uma regra:** ferramenta que possa imprimir dado de privado numa sessão pública redige de fonte autoritativa e **verifica** antes de imprimir — falha fechada |
-| **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
+| **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu duas vezes; severidade cai de alta para média** | 21/08: dados do repo e **rulesets agora leem (200)**. 24/08: o `POST /rulesets` rodou com sucesso em 15 privados por outra sessão — o 403 de escrita é **allowlist do proxy desta frente**, não da conta. Seguem fora: secret scanning, segredos de Actions, colaboradores e `/branches/*/protection` (escopo do app, não proxy). **Não sustenta mais H1, H3 e H4**, que fecharam sem ele — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | ✅ **fechado em 2026-08-21** | `verificar` exigido no `protect-main`, fixado no app do Actions, sem bypass. PR quebrado não entra mais — é plataforma, não boa vontade. O merge sem revisor segue doutrina |
 | **H4** — secret scanning e push protection | ✅ **fechado** | ambos **ativos**, conferidos na UI em 2026-08-21 com evidência visual. GHAS é flag distinto e segue desligado — não era ele que importava |
@@ -45,7 +45,7 @@
 | **H7** — branches principais dos privados desprotegidas | 🟢 **aplicado em 24/08 por API, mas não é gate de merge** | 17 de 18 com ruleset `deletion` + `non_fast_forward` na default, enforcement ativo, bypass vazio — **16 têm só essas duas**: impedem apagar e dar force push, **não exigem PR nem check e não impedem push direto**. Só este repo público tem gate de merge. Não foi clique humano: foi `POST /rulesets` em lote, de outra sessão. Fica aberta a **lacuna de rastreamento** entre "protegido contra destruição" e "com gate" |
 | **H3 · N6** — PR Watch | ✅ **fechado por remoção** | 22 disparos, **zero execuções** — nunca alcançou a action. Removido em 2026-08-21 a pedido do dono. Deixá-lo parado era cobertura aparente |
 | **H5** | ❌ aberto | decisão humana, sem dono declarado, aberto desde 2026-08-02 |
-| **L2** | 🔴 **aberto, e agravado** | a coluna de departamento publica 4 de 17 e omite 13 — a mesma forma que **L7** rejeitou na coluna ao lado. Decisão não tomada, executada pela metade |
+| **L2** — o índice publicado tem o eixo errado | 🟡 **os nomes fecharam em 24/08, o eixo não** | a metade que agravava o item **fechou**: a coluna de departamento virou `D1`–`D5` com treze *"não verificado"*, e o `grep` de conferência pegou os cinco nomes reais que sobravam no blueprint. Conferido em 25/08 no `AGENTS.md` — a única ocorrência de *"não declarado"* que resta descreve o estado passado, dentro da nota. **Segue aberto o que dá nome ao item:** o índice publica um recorte por repositório, não setor × repositórios. Depende dos handoffs de **L1** |
 | **L4** — cobertura recorrente | 🟡 **decidido** | desenho C (uma rotina por setor). Criar a rotina é na UI: daqui herdaria o ambiente público e repetiria o defeito do P0 |
 | **A1** — orquestrador no prédio errado | 🟡 **decidido, plano escrito** | vai para o departamento de Fundação; visibilidade deste repo **não muda**. Ordem: criar no privado, conferir, só então podar aqui. Executa uma sessão escopada no privado — daqui violaria R1 |
 | **L1** — consolidação dos handoffs | 🟡 quase fechado | fim de 2026-08-21: **15 relatados fechados, 2 em aberto** (`P16`, `P17`). "Relatado" porque R1 impede reverificar daqui — ver o item. As duas retenções são dado humano e correção na origem, nenhuma é falha de auditoria |
@@ -1883,19 +1883,46 @@ nenhum ator de bypass.
 ---
 
 ### V1 — A configuração do repositório não é reverificável pela nuvem
-**Severidade: alta · Executor: ☁️ Nuvem (implementa) + 👤 Humano (confere hoje) · ABERTO**
+**Severidade: média — era alta · 🟡 ENCOLHEU EM 21/08, E DE NOVO EM 24/08 · Executor: ☁️ Nuvem (implementa) + 👤 Humano (confere)**
 
-**Evidência (2026-08-20):** `gh` não existe no ambiente de nuvem; o proxy de
-saída devolve **403** para os caminhos de configuração de repositório da API do
-GitHub, com token que responde `200` em endpoint de identidade; nenhuma
-ferramenta MCP expõe ruleset ou proteção de branch. Detalhe na
+**Evidência original (2026-08-20), parcialmente superada:** `gh` não existe no
+ambiente de nuvem; o proxy de saída devolve **403** para os caminhos de
+configuração de repositório da API do GitHub, com token que responde `200` em
+endpoint de identidade; nenhuma ferramenta MCP expõe ruleset ou proteção de
+branch.
+
+**O que mudou depois, e por que o item encolheu duas vezes:**
+
+| Data | O que passou a responder | Efeito em V1 |
+|---|---|---|
+| 21/08 | dados do repositório e **`/rulesets` (leitura)** devolvem **200** | o workflow substituto **não precisa mais cobrir ruleset** — que era o caso de uso mais caro |
+| 24/08 | `POST /rulesets` executado **com sucesso** em 15 privados, por outra sessão | o 403 de escrita é **allowlist do proxy desta frente**, não limite da conta — o que restringe o escopo do item ao *ambiente*, não à API |
+
+**Fica de fora, e é o que sobrou do item:** secret scanning, segredos de Actions,
+colaboradores e `/branches/*/protection` — este último por **escopo do app**,
+não pelo proxy, distinção que importa porque escopo não se resolve com workflow.
+Detalhe endpoint a endpoint na
 [seção dedicada](#o-que-a-nuvem-não-alcança--e-por-quê).
 
-**Por que é severidade alta:** não é um item de conforto. Ele é a razão pela qual
-H1, H3 e H4 — três controles de segurança de um repositório público — estão hoje
-em "não se sabe". Um controle que ninguém consegue observar tende ao mesmo
-resultado prático de um controle que não existe, com a diferença de que o
+> **Esta seção passou de 20/08 a 25/08 declarando ABERTO um item que encolhera
+> duas vezes**, enquanto a linha-resumo já dizia 🟡 *"encolheu"* e a seção de
+> alcance já trazia a medição endpoint a endpoint. É o mesmo defeito do **L2**,
+> espelhado: lá o resumo atrasou em relação ao detalhe, aqui o detalhe atrasou em
+> relação ao resumo. **Nenhuma das duas camadas é a confiável por natureza** — a
+> confiável é a que cita medição com data, e era exatamente essa que faltava aqui.
+
+**Por que nasceu severidade alta:** não era um item de conforto. Ele era a razão
+pela qual H1, H3 e H4 — três controles de segurança de um repositório público —
+estavam em "não se sabe". Um controle que ninguém consegue observar tende ao
+mesmo resultado prático de um controle que não existe, com a diferença de que o
 primeiro produz falsa tranquilidade.
+
+**Os três saíram do "não se sabe" sem que V1 fosse construído**, e é por isso que
+a severidade cai: **H1** fechou em 21/08 com o ruleset lido inteiro pela própria
+API que voltou a responder, **H4** fechou conferido na UI em 21/08 com evidência
+visual, e **H3** fechou por remoção. O que justificava "alta" era o conjunto de
+controles reféns do item; ele se esvaziou. Sobra um item real, mas menor: sem o
+workflow, o que **não** responde continua só conferível na UI, um a um, à mão.
 
 **Ação (☁️):** adicionar ao repositório um workflow do Actions que leia a
 configuração usando o token nativo da execução — que roda dentro do GitHub e
@@ -1910,17 +1937,22 @@ teste é a própria primeira execução do workflow** — e se ele não consegui
 resultado é útil do mesmo jeito: passa a estar provado que só a UI responde, e
 esse fato fica registrado em vez de ser redescoberto a cada rodada.
 
-**Ação (👤), enquanto V1 não existe:** conferir H1 e H4 na UI e datar a
-conferência aqui.
+**Ação (👤), enquanto V1 não existe:** ~~conferir H1 e H4 na UI e datar a
+conferência aqui~~ — **feito em 21/08, os dois, com data e evidência.** Não
+restou ação humana pendente neste item.
 
-**Verificação:** uma sessão de nuvem consegue afirmar o estado da proteção de
-`main` e do secret scanning citando a saída de um job, sem depender de memória
-nem deste arquivo.
+**Verificação:** uma sessão de nuvem consegue afirmar o estado do secret
+scanning, dos segredos de Actions e dos colaboradores citando a saída de um job,
+sem depender de memória nem deste arquivo. *(A proteção de `main` saiu da
+verificação: ela passou a ser lida direto pela API em 21/08, e exigir que o
+workflow a cubra seria manter o critério maior que o item.)*
 
-> Esta sessão **não** implementou o workflow: `.github/` estava sendo editado por
-> outra sessão em paralelo e escrever lá agora produziria conflito. O item fica
-> registrado com a ação inteira descrita, que é o que permite executá-lo depois
-> sem reconstruir o raciocínio.
+> A sessão de 20/08 **não** implementou o workflow: `.github/` estava sendo
+> editado por outra sessão em paralelo e escrever lá produziria conflito. O
+> impedimento era daquele dia e **não vale mais** — fica registrado como história,
+> não como bloqueio corrente. Um motivo datado que ninguém redata vira motivo
+> permanente por inércia, que é o defeito que a seção de alcance já descreveu:
+> *"bloqueio tem data de validade"*.
 
 ### L1 — Auditoria dos departamentos: 17 sessões em voo
 **Severidade: média · Executor: ☁️ Nuvem (feito) + 👤 Humano (transporte) · EM VOO**
@@ -2285,6 +2317,19 @@ que existe; a coluna de departamento não publica nome real nenhum — apelido o
 se sabe, *"não verificado"* onde não se sabe — **e um `grep` pelos cinco nomes
 reais não os encontra em arquivo versionado nenhum.** As três passam em
 2026-08-24. O que segue aberto é o **eixo**, não os nomes.
+
+> **A linha-resumo ficou um dia atrás desta seção, e isso é um defeito do
+> arquivo, não um detalhe de formatação.** Enquanto aqui já se lia *"os nomes
+> fecharam"*, a tabela do topo seguia dizendo 🔴 *"aberto, e agravado — publica 4
+> de 17 e omite 13"*, descrevendo um estado que a correção de 24/08 tinha
+> desfeito. Quem lesse só o resumo — que é como um backlog longo costuma ser lido
+> — recomendaria de novo um trabalho já feito. Corrigido em 25/08, contra o
+> `AGENTS.md`: `D1`–`D5` presentes, treze *"não verificado"*, e a única ocorrência
+> restante de *"não declarado"* é a nota que narra o estado anterior.
+>
+> Vale para os dois lados: **este arquivo tem duas camadas que envelhecem em
+> ritmos diferentes**, e a de cima é a que mais gente lê. Fechar um item sem
+> tocar na linha-resumo deixa o backlog afirmando o contrário de si mesmo.
 
 ### L3 — Executores e hook seguem não exercitados
 **Severidade: média · Executor: ☁️ Nuvem + 👤 Humano · ABERTO**
