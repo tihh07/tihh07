@@ -103,6 +103,12 @@ clique humano.
 - O binário `gh` **não existe** neste ambiente (`command -v gh` devolve vazio).
 - Nenhuma ferramenta MCP disponível expõe ruleset ou proteção de branch — nem
   leitura nem escrita. O que abriu foi a API REST, não o MCP.
+- **E o MCP também empobrece o que a REST devolve** — instância medida em
+  25/08: o objeto de repositório do MCP descarta as sete flags de merge
+  (`delete_branch_on_merge`, `allow_*`, `squash_merge_commit_*`), enquanto
+  `GET /repos/tihh07/tihh07` devolve **200** com todas elas, **sem token** —
+  repositório público. Ausência de campo na ferramenta não é ausência de acesso,
+  e uma sessão já tratou uma pela outra (ver **H6**).
 - A ferramenta de secret scanning recusa com *"Repository does not have GitHub
   Advanced Security enabled"* — o que prova o estado do GHAS e nada além dele.
 
@@ -1451,12 +1457,36 @@ deleção foi emitida entre os dois pontos — não havia como: o `guard-push` b
 `push --delete` e a sessão não tem ferramenta de apagar branch. Logo a remoção é
 da plataforma, no merge.
 
-**O que não se conferiu, e por que:** o flag `delete_branch_on_merge` do
-repositório **não foi lido** — o payload que esta frente recebe não o traz.
-Portanto o mecanismo está inferido do efeito, não lido na configuração. É a
-mesma classe de limite do **V1**, e vale a mesma regra: o efeito está medido e
-datado; a causa, nomeada como inferência. Quem tiver a UI aberta fecha isso com
-um olhar em Settings → General.
+**Lido na configuração, ainda em 2026-08-25:** `GET /repos/tihh07/tihh07` →
+**HTTP 200**, com `delete_branch_on_merge: true`. A causa deixou de ser inferida
+do efeito: a plataforma apaga a branch no merge porque o repositório está
+configurado para isso. Junto vieram `allow_squash_merge`, `allow_merge_commit`,
+`allow_rebase_merge` (os três `true`) e `allow_auto_merge: false` — que explica
+por que auto-merge nunca esteve disponível aqui.
+
+> **A versão anterior deste parágrafo, de horas antes, dizia que o flag "não foi
+> lido — o payload que esta frente recebe não o traz", e citava o V1 como
+> "mesma classe de limite". Estava errado nas duas metades**, e o erro é o que
+> vale reter.
+>
+> O que não traz o campo é o **payload do MCP**, que normaliza o objeto de
+> repositório e descarta as sete flags de merge. Isso não é a fronteira do que se
+> alcança daqui: a REST responde, e responde sem autenticação, porque o
+> repositório é público. Confundir *"a ferramenta que usei não traz"* com *"não
+> se lê daqui"* é exatamente o defeito que a [seção de
+> alcance](#o-que-a-nuvem-não-alcança--e-por-quê) já tinha nomeado — ela registra
+> **dados do repositório: 200** desde 20/08 e diz, com todas as letras, que *"o
+> que abriu foi a API REST, não o MCP"*.
+>
+> E o V1 é o contrário do que a citação sugeria: ele **encolheu** justamente
+> porque dados do repositório passaram a responder. Usá-lo como precedente de
+> inalcançabilidade inverte o que ele registra.
+>
+> A regra do arquivo já cobria este caso e não foi aplicada, uma seção adiante:
+> *item de configuração cuja leitura responde hoje deve ser verificado por sessão
+> de nuvem, com a data e o código HTTP no registro.* Não bastava a regra existir
+> — faltou tentar antes de declarar o limite. **Declarar limite é barato e soa
+> rigoroso; medir custa uma chamada.**
 
 > Este item se cruza com o **1** e o **4** da Retomada, que ficaram um ciclo
 > descrevendo um resíduo já inexistente. O padrão é o de sempre neste arquivo:
