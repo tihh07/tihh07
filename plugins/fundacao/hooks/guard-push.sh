@@ -96,19 +96,14 @@ case "$INPUT" in
   *) deny "entrada ilegível; bloqueando por precaução." ;;
 esac
 
-# Atalho de custo zero para o caso esmagadoramente mais comum: a sessão chamando
-# `ls`, `cat`, `grep`, `git status`. A trava só nega quando algum segmento é um
-# `git push`, e `e_um_push` exige o token literal `push` — logo, sem os bytes
-# `push` na entrada crua, não há o que decidir.
-#
-# `\u` é a única forma de o JSON escrever uma letra ASCII sem escrevê-la: se
-# aparecer, o atalho se desliga e a leitura completa acontece. O atalho não pode
-# afrouxar nada — ele só devolve 0 onde o caminho completo provadamente também
-# devolveria 0.
-case "$INPUT" in
-  *push*|*'\u'*|*'\U'*) ;;
-  *) exit 0 ;;
-esac
+# NÃO há atalho por substring aqui, e a ausência é deliberada. Uma versão desta
+# reescrita saía com 0 quando os bytes `push` não apareciam na entrada crua —
+# barato, e errado por decidir ANTES de saber se a entrada era decifrável:
+# `{isso nao e json}` tem a forma que a trava acima aceita, nenhum leitor o
+# entende, e ele virava exit 0 em vez do exit 2 que a falha fechada exige. O
+# caminho completo abaixo não gasta processo no caso comum, então o atalho
+# comprava velocidade que já se tinha pagando com a única garantia que este
+# hook não pode perder.
 
 # ---------------------------------------------------------------------------
 # LEITURA DE `.tool_input.command`
@@ -130,13 +125,17 @@ esac
 # brancos) por `{` ou `,`, e a forjada é sempre precedida por `\`.
 
 # Aponta RESTO para o texto logo depois de `"<chave>":`, e só quando a ocorrência
-# está em posição de chave. Segue para as ocorrências seguintes se a primeira
-# não estiver.
+# está em posição de chave; as que não estão são puladas. Conta em N_CHAVE
+# quantas ocorrências em posição de chave existem no texto INTEIRO, porque achar
+# uma não basta: o extrator só pode responder quando a chave é única. Com duas,
+# qual delas é `.tool_input.command` é pergunta de estrutura — e estrutura é
+# exatamente o que este leitor não acompanha.
 acha_chave() {
-  local txt="$1" alvo="\"$2\"" antes depois a d
+  local txt="$1" alvo="\"$2\"" antes depois a d achou=0 primeiro=""
   RESTO=""
+  N_CHAVE=0
   while :; do
-    case "$txt" in *"$alvo"*) ;; *) return 1 ;; esac
+    case "$txt" in *"$alvo"*) ;; *) break ;; esac
     antes="${txt%%"$alvo"*}"
     depois="${txt#*"$alvo"}"
     txt="$depois"
@@ -148,9 +147,15 @@ acha_chave() {
     d="${depois#"${depois%%[![:space:]]*}"}"
     [ "${d:0:1}" = ":" ] || continue
     d="${d:1}"
-    RESTO="${d#"${d%%[![:space:]]*}"}"
-    return 0
+    N_CHAVE=$(( N_CHAVE + 1 ))
+    if [ "$achou" -eq 0 ]; then
+      primeiro="${d#"${d%%[![:space:]]*}"}"
+      achou=1
+    fi
   done
+  [ "$achou" -eq 1 ] || return 1
+  RESTO="$primeiro"
+  return 0
 }
 
 # Lê a string JSON que começa em $1[0] == aspa e escreve VALOR já sem escapes.
@@ -204,12 +209,23 @@ le_string() {
   return 0
 }
 
+# Só responde quando a leitura é inequívoca: `tool_input` única no envelope e
+# `command` única dali em diante. Qualquer duplicata — a chave repetida, uma
+# `"command"` dentro de um sub-objeto de `tool_input`, ou um `"tool_input"`
+# aninhado em outro campo — devolve 1 e deixa a decisão com jq/python, que
+# enxergam a estrutura. Sem essa contagem,
+#     {"tool_input":{"env":{"command":"echo hi"},"command":"git push --force origin main"}}
+# faria o extrator devolver `echo hi`, e o force push para `main` sairia
+# LIBERADO. A posição de chave sozinha não fecha isso: a `"command"` aninhada
+# também é precedida de `{` ou `,` e seguida de `:`.
 extrai_command_puro() {
   local dentro
   acha_chave "$INPUT" tool_input || return 1
+  [ "$N_CHAVE" -eq 1 ] || return 1
   dentro="$RESTO"
   [ "${dentro:0:1}" = "{" ] || return 1
   acha_chave "$dentro" command || return 1
+  [ "$N_CHAVE" -eq 1 ] || return 1
   le_string "$RESTO" || return 1
   CMD="$VALOR"
   return 0

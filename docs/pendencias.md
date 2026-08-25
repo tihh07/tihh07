@@ -52,7 +52,7 @@
 | **L1** — consolidação dos handoffs | 🟡 quase fechado | fim de 2026-08-21: **15 relatados fechados, 2 em aberto** (`P16`, `P17`). "Relatado" porque R1 impede reverificar daqui — ver o item. As duas retenções são dado humano e correção na origem, nenhuma é falha de auditoria |
 | **L3** — executores e hook não exercitados | 🟡 **o hook foi exercitado em 25/08; a distribuição não** | o item afirmava que o hook *"não foi instalado em nenhum departamento"* — **era falso**: está instalado neste repo (`D5`) via `PreToolUse`, e em 25/08 **bloqueou** (`force push bloqueado`) e **liberou** (`* [new branch] claude/reconciliar-l2-v1`) pushes reais, com saída literal. Mas o critério não distinguia o departamento de **origem** do de **destino**, e cumpri-lo aqui é dogfooding. Seguem abertos: instalar num piloto que não seja este, e os **oito executores, nenhum rodado em trabalho real** — os dois dependem de **L1** |
 | **L6.1** — o guardrail lia o argumento de `-C` como destino | ✅ **fechado em 2026-08-25, no mesmo trabalho** | falso positivo medido: `git -C "$LIB" push` era negado com *"destino '"$LIB"' fora de claude/*"* — o fluxo que o fechamento de sessão prescreve. A suíte dizia **42/42** e nunca tinha exercitado `git -C`. Corrigido o parsing (não a política) e a suíte foi a **55 casos** — [item abaixo](#l61--o-guardrail-lia-o-argumento-de--c-como-destino) |
-| **L6.2** — o guardrail cobrava segundos de toda chamada de terminal | ✅ **fechado em 2026-08-25, no mesmo trabalho** | o hook é `PreToolUse` em `Bash`: o custo era de `ls`, não de push. Medido com repetição, **6425 ms de mediana para `ls -la`** — cinco criações de processo no caminho que nem é push, das quais **`python3` sozinho custava 3994 ms** porque `jq` não existe na máquina e o `python3` do `PATH` é o stub da Microsoft Store. **Não era regressão do L6.1:** medida nas mesmas entradas, a diferença cai dentro da variância e aparece nos dois sentidos. Consequência que importava: a suíte, **única verificação executável do repositório**, deixou de terminar em dez minutos. Conserto: caminho quente inteiro em builtins, com extrator de JSON próprio que **defere** ao `jq`/`python` em qualquer forma que não reconheça e só casa `"command"` em posição de chave. Resíduo declarado: sobra o custo de iniciar o `bash` do hook (~1,1 s), que nenhuma edição aqui remove |
+| **L6.2** — o guardrail cobrava segundos de toda chamada de terminal | ✅ **fechado em 2026-08-25, no mesmo trabalho** | o hook é `PreToolUse` em `Bash`: o custo era de `ls`, não de push. Medido com repetição, **6425 ms de mediana para `ls -la`** — cinco criações de processo no caminho que nem é push, das quais **`python3` sozinho custava 3994 ms** porque `jq` não existe na máquina e o `python3` do `PATH` é o stub da Microsoft Store. **Não era regressão do L6.1:** medida nas mesmas entradas, a diferença cai dentro da variância e aparece nos dois sentidos. Consequência que importava: a suíte, **única verificação executável do repositório**, deixou de terminar em dez minutos. Conserto: caminho quente inteiro em builtins, com extrator de JSON próprio que **defere** ao `jq`/`python` em qualquer forma que não reconheça e só casa `"command"` em posição de chave. Resíduo declarado: sobra o custo de iniciar o `bash` do hook (~1,1 s), que nenhuma edição aqui remove. **Reprovado depois pelo portão de consenso, e reconsertado:** as duas vozes acharam, independentes, que o extrator parava na **primeira** `"command"` em posição de chave — um sub-objeto dentro de `tool_input` fazia o hook julgar `echo hi` e **liberar um force push para `main`** — e o auditor achou ainda que o atalho por substring tinha apagado a **falha fechada**, decidindo antes de saber se a entrada era decifrável. Nem a suíte de 66 casos nem a CI verde pegaram. Conserto: o extrator só responde quando a chave é **única** e defere ao `jq`/`python` em qualquer ambiguidade; o atalho foi **removido**, não corrigido |
 | **L7** — nomes dos privados no índice público | ✅ **fechado** | apelidos `P01`–`P17` em 2026-08-21; regra no `SECURITY.md`; varredura confirma nenhum nome real em arquivo versionado |
 
 Os abertos **não são resíduo de esforço**: cada um está preso a um limite
@@ -105,6 +105,12 @@ clique humano.
 - O binário `gh` **não existe** neste ambiente (`command -v gh` devolve vazio).
 - Nenhuma ferramenta MCP disponível expõe ruleset ou proteção de branch — nem
   leitura nem escrita. O que abriu foi a API REST, não o MCP.
+- **E o MCP também empobrece o que a REST devolve** — instância medida em
+  25/08: o objeto de repositório do MCP descarta as sete flags de merge
+  (`delete_branch_on_merge`, `allow_*`, `squash_merge_commit_*`), enquanto
+  `GET /repos/tihh07/tihh07` devolve **200** com todas elas, **sem token** —
+  repositório público. Ausência de campo na ferramenta não é ausência de acesso,
+  e uma sessão já tratou uma pela outra (ver **H6**).
 - A ferramenta de secret scanning recusa com *"Repository does not have GitHub
   Advanced Security enabled"* — o que prova o estado do GHAS e nada além dele.
 
@@ -135,6 +141,13 @@ abertos, `main` protegida com as quatro regras (`deletion`, `non_fast_forward`,
 branch `claude/status-c1-medicao`, **provada mesclada** (zero linhas de diferença
 contra `main`), continua no remoto. Apagá-la é um clique humano — ver o item 4.
 
+> **Corrigido em 2026-08-25: o resíduo não existe mais, e não foi clique humano
+> que o tirou.** O remoto tem hoje **uma única branch, `main`** — conferido por
+> `list_branches`. A `claude/status-c1-medicao` sumiu em algum momento entre 23 e
+> 25/08; **quem a apagou e quando não se estabelece daqui**, e fica dito em vez de
+> inventado. O que se mediu foi o caso novo: a branch deste ciclo foi criada,
+> mesclada e **desapareceu sozinha**, sem nenhuma deleção emitida — ver **H6**.
+
 **2. Quatro itens fecharam entre 21 e 23/08**, e nenhum deve ser recomendado de
 novo: **H1** (ruleset lido inteiro), **H1-bis** (`verificar` obrigatório, fixado
 no app do Actions), **H4** (secret scanning ativo), **L7** (apelidos aplicados).
@@ -162,6 +175,17 @@ restritivo que a regra escrita**, e onde os dois divergem quem vence é o ambien
 > barrada aqui, não é *"como libero o proxy"*; é **"de qual sessão isso passa"**.
 > Registrar e devolver ao humano continua certo como piso; parar de procurar, não.
 > Ver **H7**.
+
+> **Emendado em 2026-08-25 — a parede segue de pé, a consequência que ela citava
+> não.** O item 1 apontava para cá para explicar por que uma branch mesclada
+> ficava esperando clique humano. Esse efeito **não se reproduz**: a plataforma
+> apaga a branch de trabalho no ato do merge, e o resíduo não se acumula mais.
+>
+> A parede em si **não foi reverificada hoje**, e a distinção importa: não houve
+> tentativa de deleção por API — esta sessão não tem ferramenta para isso — e
+> `git push --delete` é barrado pelo próprio `guard-push`, que é o
+> comportamento desejado, não um obstáculo a contornar. Então o que caiu foi a
+> **necessidade** de apagar, não a demonstração de que o agente consegue.
 
 **5. O que sobra é quase todo humano**, e nenhum destrava insistindo daqui —
 **mas o H7 saiu desta lista em 24/08, e a razão importa: ele não foi destravado
@@ -1425,6 +1449,53 @@ Fica o registro do padrão, que é o que interessa reter: apagar no ato do merge
 o que impede a categoria 4 da auditoria de poda de reaparecer todo ciclo. Doze
 dias e três merges depois, continua valendo.
 
+**Reconfirmado em 2026-08-25, e desta vez de dentro do ciclo.** As confirmações
+anteriores eram leituras de estado — `git branch -r` num instante em que nenhuma
+branch sobrava, o que também é o que se veria se ninguém tivesse aberto PR
+nenhum. Aqui o ciclo inteiro foi observado no mesmo dia: a `claude/…` do PR #38
+**existia** (o push devolveu `* [new branch]`), o PR foi mesclado por squash em
+`45c85c8`, e minutos depois `list_branches` devolve **só `main`**. Nenhuma
+deleção foi emitida entre os dois pontos — não havia como: o `guard-push` barra
+`push --delete` e a sessão não tem ferramenta de apagar branch. Logo a remoção é
+da plataforma, no merge.
+
+**Lido na configuração, ainda em 2026-08-25:** `GET /repos/tihh07/tihh07` →
+**HTTP 200**, com `delete_branch_on_merge: true`. A causa deixou de ser inferida
+do efeito: a plataforma apaga a branch no merge porque o repositório está
+configurado para isso. Junto vieram `allow_squash_merge`, `allow_merge_commit`,
+`allow_rebase_merge` (os três `true`) e `allow_auto_merge: false` — que explica
+por que auto-merge nunca esteve disponível aqui.
+
+> **A versão anterior deste parágrafo, de horas antes, dizia que o flag "não foi
+> lido — o payload que esta frente recebe não o traz", e citava o V1 como
+> "mesma classe de limite". Estava errado nas duas metades**, e o erro é o que
+> vale reter.
+>
+> O que não traz o campo é o **payload do MCP**, que normaliza o objeto de
+> repositório e descarta as sete flags de merge. Isso não é a fronteira do que se
+> alcança daqui: a REST responde, e responde sem autenticação, porque o
+> repositório é público. Confundir *"a ferramenta que usei não traz"* com *"não
+> se lê daqui"* é exatamente o defeito que a [seção de
+> alcance](#o-que-a-nuvem-não-alcança--e-por-quê) já tinha nomeado — ela registra
+> **dados do repositório: 200** desde 20/08 e diz, com todas as letras, que *"o
+> que abriu foi a API REST, não o MCP"*.
+>
+> E o V1 é o contrário do que a citação sugeria: ele **encolheu** justamente
+> porque dados do repositório passaram a responder. Usá-lo como precedente de
+> inalcançabilidade inverte o que ele registra.
+>
+> A regra do arquivo já cobria este caso e não foi aplicada, uma seção adiante:
+> *item de configuração cuja leitura responde hoje deve ser verificado por sessão
+> de nuvem, com a data e o código HTTP no registro.* Não bastava a regra existir
+> — faltou tentar antes de declarar o limite. **Declarar limite é barato e soa
+> rigoroso; medir custa uma chamada.**
+
+> Este item se cruza com o **1** e o **4** da Retomada, que ficaram um ciclo
+> descrevendo um resíduo já inexistente. O padrão é o de sempre neste arquivo:
+> **duas camadas que envelhecem em velocidades diferentes** — o item detalhado
+> estava certo, o resumo no topo não. Foi exatamente o que o L2 e o V1 já tinham
+> mostrado em 25/08, e é o terceiro caso da mesma forma em um dia.
+
 > H1, H2 e H4 são entrega prevista da **Fase 1**, e o que esta rodada mostrou é
 > que o problema deles mudou de "não existem" para "não se sabe daqui". H5 é a
 > versão da inversão original em que o custo de errar não é técnico — e é o único
@@ -1528,6 +1599,7 @@ hook declarado e arquivo ausente e traga a linha `HOOK DECLARADO SEM ARQUIVO`.
 **Nenhum dos dois fecha a camada 1 dentro da sessão.** Quando o diretório do
 projeto morre no meio do trabalho, o que resta é o servidor. Este item não vai
 prometer mais do que isso.
+
 
 ### A1 — O orquestrador está no prédio errado (decidido: muda)
 
@@ -2607,6 +2679,62 @@ cada. Ela **termina**, que era o que faltava, e no `ubuntu-latest` da
 alguém quiser encurtá-la na máquina Windows, o alvo é o número de processos que a
 suíte cria, não o hook: é o que resta.
 
+
+**O portão de consenso rodou, e reprovou o conserto.** O bloco acima descreve o
+diff como ele foi para o PR #41, com suíte verde de 66 casos e o check `verificar`
+verde. As duas vozes do portão — `auditor-independente` (independência de
+contexto) e Codex (independência de contexto **e** de modelo) — receberam só a
+spec e o diff, numa bancada sem histórico de git, e as **duas reprovaram**. Por
+defeitos **diferentes**, achados sem falar uma com a outra.
+
+O primeiro, apontado pelas duas: **posição de chave não é unicidade.** O extrator
+casava `"command"` em posição de chave e parava na **primeira**. A defesa escrita
+cobria a chave forjada *dentro de uma string* — aspa precedida de `\` — e não
+cobria a chave **aninhada**, que é precedida de `{` ou `,` e seguida de `:` como
+qualquer chave legítima. Então
+
+```
+{"tool_input":{"env":{"HOME":"/h","command":"echo hi"},"command":"git push --force origin main"}}
+```
+
+fazia o hook julgar `echo hi` e **liberar um force push para `main`**. O hook
+anterior, que lê com `jq`/`python`, bloqueava. Mesmo efeito com a chave repetida
+(`"command":"ls","command":"git push origin main"`) e com um `"tool_input"`
+aninhado em outro campo do envelope.
+
+O segundo, só do auditor: **a falha fechada tinha sumido.** O atalho por
+substring saía com 0 quando os bytes `push` não apareciam na entrada crua — e
+saía **antes** de qualquer leitor, portanto antes de saber se a entrada era sequer
+decifrável. `{isso nao e json}` e `{"tool_input":"nao e objeto"}` davam exit 2 no
+hook anterior e passaram a dar 0. A suíte não pegou porque o caso que existia
+(`[1,2]`) testava a falha fechada por um **proxy** — não ter a forma `{`…`}` — e
+não por decifrabilidade: verde por cima do defeito.
+
+**Os seis casos foram reproduzidos por execução antes de qualquer conserto.** O
+Codex não conseguiu executar o dele (o sandbox matou o Git Bash antes do hook) e
+declarou isso; a afirmação dele era leitura de código, e leitura de código não é
+achado até rodar. Rodou, e caiu nas duas bancadas como ele descreveu.
+
+**O conserto dos dois.** No extrator, `acha_chave` passou a **contar** as
+ocorrências em posição de chave, e o extrator só responde quando `tool_input` é
+única no envelope **e** `command` é única dali em diante; qualquer duplicata
+defere ao `jq`/`python`, que enxergam a estrutura. O atalho por substring foi
+**removido inteiro** — não corrigido, removido: ele comprava velocidade que já se
+tinha, porque o caminho completo não gasta processo no caso comum, e pagava com a
+única garantia que o hook não pode perder. Um envelope real do harness, capturado
+desta sessão e conferido, tem exatamente **uma** ocorrência de cada chave, então o
+caminho rápido continua sendo o caminho de todo dia.
+
+**A lição que sobrevive ao arquivo.** Um extrator por texto pode saber *onde* uma
+chave está e ainda não saber *qual* chave é a certa — `jq` acerta porque enxerga
+estrutura, e imitar a resposta dele sem imitar o que ele enxerga é o buraco. A
+regra que fecha não é reconhecer melhor: é **deferir quando há mais de uma
+resposta possível**. E o atalho ensinou a outra metade: otimização que decide
+antes de ler decide também sobre o que não sabe ler.
+
+> Nem a suíte de 66 casos nem o check verde de CI pegaram qualquer um dos dois.
+> Pegou o portão — o custo dele se pagou na primeira vez que rodou de ponta a
+> ponta com as duas vozes.
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
 **Severidade: alta · 🟡 OS NOMES FECHARAM, O EIXO NÃO — 2026-08-24 · Executor: 👤 Humano (decidiu) + ☁️ Nuvem (aplicou)**
 
