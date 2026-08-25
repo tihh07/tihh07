@@ -146,6 +146,7 @@ em dois lugares é a divergência que este repositório existe para evitar.
 | `docs/pendencias.md` | Backlog: o que falta, com executor e critério de verificação |
 | `docs/handoff/` | Padrão e fichas de handoff — o que atravessa privado × público |
 | `docs/control-plane.md` | Desenho das rotinas e da config de repo — como reconstruir se a UI sumir |
+| `docs/registro-operacoes.md` | **Modelo** do registro de operações (Res. CD/ANPD 2/2022); o preenchido é N1 e mora no privado |
 | `SECURITY.md` | Canônico do checklist de sanitização, da regra R1, do kill-switch e do runbook de incidente |
 | `.claude/settings.json` | Permissões do projeto e instalação do hook de push |
 | `.claude/prompts/` | Prompts reutilizáveis entre projetos |
@@ -235,6 +236,13 @@ envelhece.
   A primeira das três se declarou como "sete linhas" — era o tamanho da nota,
   não o do arquivo — e a segunda não se declarou. Errar a conta e omitir a
   conta produzem o mesmo resultado que esta regra existe para impedir.
+  Em 2026-08-25 cresceu **oito linhas**: uma no índice de arquivos, para o
+  modelo de registro de operações que o **H5.5** exigia, e sete nesta própria
+  declaração. A soma foi de 251 a 259. Declarar custa mais linhas que a mudança
+  declarada, e é assim mesmo: o barato seria não contar. *(Duas versões desta
+  nota erraram a conta antes desta — declarar cresce o arquivo que a declaração
+  mede. A regra que faltava: **escreva a nota, rode `wc -l`, e só então fixe o
+  número** — o previsto está errado por construção, o medido converge.)*
 - **Sanitização** — nada de caminho local absoluto, nome de cliente, token ou
   URL interna em arquivo versionado, inclusive fora do `README.md`. O índice
   acima guarda caminhos locais apenas se forem genéricos; caso contrário,
