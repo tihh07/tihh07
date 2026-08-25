@@ -353,6 +353,41 @@ caso_bruto 0 "envelope sem .tool_input.command" \
 # é o envelope que o hook recebe — e o que o hook não entende, ele bloqueia.
 caso_bruto 2 "envelope que não é objeto (falha fechada)" \
   '[1,2]'
+
+# --- Leitura ambígua: o extrator puro tem de deferir, nunca adivinhar ---------
+#
+# `.tool_input.command` é inequívoco para jq e para python porque eles enxergam
+# a estrutura. Um leitor por texto não enxerga, e a posição de chave sozinha não
+# salva: a `"command"` de um sub-objeto também é precedida de `{` ou `,` e
+# seguida de `:`. Se o extrator responder com a primeira que achar, o hook julga
+# um comando que ninguém escreveu — e nos quatro casos abaixo o comando que ele
+# julgaria é benigno enquanto o real é um push para `main`.
+#
+# Os quatro passam também no hook anterior, que lê com jq/python. É o que se
+# quer: eles medem a política, não a implementação.
+caso_bruto 2 "tool_input aninhado noutro campo não sequestra a leitura" \
+  '{"wrapper":{"tool_input":{"command":"ls -la"}},"tool_input":{"command":"git push origin main"}}'
+
+caso_bruto 2 "sub-objeto dentro de tool_input não esconde o force push" \
+  '{"tool_input":{"env":{"HOME":"/h","command":"echo hi"},"command":"git push --force origin main"}}'
+
+caso_bruto 2 "chave \"command\" duplicada não libera pela primeira" \
+  '{"tool_input":{"command":"ls","command":"git push origin main"}}'
+
+caso_bruto 2 "sub-objeto antes da chave real não libera" \
+  '{"tool_input":{"opts":{"command":"ls"},"command":"git push origin main"}}'
+
+# --- Falha fechada, medida por decifrabilidade e não pela forma ---------------
+#
+# O caso `[1,2]` acima passa por um proxy: ele não tem a forma `{`…`}`. Estes
+# dois têm a forma e mesmo assim não são decifráveis por nenhum leitor — é o que
+# a falha fechada precisa cobrir, e é onde um atalho por substring que decide
+# antes de ler devolveria 0.
+caso_bruto 2 "objeto na forma, indecifrável no conteúdo" \
+  '{isso nao e json}'
+
+caso_bruto 2 "tool_input escalar em vez de objeto" \
+  '{"tool_input":"nao e objeto"}'
 echo
 echo "$PASS passaram, $FAIL falharam"
 [ "$FAIL" -eq 0 ]

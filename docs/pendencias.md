@@ -51,7 +51,7 @@
 | **L1** — consolidação dos handoffs | 🟡 quase fechado | fim de 2026-08-21: **15 relatados fechados, 2 em aberto** (`P16`, `P17`). "Relatado" porque R1 impede reverificar daqui — ver o item. As duas retenções são dado humano e correção na origem, nenhuma é falha de auditoria |
 | **L3** — executores e hook não exercitados | 🟡 **o hook foi exercitado em 25/08; a distribuição não** | o item afirmava que o hook *"não foi instalado em nenhum departamento"* — **era falso**: está instalado neste repo (`D5`) via `PreToolUse`, e em 25/08 **bloqueou** (`force push bloqueado`) e **liberou** (`* [new branch] claude/reconciliar-l2-v1`) pushes reais, com saída literal. Mas o critério não distinguia o departamento de **origem** do de **destino**, e cumpri-lo aqui é dogfooding. Seguem abertos: instalar num piloto que não seja este, e os **oito executores, nenhum rodado em trabalho real** — os dois dependem de **L1** |
 | **L6.1** — o guardrail lia o argumento de `-C` como destino | ✅ **fechado em 2026-08-25, no mesmo trabalho** | falso positivo medido: `git -C "$LIB" push` era negado com *"destino '"$LIB"' fora de claude/*"* — o fluxo que o fechamento de sessão prescreve. A suíte dizia **42/42** e nunca tinha exercitado `git -C`. Corrigido o parsing (não a política) e a suíte foi a **55 casos** — [item abaixo](#l61--o-guardrail-lia-o-argumento-de--c-como-destino) |
-| **L6.2** — o guardrail cobrava segundos de toda chamada de terminal | ✅ **fechado em 2026-08-25, no mesmo trabalho** | o hook é `PreToolUse` em `Bash`: o custo era de `ls`, não de push. Medido com repetição, **6425 ms de mediana para `ls -la`** — cinco criações de processo no caminho que nem é push, das quais **`python3` sozinho custava 3994 ms** porque `jq` não existe na máquina e o `python3` do `PATH` é o stub da Microsoft Store. **Não era regressão do L6.1:** medida nas mesmas entradas, a diferença cai dentro da variância e aparece nos dois sentidos. Consequência que importava: a suíte, **única verificação executável do repositório**, deixou de terminar em dez minutos. Conserto: caminho quente inteiro em builtins, com extrator de JSON próprio que **defere** ao `jq`/`python` em qualquer forma que não reconheça e só casa `"command"` em posição de chave. Resíduo declarado: sobra o custo de iniciar o `bash` do hook (~1,1 s), que nenhuma edição aqui remove |
+| **L6.2** — o guardrail cobrava segundos de toda chamada de terminal | ✅ **fechado em 2026-08-25, no mesmo trabalho** | o hook é `PreToolUse` em `Bash`: o custo era de `ls`, não de push. Medido com repetição, **6425 ms de mediana para `ls -la`** — cinco criações de processo no caminho que nem é push, das quais **`python3` sozinho custava 3994 ms** porque `jq` não existe na máquina e o `python3` do `PATH` é o stub da Microsoft Store. **Não era regressão do L6.1:** medida nas mesmas entradas, a diferença cai dentro da variância e aparece nos dois sentidos. Consequência que importava: a suíte, **única verificação executável do repositório**, deixou de terminar em dez minutos. Conserto: caminho quente inteiro em builtins, com extrator de JSON próprio que **defere** ao `jq`/`python` em qualquer forma que não reconheça e só casa `"command"` em posição de chave. Resíduo declarado: sobra o custo de iniciar o `bash` do hook (~1,1 s), que nenhuma edição aqui remove. **Reprovado depois pelo portão de consenso, e reconsertado:** as duas vozes acharam, independentes, que o extrator parava na **primeira** `"command"` em posição de chave — um sub-objeto dentro de `tool_input` fazia o hook julgar `echo hi` e **liberar um force push para `main`** — e o auditor achou ainda que o atalho por substring tinha apagado a **falha fechada**, decidindo antes de saber se a entrada era decifrável. Nem a suíte de 66 casos nem a CI verde pegaram. Conserto: o extrator só responde quando a chave é **única** e defere ao `jq`/`python` em qualquer ambiguidade; o atalho foi **removido**, não corrigido |
 | **L7** — nomes dos privados no índice público | ✅ **fechado** | apelidos `P01`–`P17` em 2026-08-21; regra no `SECURITY.md`; varredura confirma nenhum nome real em arquivo versionado |
 
 Os abertos **não são resíduo de esforço**: cada um está preso a um limite
@@ -2509,6 +2509,62 @@ cada. Ela **termina**, que era o que faltava, e no `ubuntu-latest` da
 alguém quiser encurtá-la na máquina Windows, o alvo é o número de processos que a
 suíte cria, não o hook: é o que resta.
 
+
+**O portão de consenso rodou, e reprovou o conserto.** O bloco acima descreve o
+diff como ele foi para o PR #41, com suíte verde de 66 casos e o check `verificar`
+verde. As duas vozes do portão — `auditor-independente` (independência de
+contexto) e Codex (independência de contexto **e** de modelo) — receberam só a
+spec e o diff, numa bancada sem histórico de git, e as **duas reprovaram**. Por
+defeitos **diferentes**, achados sem falar uma com a outra.
+
+O primeiro, apontado pelas duas: **posição de chave não é unicidade.** O extrator
+casava `"command"` em posição de chave e parava na **primeira**. A defesa escrita
+cobria a chave forjada *dentro de uma string* — aspa precedida de `\` — e não
+cobria a chave **aninhada**, que é precedida de `{` ou `,` e seguida de `:` como
+qualquer chave legítima. Então
+
+```
+{"tool_input":{"env":{"HOME":"/h","command":"echo hi"},"command":"git push --force origin main"}}
+```
+
+fazia o hook julgar `echo hi` e **liberar um force push para `main`**. O hook
+anterior, que lê com `jq`/`python`, bloqueava. Mesmo efeito com a chave repetida
+(`"command":"ls","command":"git push origin main"`) e com um `"tool_input"`
+aninhado em outro campo do envelope.
+
+O segundo, só do auditor: **a falha fechada tinha sumido.** O atalho por
+substring saía com 0 quando os bytes `push` não apareciam na entrada crua — e
+saía **antes** de qualquer leitor, portanto antes de saber se a entrada era sequer
+decifrável. `{isso nao e json}` e `{"tool_input":"nao e objeto"}` davam exit 2 no
+hook anterior e passaram a dar 0. A suíte não pegou porque o caso que existia
+(`[1,2]`) testava a falha fechada por um **proxy** — não ter a forma `{`…`}` — e
+não por decifrabilidade: verde por cima do defeito.
+
+**Os seis casos foram reproduzidos por execução antes de qualquer conserto.** O
+Codex não conseguiu executar o dele (o sandbox matou o Git Bash antes do hook) e
+declarou isso; a afirmação dele era leitura de código, e leitura de código não é
+achado até rodar. Rodou, e caiu nas duas bancadas como ele descreveu.
+
+**O conserto dos dois.** No extrator, `acha_chave` passou a **contar** as
+ocorrências em posição de chave, e o extrator só responde quando `tool_input` é
+única no envelope **e** `command` é única dali em diante; qualquer duplicata
+defere ao `jq`/`python`, que enxergam a estrutura. O atalho por substring foi
+**removido inteiro** — não corrigido, removido: ele comprava velocidade que já se
+tinha, porque o caminho completo não gasta processo no caso comum, e pagava com a
+única garantia que o hook não pode perder. Um envelope real do harness, capturado
+desta sessão e conferido, tem exatamente **uma** ocorrência de cada chave, então o
+caminho rápido continua sendo o caminho de todo dia.
+
+**A lição que sobrevive ao arquivo.** Um extrator por texto pode saber *onde* uma
+chave está e ainda não saber *qual* chave é a certa — `jq` acerta porque enxerga
+estrutura, e imitar a resposta dele sem imitar o que ele enxerga é o buraco. A
+regra que fecha não é reconhecer melhor: é **deferir quando há mais de uma
+resposta possível**. E o atalho ensinou a outra metade: otimização que decide
+antes de ler decide também sobre o que não sabe ler.
+
+> Nem a suíte de 66 casos nem o check verde de CI pegaram qualquer um dos dois.
+> Pegou o portão — o custo dele se pagou na primeira vez que rodou de ponta a
+> ponta com as duas vozes.
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
 **Severidade: alta · 🟡 OS NOMES FECHARAM, O EIXO NÃO — 2026-08-24 · Executor: 👤 Humano (decidiu) + ☁️ Nuvem (aplicou)**
 
