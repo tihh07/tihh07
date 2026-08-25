@@ -49,7 +49,7 @@
 | **L4** — cobertura recorrente | 🟡 **decidido** | desenho C (uma rotina por setor). Criar a rotina é na UI: daqui herdaria o ambiente público e repetiria o defeito do P0 |
 | **A1** — orquestrador no prédio errado | 🟡 **decidido, plano escrito** | vai para o departamento de Fundação; visibilidade deste repo **não muda**. Ordem: criar no privado, conferir, só então podar aqui. Executa uma sessão escopada no privado — daqui violaria R1 |
 | **L1** — consolidação dos handoffs | 🟡 quase fechado | fim de 2026-08-21: **15 relatados fechados, 2 em aberto** (`P16`, `P17`). "Relatado" porque R1 impede reverificar daqui — ver o item. As duas retenções são dado humano e correção na origem, nenhuma é falha de auditoria |
-| **L3** — executores e hook não exercitados | ❌ aberto | depende do retorno de L1 |
+| **L3** — executores e hook não exercitados | 🟡 **o hook foi exercitado em 25/08; a distribuição não** | o item afirmava que o hook *"não foi instalado em nenhum departamento"* — **era falso**: está instalado neste repo (`D5`) via `PreToolUse`, e em 25/08 **bloqueou** (`force push bloqueado`) e **liberou** (`* [new branch] claude/reconciliar-l2-v1`) pushes reais, com saída literal. Mas o critério não distinguia o departamento de **origem** do de **destino**, e cumpri-lo aqui é dogfooding. Seguem abertos: instalar num piloto que não seja este, e os **oito executores, nenhum rodado em trabalho real** — os dois dependem de **L1** |
 | **L7** — nomes dos privados no índice público | ✅ **fechado** | apelidos `P01`–`P17` em 2026-08-21; regra no `SECURITY.md`; varredura confirma nenhum nome real em arquivo versionado |
 
 Os abertos **não são resíduo de esforço**: cada um está preso a um limite
@@ -2340,21 +2340,57 @@ reais não os encontra em arquivo versionado nenhum.** As três passam em
 executa" deixou de ser pendência há duas semanas, e o controle mais barato do
 repositório é o único com histórico impecável.
 
-O resto continua aberto: os oito executores foram escritos a partir da
-especificação e nenhum rodou em trabalho real; o hook não foi instalado em nenhum
-departamento; o plugin está em 0.1.0 e o
+**A frase "o hook não foi instalado em nenhum departamento" era falsa quando foi
+escrita, e seguiu no arquivo.** Ele está instalado **aqui**, que o índice lista
+como `D5`, via `PreToolUse` em `.claude/settings.json`:
+
+```json
+"hooks": { "PreToolUse": [ { "matcher": "Bash", "hooks": [
+  { "type": "command",
+    "command": "$CLAUDE_PROJECT_DIR/plugins/fundacao/hooks/guard-push.sh" } ] } ] }
+```
+
+**E ele exerceu as duas metades do critério, em trabalho real — 2026-08-25:**
+
+| Metade | Evidência literal |
+|---|---|
+| **liberou** | `* [new branch] claude/reconciliar-l2-v1 -> claude/reconciliar-l2-v1` · `EXIT_PUSH=0` — push real do PR #35 |
+| **bloqueou** | `guard-push: force push bloqueado. / Sessões de agente só empurram para branches claude/*.` — hook `PreToolUse` interrompeu a chamada antes do `git` rodar |
+
+O bloqueio foi provocado com `git push --force --dry-run`, escolhido por ser
+inócuo se o hook falhasse: dry-run não altera remoto. **Não é a suíte.** A suíte
+roda num repositório descartável, propositalmente isolado; isto é o hook
+*instalado*, no repositório real, na configuração real. A distinção é a razão de
+ser deste item — *artefato escrito não é controle aplicado* —, e ela vale
+igualmente para o teste: **suíte verde é artefato, hook que barrou é controle.**
+
+**O critério estava sub-especificado, e por isso "cumprido" diz menos do que
+parece.** *"Instalado em pelo menos um departamento"* não distinguia o
+departamento **onde o plugin foi escrito** dos departamentos **para onde ele
+deveria ser distribuído**. Cumpri-lo aqui é dogfooding — vale, mas é a evidência
+mais fraca possível, porque este é o único terreno onde o plugin nunca precisou
+viajar. Critério que a própria origem satisfaz não mede distribuição.
+
+**Critério revisado, em duas linhas que não se confundem:**
+
+1. ✅ **O hook funciona instalado** — provado em `D5` com bloqueio e liberação
+   reais, datados e com saída literal acima.
+2. ❌ **O plugin foi distribuído** — instalado num departamento que **não** é o
+   de origem, e lá bloqueou ou liberou um push real.
+
+**O resto continua aberto:** os oito executores foram escritos a partir da
+especificação e **nenhum rodou em trabalho real**; o plugin está em 0.1.0 e o
 [README dele](../plugins/fundacao/README.md) declara isso.
 
-É a mesma armadilha que o `oficial-governanca` existe para detectar: artefato
-escrito não é controle aplicado.
+É a mesma armadilha que o `oficial-governanca` existe para detectar.
 
-**Ação:** instalar o plugin no piloto e corrigir o que a realidade contradisser.
+**Ação:** instalar o plugin num piloto que não seja este repositório, e corrigir
+o que a realidade contradisser.
 **Destrava com L1:** os relatórios das 17 auditorias dizem, pela primeira vez, em
 que terreno o plugin seria instalado. Instalar antes de ler o handoff é escrever
 controle sobre terreno não verificado.
 
-**Verificação:** o hook está instalado em pelo menos um departamento e bloqueou
-ou liberou um push real, registrado.
+**Verificação:** a linha 2 do critério revisado acima.
 
 #### L3.1 — O `guard-push` dependia de `jq`, ausente na máquina local
 **Severidade: média · ✅ FECHADO em 2026-08-08 · Executor: ☁️ Nuvem**
