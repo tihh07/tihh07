@@ -50,6 +50,7 @@
 | **A1** — orquestrador no prédio errado | 🟡 **decidido, plano escrito** | vai para o departamento de Fundação; visibilidade deste repo **não muda**. Ordem: criar no privado, conferir, só então podar aqui. Executa uma sessão escopada no privado — daqui violaria R1 |
 | **L1** — consolidação dos handoffs | 🟡 quase fechado | fim de 2026-08-21: **15 relatados fechados, 2 em aberto** (`P16`, `P17`). "Relatado" porque R1 impede reverificar daqui — ver o item. As duas retenções são dado humano e correção na origem, nenhuma é falha de auditoria |
 | **L3** — executores e hook não exercitados | 🟡 **o hook foi exercitado em 25/08; a distribuição não** | o item afirmava que o hook *"não foi instalado em nenhum departamento"* — **era falso**: está instalado neste repo (`D5`) via `PreToolUse`, e em 25/08 **bloqueou** (`force push bloqueado`) e **liberou** (`* [new branch] claude/reconciliar-l2-v1`) pushes reais, com saída literal. Mas o critério não distinguia o departamento de **origem** do de **destino**, e cumpri-lo aqui é dogfooding. Seguem abertos: instalar num piloto que não seja este, e os **oito executores, nenhum rodado em trabalho real** — os dois dependem de **L1** |
+| **L6.1** — o guardrail lia o argumento de `-C` como destino | ✅ **fechado em 2026-08-25, no mesmo trabalho** | falso positivo medido: `git -C "$LIB" push` era negado com *"destino '"$LIB"' fora de claude/*"* — o fluxo que o fechamento de sessão prescreve. A suíte dizia **42/42** e nunca tinha exercitado `git -C`. Corrigido o parsing (não a política) e a suíte foi a **55 casos** — [item abaixo](#l61--o-guardrail-lia-o-argumento-de--c-como-destino) |
 | **L7** — nomes dos privados no índice público | ✅ **fechado** | apelidos `P01`–`P17` em 2026-08-21; regra no `SECURITY.md`; varredura confirma nenhum nome real em arquivo versionado |
 
 Os abertos **não são resíduo de esforço**: cada um está preso a um limite
@@ -2303,6 +2304,75 @@ montando o próprio cenário, explicitamente. Sem repositório neutro a suíte
 > execução**. O check foi criado para dar a `main` uma trava de plataforma, e
 > antes disso já encontrou um defeito real num guardrail de segurança que duas
 > revisões humanas e uma suíte dedicada tinham deixado passar.
+
+#### L6.1 — O guardrail lia o argumento de `-C` como destino
+**Severidade: média · Executor: ☁️ Nuvem · FECHADO em 2026-08-25, no mesmo trabalho que o achou**
+
+O hook extraía o refspec descartando os tokens que começam com `-`. O filtro não
+tem como olhar para o token **anterior**, e há opções que levam valor separado:
+descartado o `-C`, o caminho que vem depois dele vira a última palavra não-flag,
+isto é, o "destino".
+
+**Falso positivo, com a saída literal:**
+
+```
+$ git -C "$LIB" push
+guard-push: destino '"$LIB"' fora de claude/*.
+```
+
+A branch alvo era `claude/sintese-bundle-datado-obsoleto` — dentro da política. E
+não era um comando exótico: `git -C "$LIB" push` é o que o passo 4a do fechamento
+de sessão **prescreve** para empurrar a biblioteca a partir da sessão de outro
+projeto. O guardrail negava o caminho que existe para permitir, que é a forma de
+falha que este hook já tinha cometido duas vezes (heredoc em 20/08,
+redirecionamento em 21/08) e que o cabeçalho dele descreve: *guardrail que nega
+demais é indistinguível de guardrail quebrado, e convida à desinstalação.*
+
+Com caminho legível a negação era a mesma — logo não era um problema de aspas:
+
+```
+$ git -C /tmp/tmp.XXXX push        # o diretório está em claude/lib
+guard-push: destino '/tmp/tmp.XXXX' fora de claude/*.
+```
+
+**O defeito de segunda ordem é o de sempre, e é o que importa.** A suíte passava
+**42/42** e **nunca tinha exercitado `git -C`**. Verde sobre um caminho que o hook
+erra — a mesma família do L6 e do L5: *controle nunca exercitado num caminho é
+afirmação sobre ele, não prova dele.* Correção sem caso novo não fecharia nada.
+
+**Corrigido em dois pontos, e nenhum deles é a política:**
+
+1. A extração de refspec virou um laço sobre os tokens, que **consome o argumento**
+   das opções que levam valor — `-C`, `-c`, `--git-dir`, `--work-tree`,
+   `--namespace`, `--exec-path` do git, e `--repo`, `-o`, `--push-option`,
+   `--exec`, `--receive-pack` do `push`. As outras quatro foram procuradas junto
+   com o `-C`: erravam pelo mesmo motivo e agora têm caso próprio.
+2. Com `-C <dir>` e sem refspec, a branch consultada passou a ser a **do
+   diretório**, não a de onde o comando partiu. A escolha anterior errava nas duas
+   direções, e a segunda é a perigosa: negava a biblioteca parada em `claude/*` e
+   **liberava a vizinha parada em `main`** sempre que a sessão estivesse numa
+   `claude/*`.
+
+**Um limite fica declarado, não escondido:** quando o caminho não é legível daqui
+— `-C "$LIB"`, com a variável que só o shell do agente expande — o hook decide
+pela branch da sessão. Ele **não** expande nada: `eval` sobre string vinda da
+ferramenta seria executar comando alheio dentro do guardrail. É a mesma classe de
+lacuna que o cabeçalho já assume ao dizer que push por API ou MCP passa ao largo.
+Há caso para as duas direções desse limite.
+
+**Verificação, nas duas direções (é o critério que o L6 fixou):**
+
+- com o conserto, **55 passaram, 0 falharam**, exit 0;
+- a suíte nova contra o hook **antigo**: **49 passaram, 6 falharam** — e as seis
+  são exatamente os casos que o parsing antigo erra;
+- os **42 casos anteriores passam nos dois**: nada que era bloqueado passou a ser
+  liberado. A correção é de parsing, e o placar prova que a política não se moveu.
+
+Treze casos novos: os cinco de `-C` (diretório em `claude/*`, com refspec
+explícito, para `main`, com `--force`, e o simétrico do diretório em `main` visto
+de uma sessão `claude/*`), os dois do `-C` não expansível e os seis das outras
+opções com valor — quatro que precisam liberar e dois provando que elas não viram
+rota de fuga para `main`.
 
 ### L2 — O índice publicado tem o eixo errado, não só linhas faltando
 **Severidade: alta · 🟡 OS NOMES FECHARAM, O EIXO NÃO — 2026-08-24 · Executor: 👤 Humano (decidiu) + ☁️ Nuvem (aplicou)**

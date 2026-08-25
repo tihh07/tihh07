@@ -142,6 +142,67 @@ sem_redirecao() {
   printf '%s' "$1" | sed -E 's/[0-9]*(>>|>|<)[[:space:]]*(&[0-9-]+)?[^[:space:]]*/ /g'
 }
 
+# Opções que CONSOMEM o token seguinte — o valor delas nunca é um refspec.
+# A distinção não é acadêmica: um filtro que só descarta o que começa com `-`
+# deixa o VALOR no meio dos tokens, e a extração de refspec — última palavra que
+# não é flag — passa a lê-lo como destino. Foi o falso positivo medido em
+# 2026-08-25: `git -C "$LIB" push` era negado com "destino '"$LIB"' fora de
+# claude/*", num push para uma branch `claude/*` legítima e pelo caminho que a
+# rotina de fechamento de sessão prescreve. Guardrail que nega o fluxo que ele
+# existe para permitir gasta a confiança que faz alguém mantê-lo instalado.
+#
+# Duas metades: opções globais do git, antes do subcomando (as mesmas de
+# `e_um_push`), e as de `git push` que levam valor separado. A forma
+# `--opcao=valor` não precisa entrar — é um único token, que o filtro de `-` já
+# descarta.
+consome_proximo() {
+  case "$1" in
+    -C|-c|--git-dir|--work-tree|--namespace|--exec-path) return 0 ;;
+    --repo|-o|--push-option|--exec|--receive-pack) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Percorre os tokens do segmento e escreve dois globais: REF, o refspec (última
+# palavra que não seja opção, valor de opção, remoto conhecido ou o próprio
+# git/push), e DIR_C, o argumento de `-C` quando houver. Um laço, e não o
+# pipeline de `grep` anterior: filtro linha a linha não tem como olhar para o
+# token ANTERIOR, e é exatamente disso que se trata aqui.
+#
+# Newline vira espaço antes de tokenizar: um push quebrado com `\` no fim da
+# linha chega aqui em mais de uma linha, e `read -a` só leria a primeira.
+#
+# A divisão em palavras também descarta os tokens vazios que `sem_redirecao`
+# deixa para trás — era o que o `grep -vE '^$'` do pipeline anterior fazia à mão,
+# e esquecê-lo custou os quatro casos vermelhos de 2026-08-21. Quem trocar este
+# laço por um pipeline outra vez precisa reintroduzir as duas coisas: o descarte
+# do vazio e a leitura do token anterior.
+extrai_ref() {
+  local -a w
+  read -r -a w <<< "$(sem_redirecao "$1" | tr '\n' ' ')"
+  REF=""
+  DIR_C=""
+  local i=0
+  while [ $i -lt ${#w[@]} ]; do
+    if consome_proximo "${w[$i]}"; then
+      if [ "${w[$i]}" = "-C" ]; then
+        DIR_C="${w[$((i + 1))]:-}"
+        # Aspas literais podem ter vindo junto no texto do comando; o shell as
+        # comeria, este hook lê o texto cru.
+        DIR_C="${DIR_C%[\"\']}"
+        DIR_C="${DIR_C#[\"\']}"
+      fi
+      i=$((i + 2))
+      continue
+    fi
+    case "${w[$i]}" in
+      -*|git|push|origin|upstream) ;;
+      *) REF="${w[$i]}" ;;
+    esac
+    i=$((i + 1))
+  done
+}
+
 verifica_segmento() {
   local SEG="$1"
 
@@ -166,25 +227,27 @@ verifica_segmento() {
   printf '%s' "$SEG" | grep -qE '(--all|--mirror|--prune)([[:space:]]|$)' \
     && deny "push de repositório inteiro (--all/--mirror/--prune) bloqueado."
 
-  # Extrai o refspec: última palavra que não seja flag, remoto conhecido ou o próprio git/push.
-  # O `grep -vE '^$'` não é cosmético. `sem_redirecao` troca o redirecionamento
-  # por um espaço, então `... claude/x 2>` vira `... claude/x  ` e o `tr` produz
-  # tokens vazios no fim. Sem descartá-los, `tail -1` devolve **string vazia** em
-  # vez do refspec, o refspec "some", e o fluxo cai no fallback da branch atual
-  # logo abaixo — que acerta por acaso quando a suíte roda num checkout `claude/*`
-  # e erra em qualquer outro. Foi assim que a correção de 2026-08-21 passou 42/42
-  # na máquina local e falhou 4 casos no runner do GitHub, onde o checkout de
-  # `pull_request` deixa o HEAD destacado.
-  REF=$(sem_redirecao "$SEG" \
-    | tr ' ' '\n' \
-    | grep -vE '^$' \
-    | grep -vE '^(git|push|origin|upstream|-u|--set-upstream|--tags|--quiet|-q|--verbose|-v)$' \
-    | grep -vE '^-' \
-    | tail -1)
+  extrai_ref "$SEG"
 
-  # Push sem refspec empurra a branch atual — precisa que ela seja claude/*.
+  # Push sem refspec empurra a branch atual — mas com `-C <dir>` a branch que
+  # importa é a **do diretório**, não a de onde o comando foi digitado. Perguntar
+  # à errada erra nas duas direções: nega a biblioteca parada em `claude/*`
+  # porque a sessão está noutro lugar, e libera a vizinha parada em `main` porque
+  # a sessão está em `claude/*`. A segunda é a perigosa.
+  #
+  # Quando o caminho não é legível daqui — `-C "$LIB"`, com a variável que só o
+  # shell do agente sabe expandir, que é a forma prescrita pelo fechamento de
+  # sessão — não há como saber, e vale a branch atual. O hook **não** expande
+  # nada: `eval` sobre string vinda da ferramenta seria executar comando alheio
+  # dentro do guardrail. Fica o limite, declarado: nesse caso o hook decide pela
+  # sessão, não pelo destino. É a mesma classe de lacuna que o cabeçalho já
+  # assume ao dizer que push por API ou MCP passa ao largo.
   if [ -z "$REF" ]; then
-    REF=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    local ALVO=""
+    [ -n "$DIR_C" ] && [ -d "$DIR_C" ] \
+      && ALVO=$(git -C "$DIR_C" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    [ -z "$ALVO" ] && ALVO=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    REF="$ALVO"
     [ -z "$REF" ] && deny "não foi possível determinar a branch de destino."
   fi
 
