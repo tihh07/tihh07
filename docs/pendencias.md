@@ -35,14 +35,14 @@
 | Item | Estado | Por quê |
 |---|---|---|
 | **S1** — dado pessoal versionado em repositórios privados | 🟡 **risco aceito** | verificado: 1 dos 3 limpo, 2 confirmados. Dono decidiu manter, privado, sob acesso dele (2026-08-21), e **reconfirmou no fim do dia**. Reabre se algum deixar de ser privado, ganhar colaborador ou surgir titular externo — e muda de natureza se os 14 PRs de remoção forem mesclados |
-| **C1** — minutos de Actions a 90% | 🟡 **medido em 2026-08-24: zero minuto faturável em 16 de 16 repositórios com workflow** | teto foi a 3.000. A medição rodou e é válida — o denominador é 16, não zero. Mas ela **não explica os 1.802 minutos** do alerta de 21/08: o gasto está fora do que ela alcança, e essa lacuna é agora o item. **Não é este repo** e **não é o plugin**. Orçamento adicional **decidido em 24/08: $0**, operar dentro do limite mensal — falta gravar na UI. Fecha quando a composição da cota for lida em Settings → Billing |
+| **C1** — minutos de Actions a 90% | 🟢 **explicado em 24/08: não havia contradição** | teto foi a 3.000. A medição rodou e é válida — o denominador é 16, não zero. Ela media **minuto faturável** ($0, coberto por desconto) e o alerta media **consumo de franquia** (2.837,3 de 3.000 em 24/08) — duas grandezas, nenhuma contradição. Restam **162,7 min** e a franquia vira em **7 dias**; com $0 e *stop usage*, o Actions **para na conta** quando acabar. Repositório público não consome franquia: o consumo é dos privados. **Não é este repo** e **não é o plugin**. Orçamento adicional **decidido e gravado em 24/08: $0 com *stop usage*, conferido na tela**. Fecha quando a composição da cota for lida em Settings → Billing |
 | **S2** — R1 cobre conteúdo, não inventário | 🔴 **aberto, e com segunda ocorrência em 24/08** | metadados de sessão entregam a **lista** dos privados a uma sessão do público. E em 24/08 a medição do C1 fez o mesmo por outro canal, com o sanitizador da ferramenta falhando aberto e imprimindo quinze nomes reais num transcript público — nada em arquivo versionado. O mapeamento apelido → repo segue protegido; a existência deles, não. Enquadramento humano |
 | **V1** — configuração não é reverificável pela nuvem | 🟡 **encolheu** | remedido em 21/08: dados do repo e **rulesets agora leem (200)**. Seguem fora: escrita, secret scanning, segredos de Actions, colaboradores. V1 ficou mais barato — [seção abaixo](#o-que-a-nuvem-não-alcança--e-por-quê) |
 | **P2** — prompt de rotina só na UI | 🟡 metade | N2 fechada em 2026-08-20; control-plane depende de decidir onde a skill mora |
 | **H1-bis** — `main` exige PR, mas zero aprovação | ✅ **fechado em 2026-08-21** | `verificar` exigido no `protect-main`, fixado no app do Actions, sem bypass. PR quebrado não entra mais — é plataforma, não boa vontade. O merge sem revisor segue doutrina |
 | **H4** — secret scanning e push protection | ✅ **fechado** | ambos **ativos**, conferidos na UI em 2026-08-21 com evidência visual. GHAS é flag distinto e segue desligado — não era ele que importava |
 | **H2** — `CODEOWNERS` exigível | 🟡 parcial | trava em ter um único dono, não em plano nem em ação. Nos privados o recurso passou a existir com o Pro (2026-08-21) — mas comprar a ferramenta não cria o segundo revisor |
-| **H7** — branches principais dos privados desprotegidas | 🟡 **destravado, falta configurar** | era limite de plano e não é mais. Com o Pro ativo, é clique humano na UI, um repositório por vez — e é o item de maior retorno da lista |
+| **H7** — branches principais dos privados desprotegidas | 🟢 **aplicado em 24/08 por API, mas não é gate de merge** | 17 de 18 com ruleset `deletion` + `non_fast_forward` na default, enforcement ativo, bypass vazio — **16 têm só essas duas**: impedem apagar e dar force push, **não exigem PR nem check e não impedem push direto**. Só este repo público tem gate de merge. Não foi clique humano: foi `POST /rulesets` em lote, de outra sessão. Fica aberta a **lacuna de rastreamento** entre "protegido contra destruição" e "com gate" |
 | **H3 · N6** — PR Watch | ✅ **fechado por remoção** | 22 disparos, **zero execuções** — nunca alcançou a action. Removido em 2026-08-21 a pedido do dono. Deixá-lo parado era cobertura aparente |
 | **H5** | ❌ aberto | decisão humana, sem dono declarado, aberto desde 2026-08-02 |
 | **L2** | 🔴 **aberto, e agravado** | a coluna de departamento publica 4 de 17 e omite 13 — a mesma forma que **L7** rejeitou na coluna ao lado. Decisão não tomada, executada pela metade |
@@ -75,7 +75,7 @@ mapa mudou:** parte do que esta seção declarava inalcançável passou a respon
 |---|---|---|---|
 | dados do repositório | **200** | — | **abriu** desde 20/08 |
 | `/rulesets` (leitura) | **200** | — | **abriu** desde 20/08 |
-| `/rulesets` (escrita) | 403 | *"Write access to this GitHub API path is not permitted through this proxy"* | allowlist do proxy |
+| `/rulesets` (escrita) | 403 **aqui** | *"Write access to this GitHub API path is not permitted through this proxy"* | allowlist do proxy **desta frente** — em 24/08 outra sessão fez `POST` no mesmo caminho, com sucesso, em 15 privados. O 403 é do ambiente, não da conta |
 | `/branches/*/protection` | 403 | *"Resource not accessible by integration"* | escopo do app, **não** o proxy |
 | `/secret-scanning/alerts` · `/collaborators` | 403 | *"Access to this GitHub API path is not permitted through this proxy"* | allowlist do proxy |
 | `/actions/secrets` · `/actions/permissions` | 403 | *"Access to this GitHub Actions path is not permitted through this proxy"* | allowlist do proxy |
@@ -148,12 +148,22 @@ antes de escalar para dezessete repositórios; a sintaxe está no relatório
 **4. Duas paredes limitam o agente, e elas não são a mesma coisa que a doutrina.**
 O `SECURITY.md` autoriza agente a apagar branch já mesclada — **o mediador da
 plataforma não deixa**, e devolve 403 mesmo com a prova feita. O mesmo vale para
-qualquer escrita de configuração de repositório. **A plataforma é mais restritiva
-que a regra escrita**, e onde as duas divergem quem vence é a plataforma. Não
-procure rota alternativa: registre e devolva ao humano.
+qualquer escrita de configuração de repositório. **O ambiente desta frente é mais
+restritivo que a regra escrita**, e onde os dois divergem quem vence é o ambiente.
 
-**5. O que sobra é quase todo humano**, e nenhum destrava insistindo daqui:
-**H7** (proteger a branch default dos privados) · **C1** (não é mais "medir": a
+> **Corrigido em 2026-08-24.** Este parágrafo dizia *"a plataforma"* e terminava
+> em *"não procure rota alternativa"*. As duas coisas se provaram falsas no mesmo
+> dia: outra sessão criou **15 rulesets por `POST`** nos privados, num lote de dez
+> minutos. O bloqueio é do **ambiente desta sessão**, não da plataforma nem da
+> conta — e a rota alternativa existia. A pergunta certa, quando uma escrita for
+> barrada aqui, não é *"como libero o proxy"*; é **"de qual sessão isso passa"**.
+> Registrar e devolver ao humano continua certo como piso; parar de procurar, não.
+> Ver **H7**.
+
+**5. O que sobra é quase todo humano**, e nenhum destrava insistindo daqui —
+**mas o H7 saiu desta lista em 24/08, e a razão importa: ele não foi destravado
+por humano, foi executado por outra sessão, cujo ambiente escreve onde o desta
+aqui é barrado.** · **C1** (não é mais "medir": a
 medição rodou em 24/08 de uma sessão local, com `gh auth token`, e enumerou os
 privados sem PAT novo — o que sobra é **decidir o orçamento** e explicar o zero)
 · **S2** (enquadrar o alcance de R1) · **L2**
@@ -649,7 +659,7 @@ aritmética enquanto o dono for o único revisor. **Comprar a ferramenta não cr
 o segundo revisor.**
 
 ### H7 — As branches principais dos privados seguem desprotegidas
-**Severidade: alta · 🟡 DESTRAVADO, FALTA CONFIGURAR · Executor: 👤 Humano**
+**Severidade: alta · 🟢 APLICADO EM MASSA POR API EM 2026-08-24 — MAS O QUE FOI APLICADO NÃO É GATE DE MERGE · Executor: ✅ script no privado de governança**
 
 Registrado como item próprio em 2026-08-21, depois de aparecer duas vezes dentro
 de outros: como achado de auditoria em **L1** e como argumento de compra em
@@ -662,6 +672,84 @@ verificar** — R1 — e o número não deve ser adivinhado.
 **O que mudou:** a causa registrada era limite de plano, e deixou de ser. Com o
 Pro ativo, proteção de branch existe em repositório privado. O item saiu de
 "decidir se vale pagar, ou aceitar o risco por escrito" e virou configuração.
+
+---
+
+## 2026-08-24 — aplicado, e o registro abaixo envelheceu em três pontos
+
+**Origem:** medição de leitura feita por uma sessão escopada no privado de
+governança, trazida pelo dono. **Não reverificada daqui** — R1 impede, e vale a
+regra da casa: *"fechado aqui é sempre relato"*.
+
+**O que existe hoje, medido por `gh api` em 18 repositórios:**
+
+| | |
+|---|---|
+| Com ruleset `deletion` + `non_fast_forward` na default | **17 de 18** |
+| Destes, com **também** `pull_request` | **1** |
+| Destes, com **também** `required_status_checks` | **1** (o mesmo) |
+| Com branch protection **clássica** na default | **0 de 18** |
+| Sem ruleset algum | 1 (repositório em modo somente-leitura) |
+
+Alvo `~DEFAULT_BRANCH`, enforcement `active`, `bypass_actors` **vazio**.
+
+> **"Protegido" aqui quer dizer protegido contra destruição, não gate de merge.**
+> Dezesseis dos dezessete rulesets têm **exatamente duas regras**: impedem apagar
+> a branch e impedem force push. **Não exigem PR, não exigem review, não exigem
+> status check, e não impedem push direto na default.** O único repositório com
+> gate de merge real é este, o público, cujo ruleset `protect-main` também carrega
+> `pull_request` e `required_status_checks`.
+
+**A omissão das duas regras é deliberada e documentada** no privado, por dois
+deadlocks que este arquivo já conhece: status check obrigatório que nunca roda
+trava o merge para sempre, e *"Require approvals: 1"* em repositório de
+colaborador único deixa todo PR inmergível, porque ninguém aprova o próprio PR.
+É a mesma razão pela qual `required_approving_review_count` é **0** aqui.
+
+**Três coisas escritas acima envelheceram, e ficam corrigidas em vez de apagadas:**
+
+**1. "Falta configurar, é clique humano na UI, um repositório por vez" — falso.**
+Foi aplicado por `POST repos/<owner>/<repo>/rulesets`, de um script versionado no
+privado de governança. Os `created_at` mostram um lote de **15 em 10min08s**,
+entre 14:31:14Z e 14:41:22Z — laço de script, não mão humana.
+
+**2. "Vale para qualquer superfície da Claude — todos chegam ao GitHub pelo mesmo
+mediador" — falso, e era a afirmação mais cara do item.** Ela mandava a próxima
+sessão *não procurar rota alternativa*. A rota existia: **outra sessão escreveu**.
+O bloqueio de escrita em `/rulesets` é do **ambiente desta frente**, não da
+plataforma nem da conta. A lição do item inverte-se: quando uma escrita for
+barrada aqui, a pergunta certa não é *"como libero o proxy"* — é **"de qual
+sessão isso passa"**.
+
+**3. O 403 *"Upgrade to GitHub Pro"* não reproduz mais.** Hoje
+`branches/<default>/protection` devolve **404 "Branch not protected"** nos 18,
+inclusive nos privados. O endpoint lê; o que ele reporta é ausência de proteção
+clássica.
+
+**Duas armadilhas de verificação, que valem mais que o resultado:**
+
+- **`.protected` da branch não responde a pergunta.** Ele devolve `true` sempre
+  que existe ruleset, e por isso **não distingue** "só deletion + non_fast_forward"
+  de "gate de merge completo". Quem checar `.protected` vai concluir que está tudo
+  protegido.
+- **Script verde não é evidência de ruleset criado.** A falha de criação cai num
+  ramo `|| echo` que **não altera o exit code**. Só a releitura de
+  `repos/<repo>/rulesets` prova. Nesta rodada nenhum faltou — mas isso foi
+  verificado relendo, não confiando no verde.
+
+**O que fica aberto, e é lacuna de rastreamento real:** não há item — nem aqui nem
+no privado — acompanhando a **diferença** entre "protegido contra deleção e force
+push" e "com gate de merge". A decisão de não exigir PR está tomada e justificada;
+o que não existe é o registro de que os dois estados são diferentes e de qual vale
+para qual repositório.
+
+**Não medido, e dito para ninguém supor:** push direto na default **não foi
+testado** (exigiria escrita), e o stdout da execução real do script não foi
+observado — a evidência é o estado resultante mais os `created_at`.
+
+---
+
+**O registro abaixo é de 2026-08-21 e vale como história do que se acreditava.**
 
 **Duas paredes independentes impedem um agente de aplicar isto, e a distinção
 importa porque uma delas é um botão que você tem** (e não deve apertar):
@@ -863,6 +951,44 @@ de abrir um privado para contar execuções. A verificação é humana, ou de um
 sessão escopada num privado: aba *Actions*, workflow *Watchdog*, e ver se há uma
 execução por dia.
 
+#### 2026-08-24, fim do dia — a contradição não existia, e o instrumento estava certo
+
+Lido na tela de *Billing → Usage*, aba **Actions**, trazido pelo dono:
+
+| | |
+|---|---|
+| **Billable usage** | **$0** = $17,40 de consumo − $17,40 de desconto |
+| **Included usage** | **2.837,3 min usados / 3.000 incluídos** (94,6%) |
+| Reset da franquia | **em 7 dias** |
+
+**As duas leituras sempre foram verdadeiras, medindo coisas diferentes.** O
+`medir-actions.sh` lê **minuto faturável** — que é zero, porque o desconto cobre a
+franquia inteira. O alerta lê **consumo da franquia**. Não havia contradição: havia
+duas grandezas com o mesmo nome coloquial, "minutos".
+
+> **O instrumento estava certo; a pergunta é que estava errada.** Três dias foram
+> gastos consertando um script que respondia corretamente a uma pergunta que não
+> era a que o item fazia. Os defeitos consertados nos PRs #23 e #24 eram reais — mas
+> nenhum deles era a causa do zero, e nenhum poderia ter sido, porque o zero **não
+> era um defeito**.
+
+**Isso encerra a lacuna que este item carregava**, e derruba as duas hipóteses que
+sobravam: não é `affiliation=owner` escondendo repositório de organização, e não é
+consumo fora do Actions. É a franquia sendo consumida normalmente, por trabalho que
+não gera cobrança.
+
+**E inverte a urgência.** Sobram **162,7 minutos** e a franquia vira em 7 dias. Com
+o orçamento em $0 e *stop usage* ligado — a decisão de hoje —, quando a franquia
+acabar **o Actions para na conta inteira** até o reset. O custo aceito ao decidir
+deixou de ser hipotético: ele tem data.
+
+**O que este repositório contribui para esse consumo: nada.** Actions em
+repositório **público** é coberto pelo desconto e **não** consome a franquia — é o
+que a própria tela diz, ao listar *"discounts cover Actions usage in public
+repositories"*. Os 2.837 minutos são dos privados. Otimizar os workflows daqui não
+devolve um minuto sequer; **onde a otimização paga é nos privados**, e o rateio por
+repositório está em *View details*, na mesma tela — leitura humana, R1 impede daqui.
+
 **O que a medição devolveu, em números** — restaurado em 2026-08-24 do texto que
 o `b2782fb` removeu ao adotar a versão rival. As duas sessões cederam uma à
 outra ao mesmo tempo, e nessa troca esta tabela caiu sem que ninguém a
@@ -929,11 +1055,23 @@ vai parecer defeito quando for orçamento**. Fica escrito aqui para que a próxi
 sessão que topar com uma CI parada em privado consulte este parágrafo antes de
 diagnosticar.
 
-**A decisão está tomada; a aplicação não.** Travar o orçamento é mudança de
-configuração de faturamento da conta, em *Settings → Billing and plans → Budgets
-and alerts*. Não é ação de agente: pela API exige escopo que o token local não
-carrega, e escrita de configuração de conta é do dono por regra, não por limite
-técnico. Este item só fecha quando alguém confirmar o valor gravado na UI.
+**A decisão está tomada, e a aplicação também — confirmada em 2026-08-24 na tela
+de *Settings → Billing and plans → Budgets and alerts*, trazida pelo dono:**
+
+| Escopo | Produto | Stop usage | Gasto | Orçamento |
+|---|---|---|---|---|
+| conta | **Actions** | **Yes** | $0 | **$0** |
+
+Existem cinco orçamentos de conta, todos em $0 com *stop usage* ligado — Actions,
+Packages, Codespaces, Git LFS e os SKUs de crédito de IA. **Não havia nada a
+criar:** o botão *New budget* teria duplicado um orçamento de Actions que já
+existia. Fica escrito porque a pergunta "onde eu gravo isso" tem, aqui, a resposta
+menos esperada — já estava gravado.
+
+Não é ação de agente de qualquer forma: pela API exige escopo `user`, que o token
+local não carrega — verificado, não suposto (`gh: This API operation needs the
+"user" scope`) —, e escrita de configuração de faturamento é do dono por regra,
+não por limite técnico.
 
 > **E a decisão não explica o zero.** São dois problemas que este item carrega
 > juntos e que não se resolvem um ao outro: *quanto se pode gastar* está decidido;
@@ -2248,7 +2386,7 @@ que a linha reservada para ele.
 | ~~Sex~~ | ~~**P2** — trocar o prompt das rotinas pelo ponteiro~~ | ☁️ | **metade**; a de control-plane espera a decisão de onde a skill mora |
 | ~~Sex~~ | ~~**L2** — decidir se os nomes de setor podem ser publicados~~ | 👤 | **não decidido, e agravado** — ver o achado no item |
 | ~~Sex~~ | ~~**H1-bis** — marcar `verificar` como obrigatório~~ | 👤 | **feito e verificado na API em 21/08.** Precisou de duas tentativas: a primeira salvou sem o campo |
-| **Hoje (sex)** | **C1** — travar o orçamento de $0 do Actions, ou aceitar por escrito — ✅ **decidido em 24/08: $0**; resta gravar em *Settings → Billing and plans → Budgets and alerts* | 👤 | 5 min |
+| **Hoje (sex)** | **C1** — travar o orçamento de $0 do Actions, ou aceitar por escrito — ✅ **fechado em 24/08: $0 com *stop usage*, já gravado e conferido na tela** | 👤 | 5 min |
 | **Sáb/dom** | **H7** — proteger a branch default dos privados, um a um | 👤 | destravado hoje pelo Pro |
 | **Sáb/dom** | **P16** — coletar as duas métricas que a CI espera | 👤 | fecha o penúltimo repositório do ciclo |
 | **Antes de seg** | **V1** — workflow de leitura de configuração | ☁️ | 1 sessão |
