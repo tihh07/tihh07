@@ -77,10 +77,15 @@ e continua sendo do dono.
 
 ## Estado
 
-**Não exercitado.** Os agentes foram escritos a partir da especificação e
-nenhum foi executado em trabalho real; o hook não foi testado num departamento;
-o watchdog só roda ativado no repositório público. Versão 0.1.0 significa
-exatamente isso.
+**Não exercitado, num sentido específico.** Os agentes foram escritos a partir
+da especificação e nenhum foi executado em trabalho real; o watchdog só roda
+ativado no repositório público. O hook **já foi exercitado** — instalado neste
+repositório (`D5`) via `PreToolUse`, ele bloqueou e liberou pushes reais em
+25/08 (evidência em `docs/pendencias.md`, item **L3**) — mas isso é dogfooding,
+não distribuição: este é o único terreno onde o plugin nunca precisou viajar
+para outro repositório. Falta instalá-lo num departamento que **não** seja o de
+origem. Versão 0.1.0 significa isso: agentes não exercitados e hook exercitado
+só na origem.
 
 Antes de replicar em escala, rodar no departamento-piloto e corrigir o que a
 realidade contradisser — inclusive esta afirmação.
