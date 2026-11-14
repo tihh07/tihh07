@@ -10,9 +10,9 @@ Hoje também construo sistemas, agentes e workflows de IA com governança. O obj
 
 ### PromptOps OS
 
-Metodologia operacional para profissionais de dados e áreas corporativas transformarem demandas em entregas executivas com IA, contexto e critérios de qualidade.
+Um método para colar na sua IA e deixar que ela conduza o próximo post, do briefing ao checklist. Inclui prompt mestre, kit editável de mídia social, cartilha e uma biblioteca com 119 prompts para LinkedIn e Instagram.
 
-[Conhecer o PromptOps OS](https://promptops-os-brasil.tiagosouza.chatgpt.site/)
+[Conhecer o PromptOps OS](https://guiadoprompt.com.br/)
 
 ### AI Operating System
 
@@ -50,4 +50,4 @@ Tecnologia só gera valor quando melhora decisões, reduz fricção operacional 
 ## Contato
 
 - [LinkedIn](https://www.linkedin.com/in/tiago-souza-07/)
-- [PromptOps OS](https://promptops-os-brasil.tiagosouza.chatgpt.site/)
+- [PromptOps OS](https://guiadoprompt.com.br/)
